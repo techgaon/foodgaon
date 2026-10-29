@@ -11,8 +11,8 @@ service cloud.firestore {
     }
     function staff() { return get(/databases/$(database)/documents/staff/$(ph())).data; }
     function isStaff() { return signedIn() && exists(/databases/$(database)/documents/staff/$(ph())); }
-    // super admin = TechGaon (Suraj Bhan Pandey). The old number stays only until the move is confirmed, then remove it.
-    function isSuper() { return ph() in ['+919129203268', '+919415213754']; }
+    // super admin = TechGaon (Suraj Bhan Pandey)
+    function isSuper() { return ph() == '+919129203268'; }
     function isAdmin() { return isSuper() || (isStaff() && staff().get('admin', false) == true); }
     function isRider() { return isStaff() && staff().get('rider', false) == true; }
     function riderOf() { return staff().get('riderOf', ''); }
