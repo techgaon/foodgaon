@@ -1,7 +1,7 @@
-# PetPyaar — builds the Android app and the web version automatically on every push
+# FoodGaon — builds the Android app and the web version automatically on every push
 # install.apk  = install directly on a phone (testing)
 # unsigned.aab = for Play Store; sign with the upload key before uploading (key is NOT kept on GitHub)
-name: Build PetPyaar
+name: Build FoodGaon
 
 on:
   push:
@@ -47,15 +47,15 @@ jobs:
       - name: Collect files
         run: |
           mkdir -p out
-          cp android/app/build/outputs/apk/debug/app-debug.apk out/PetPyaar-v1.0.${{ github.run_number }}-install.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk out/FoodGaon-v1.0.${{ github.run_number }}-install.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk out/FoodGaon.apk
-          cp android/app/build/outputs/bundle/release/*.aab out/PetPyaar-v1.0.${{ github.run_number }}-unsigned.aab
+          cp android/app/build/outputs/bundle/release/*.aab out/FoodGaon-v1.0.${{ github.run_number }}-unsigned.aab
           ls -la out
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}
-          name: PetPyaar v1.0.${{ github.run_number }}
+          name: FoodGaon v1.0.${{ github.run_number }}
           files: out/*
 
   web:
