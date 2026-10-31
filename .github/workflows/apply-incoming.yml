@@ -1,0 +1,32 @@
+# Applies a change bundle uploaded from the browser (incoming/update.patch.gz), then starts the app build
+name: Apply incoming update
+on:
+  push:
+    branches: [main]
+    paths: ['incoming/**']
+permissions:
+  contents: write
+  actions: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply
+        run: |
+          set -e
+          git config user.name "TechGaon"
+          git config user.email "contact@techgaon.in"
+          for f in incoming/*.patch.gz; do
+            [ -f "$f" ] || continue
+            gunzip -c "$f" > /tmp/u.patch
+            git apply --whitespace=nowarn /tmp/u.patch
+          done
+          git rm -rq incoming
+          git add -A
+          git commit -m "Restaurant onboarding, agreement, quality checks, COD rules, online payment setup"
+          git push
+      - name: Start app build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run android.yml --ref main
