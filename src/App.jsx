@@ -33,7 +33,7 @@ export default function App() {
 
   useEffect(() => { const t = setTimeout(() => setSplash(false), 2200); return () => clearTimeout(t); }, []);
   useEffect(() => onAuthStateChanged(auth, (u) => setUser(u)), []);
-  useEffect(() => watchDoc('config', 'app', (d) => d && setConfig({ ...DEFAULT_CONFIG, ...d })), []);
+  useEffect(() => watchDoc('config', 'app', (d) => d && setConfig({ ...DEFAULT_CONFIG, ...d, gstin: d.gstin || DEFAULT_CONFIG.gstin, firmAddress: d.firmAddress && d.firmAddress.length > 40 ? d.firmAddress : DEFAULT_CONFIG.firmAddress })), []);
   const phone = phoneOf(user);
   useEffect(() => {
     setStaff(null); setStaffReady(false);

@@ -15,9 +15,11 @@ import { getPosition } from '../lib/native.js';
 import MenuManager from './MenuManager.jsx';
 import Team from './Team.jsx';
 import DailyReport from './DailyReport.jsx';
-import { useReviews } from '../components/Reviews.jsx';
+import { useReviews, QualityCard } from '../components/Reviews.jsx';
 import PhotoPick from '../components/PhotoPick.jsx';
 import { t, tr } from '../i18n/index.js';
+import PartnerAgreement from '../components/PartnerAgreement.jsx';
+import { feeTerms, feeLine } from '../lib/partner.js';
 
 /* rings while there are un-accepted orders */
 export function useNewOrderAlert(orders, title = 'New order!') {
@@ -77,7 +79,7 @@ export default function RestaurantApp() {
       <div className="page-anim" key={tab}>
         {tab === 'orders' && <RestOrders orders={orders} />}
         {tab === 'menu' && <MenuManager restId={rest.id} rest={rest} />}
-        {tab === 'money' && <><DailyReport orders={orders} rest={rest} reviews={reviews} /><Dues orders={orders} rest={rest} /><Earnings orders={orders} /></>}
+        {tab === 'money' && <>{rest.codBlocked && <div className="pad-x"><div className="alert alert-red">{t('Cash on delivery is paused for your shop because FoodGaon dues are pending. Pay your dues below — it starts again automatically.')}</div></div>}<DailyReport orders={orders} rest={rest} reviews={reviews} /><QualityCard reviews={reviews} /><Dues orders={orders} rest={rest} /><Earnings orders={orders} /></>}
         {tab === 'team' && <Team rest={rest} orders={orders} />}
         {tab === 'shop' && <ShopSettings rest={rest} />}
       </div>
@@ -186,7 +188,7 @@ export function OrderCard({ o, showRest, admin }) {
       {o.discount > 0 && <div className="tiny t-green">{`Coupon ${o.offerCode}: − ${rupee(o.discount)}`}{o.discountBy === 'restaurant' ? '' : ` (${t('paid by FoodGaon')})`}</div>}
       <div className="row between small">
         <span className="row gap" style={{ gap: 6 }}>{o.customerName} · <a href={tel(o.customerPhone)}>{plain(o.customerPhone)}</a><WaBtn small phone={o.customerPhone} text={`नमस्ते ${o.customerName || ''} जी, ${o.restaurantName} से — आपका ऑर्डर #${o.code}`} /></span>
-        <b>{rupee(o.total)} <small className="muted">{o.payment === 'cod' ? 'Cash' : o.payment === 'upi_now' ? 'UPI (pay now)' : 'UPI on delivery'}</small></b>
+        <b>{rupee(o.total)} <small className="muted">{o.payment === 'cod' ? 'Cash' : o.payment === 'online' ? 'Paid online' : o.payment === 'upi_now' ? 'UPI (pay now)' : 'UPI on delivery'}</small></b>
       </div>
       {o.payment !== 'cod' && !['rejected', 'cancelled'].includes(o.status) && (
         o.paid ? <div className="pay-line ok"><Icon name="check" size={14} /> Payment received</div>
@@ -231,6 +233,8 @@ export function OrderCard({ o, showRest, admin }) {
         </div>
       )}
       {o.status === 'picked' && <div className="small"><Icon name="bike" size={14} /> {`${o.riderName || 'Rider'} is delivering`}</div>}
+      {o.status === 'picked' && o.payment === 'cod' && <button className="btn small ghost danger-text" disabled={busy} onClick={() => run(() => setStatus(o, 'cancelled', { refusedCod: true, cancelReason: 'Customer refused at the door' }))}>Customer refused</button>}
+      {o.refusedCod && <div className="tiny t-red">{t('Customer refused this cash order at the door')}</div>}
       {admin && ACTIVE.includes(o.status) && o.status !== 'placed' && (
         <div className="row gap wrap">
           {o.status === 'ready' && <button className="btn small ghost grow" onClick={() => run(() => setStatus(o, 'picked'))}>Mark picked</button>}
@@ -250,7 +254,8 @@ export function OrderCard({ o, showRest, admin }) {
 }
 
 /* what the restaurant owes FoodGaon each week (GST 5% + commission − FoodGaon coupons), paid by UPI */
-export const dueOf = (o) => Math.max(0, Math.round((o.dues ?? (Number(o.total || 0) - Number(o.payable || 0))) * 100) / 100);
+// orders paid online through the gateway are already split (FoodGaon's part never reaches the restaurant) → nothing due
+export const dueOf = (o) => (o.duesBy === 'gateway' ? 0 : Math.max(0, Math.round((o.dues ?? (Number(o.total || 0) - Number(o.payable || 0))) * 100) / 100));
 const r2x = (n) => Math.round(n * 100) / 100;
 export function useCycles(orders, setts) {
   if (!orders || !setts) return null;
@@ -403,6 +408,7 @@ function ShopSettings({ rest }) {
         </div>
         <button className="btn primary block" disabled={busy} onClick={() => save()}>Save</button>
       </div>
+      <AgreementCard rest={rest} />
       <UpiEditor noQr value={rest} title="Your UPI ID — customers pay you directly" hint="Customers' money comes straight into this account. FoodGaon does not hold your money."
         onSave={(v) => patch('restaurants', rest.id, v)} />
       <div className="card">
@@ -411,6 +417,26 @@ function ShopSettings({ rest }) {
         <p className="tiny muted">Stand inside your shop and tap the button, so delivery partners find you easily.</p>
         <button className="btn ghost block" onClick={gps}><Icon name="gps" size={18} /> Set my current location as shop</button>
       </div>
+    </div>
+  );
+}
+
+/* the restaurant's own agreement with FoodGaon (fee + PDF) */
+function AgreementCard({ rest }) {
+  const { config } = useApp();
+  const [app, setApp] = useState(undefined);
+  const [pdf, setPdf] = useState(false);
+  useEffect(() => { if (!rest.applicationId) { setApp(null); return; } getOne('partnerApps', rest.applicationId).then(setApp).catch(() => setApp(null)); }, [rest.applicationId]);
+  const f = app?.terms || feeTerms(config, rest);
+  const a = app || { restName: rest.name, ownerName: rest.ownerName, ownerPhone: '+91' + (rest.ownerPhone || ''), address: rest.address, fssai: rest.fssai, gstin: rest.gstin, terms: f };
+  return (
+    <div className="card">
+      <h4><Icon name="shield" size={18} /> My FoodGaon agreement</h4>
+      <p className="small">{t('FoodGaon fee')}: <b>{feeLine(f)}</b></p>
+      <p className="tiny muted">{t('Promise to customers: same price, same portion and same quality as your counter. No extra charge.')}</p>
+      {app?.accepted && <p className="tiny muted">{`${t('Accepted by')} ${app.accepted.name} · ${fmtDateTime(app.accepted.ms)}`}</p>}
+      <button className="btn ghost block" onClick={() => setPdf(true)}><Icon name="download" size={18} /> {t('Agreement PDF')}</button>
+      {pdf && <DocSheet open onClose={() => setPdf(false)} title="Restaurant Partner Agreement" fileName={`FoodGaon-Agreement-${rest.name.replace(/[^\w]+/g, '-')}.pdf`}><PartnerAgreement a={a} config={config} accepted={app?.accepted} /></DocSheet>}
     </div>
   );
 }

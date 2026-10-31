@@ -205,6 +205,7 @@ export function TrackOrder({ id, fresh, nav }) {
           </div>
         )}
         {dead && <div className="alert alert-red">{o.status === 'rejected' ? `Sorry, the restaurant could not take this order. ${o.cancelReason || ''}` : 'This order was cancelled.'}</div>}
+        {dead && o.payment === 'online' && o.paid && <div className="alert alert-amber">{o.rzpRefundId ? t('Your money is being returned to the same account/UPI. It usually takes 5–7 working days.') : t('Your refund will start shortly.')}</div>}
 
         {o.riderPhone && live && <RiderCard o={o} />}
         )}
@@ -235,7 +236,7 @@ export function TrackOrder({ id, fresh, nav }) {
           {o.discount > 0 && <div className="bill t-green"><span>{`Coupon ${o.offerCode}`}</span><span>− {rupee(o.discount)}</span></div>}
           {o.gst > 0 && <div className="bill muted small"><span>{o.gstIncluded ? `Includes GST ${o.gstPct || 5}%` : `GST ${o.gstPct || 5}%`}</span><span>{rupee(o.gst)}</span></div>}
           <div className="bill"><span>Delivery fee</span><span className="t-green">{o.deliveryFee ? rupee(o.deliveryFee) : 'FREE'}</span></div>
-          <div className="bill total"><span>{o.payment === 'cod' ? 'To pay in cash' : o.payment === 'upi_rider' ? 'To pay by UPI on delivery' : o.paid || o.paymentClaim ? 'Paid by UPI' : 'To pay by UPI'}</span><span>{rupee(o.total)}</span></div>
+          <div className="bill total"><span>{o.payment === 'cod' ? 'To pay in cash' : o.payment === 'online' ? (o.paid ? 'Paid online' : 'Online payment pending') : o.payment === 'upi_rider' ? 'To pay by UPI on delivery' : o.paid || o.paymentClaim ? 'Paid by UPI' : 'To pay by UPI'}</span><span>{rupee(o.total)}</span></div>
           <button className="btn ghost block" onClick={() => setBill(true)}><Icon name="receipt" size={18} /> View bill / Download PDF</button>
           {['delivered', 'cancelled', 'rejected'].includes(o.status) && (
             <button className="btn primary block" onClick={() => { cartStore.clear(); o.items.forEach((x) => { for (let k = 0; k < x.qty; k++) cartStore.add({ ...x, restaurantId: o.restaurantId }); }); nav.openCart(); }}><Icon name="bag" size={18} /> Order again</button>
@@ -258,7 +259,7 @@ export function TrackOrder({ id, fresh, nav }) {
 function PayBox({ o }) {
   const toast = useToast();
   const [show, setShow] = useState(false);
-  if (o.payment === 'cod' || ['rejected', 'cancelled'].includes(o.status)) return null;
+  if (o.payment === 'cod' || o.payment === 'online' || ['rejected', 'cancelled'].includes(o.status)) return null;
   if (o.paid) return <div className="card pay-box ok"><Icon name="shield" size={22} /><div><b>Payment received</b><small>The restaurant confirmed your UPI payment</small></div></div>;
   const claim = async () => { try { await patch('orders', o.id, { paymentClaim: 'paid', claimMs: Date.now() }); toast(t('Thanks! The restaurant will confirm your payment.')); } catch { toast(t('Could not save'), 'err'); } };
   const ref = o.code;

@@ -101,6 +101,7 @@ function DeliveryCard({ o, me, available, phone, name }) {
   const toast = useToast();
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
+  const [refuse, setRefuse] = useState(false);
   const [qr, setQr] = useState(false);
   const shop = (useRestaurants() || []).find((r) => r.id === o.restaurantId) || {};
   const upiId = shop.upiId || o.restUpiId;
@@ -143,6 +144,10 @@ function DeliveryCard({ o, me, available, phone, name }) {
         </button>
       )}
       {!available && picked && <button className="btn green block lg" disabled={busy} onClick={() => setDone(true)}><Icon name="check" size={18} /> Delivered</button>}
+      {!available && picked && o.payment === 'cod' && <button className="btn ghost small block danger-text" disabled={busy} onClick={() => setRefuse(true)}>Customer refused / not at home</button>}
+      <Confirm open={refuse} onClose={() => setRefuse(false)} danger title="Customer refused the order?" okText="Yes, refused"
+        text="Use this only if the customer did not take the food or could not be reached. Bring the food back to the shop."
+        onOk={() => run(() => setStatus(o, 'cancelled', { refusedCod: true, cancelReason: 'Customer refused at the door' }))} />
       <Confirm open={done} onClose={() => setDone(false)} title="Mark as delivered?" okText="Yes, delivered"
         text={o.payment === 'cod' ? `Make sure you collected ${rupee(o.total)} from the customer.` : o.paid || o.paymentClaim ? 'Hand over the food to the customer.' : `Make sure the customer paid ${rupee(o.total)} by UPI to the restaurant.`}
         onOk={() => run(() => setStatus(o, 'delivered', o.payment === 'cod' ? { paid: true } : { paymentClaim: o.paymentClaim || 'rider' }))} />

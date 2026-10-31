@@ -26,7 +26,7 @@ service cloud.firestore {
       allow read: if true;
       allow create, delete: if isAdmin();
       allow update: if isAdmin() || (ownsRest(rid)
-                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['commissionPct', 'deliveryCharge', 'rating', 'sort', 'demo']));
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['commissionPct', 'commissionGstExtra', 'deliveryCharge', 'rating', 'sort', 'demo', 'codBlocked', 'codDue', 'verified', 'applicationId', 'onlinePay', 'rzpLinked', 'samePrice']));
     }
     match /items/{id} {
       allow read: if true;
@@ -88,7 +88,7 @@ service cloud.firestore {
                     || (isRider() && (resource.data.riderPhone == ph()
                          || (resource.data.riderPhone == '' && resource.data.restaurantId == riderOf() && request.resource.data.riderPhone == ph())))
                     || (signedIn() && resource.data.customerUid == request.auth.uid
-                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'timeline', 'rating', 'review', 'cancelReason', 'paymentClaim', 'claimMs', 'riderRating', 'reviewTags', 'reviewMs', 'payment', 'upiStatus', 'upiTxn', 'upiRef', 'hide', 'proofCount'])
+                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'timeline', 'rating', 'review', 'cancelReason', 'paymentClaim', 'claimMs', 'riderRating', 'reviewTags', 'reviewMs', 'qc', 'issue', 'payment', 'upiStatus', 'upiTxn', 'upiRef', 'hide', 'proofCount'])
                          && (request.resource.data.status == resource.data.status
                              || (resource.data.status == 'placed' && request.resource.data.status == 'cancelled')
                              || (resource.data.status == 'awaiting_payment' && request.resource.data.status in ['placed', 'payment_failed'])));
@@ -123,6 +123,76 @@ service cloud.firestore {
     match /riderLoc/{phone} {
       allow read: if signedIn();
       allow write: if phone == ph() || isAdmin();
+    }
+
+
+    // ---------- TechGaon firm app (enquiries, work orders, agreements, payments) ----------
+    function myTg(p) { return p is string && '+91' + p == ph(); }
+    match /enquiries/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['name', 'phone', 'type', 'message', 'lang', 'source', 'status', 'createdAt'])
+        && request.resource.data.phone is string && request.resource.data.phone.matches('^[6-9][0-9]{9}$')
+        && request.resource.data.name is string && request.resource.data.name.size() <= 80
+        && request.resource.data.message is string && request.resource.data.message.size() <= 1000
+        && request.resource.data.status == 'new';
+      allow read, update, delete: if isSuper();
+    }
+    match /tgConfig/{doc} {
+      allow read: if true;
+      allow write: if isSuper();
+    }
+    match /tgOrders/{id} {
+      allow read: if isSuper() || (signedIn() && myTg(resource.data.phone));
+      allow create: if signedIn() && myTg(request.resource.data.phone)
+        && request.resource.data.status == 'submitted' && request.resource.data.paidTotal == 0
+        && !('quote' in request.resource.data) && !('agreement' in request.resource.data) && !('payClaim' in request.resource.data)
+        && request.resource.data.details is string && request.resource.data.details.size() <= 3000;
+      allow update: if isSuper() || (signedIn() && myTg(resource.data.phone)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'agreement', 'payClaim', 'updatedAt'])
+        && ((resource.data.status == 'submitted' && request.resource.data.status == 'cancelled')
+          || (resource.data.status == 'quoted' && request.resource.data.status == 'accepted' && 'agreement' in request.resource.data)
+          || (request.resource.data.status == resource.data.status && resource.data.status in ['accepted', 'inprogress', 'delivered']
+              && !('agreement' in request.resource.data.diff(resource.data).affectedKeys()))));
+      allow delete: if isSuper();
+    }
+    match /tgOrderDocs/{id} {
+      allow read: if isSuper() || (signedIn() && myTg(resource.data.phone));
+      allow create: if signedIn() && myTg(request.resource.data.phone) && request.resource.data.data is string && request.resource.data.data.size() < 900000;
+      allow update, delete: if isSuper();
+    }
+
+    // ---------- restaurant partner onboarding (application + documents) ----------
+    match /partnerApps/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || resource.data.ownerPhone == ph() || isAdmin());
+      allow create: if signedIn() && request.auth.uid == uid && request.resource.data.ownerPhone == ph()
+                    && request.resource.data.status in ['draft', 'submitted']
+                    && !request.resource.data.keys().hasAny(['restaurantId', 'approvedMs']);
+      allow update: if isAdmin()
+                    || (signedIn() && request.auth.uid == uid && resource.data.status in ['draft', 'submitted', 'returned']
+                        && request.resource.data.ownerPhone == ph()
+                        && (request.resource.data.status in ['draft', 'submitted'] || (request.resource.data.status == 'returned' && resource.data.status == 'returned'))
+                        && !request.resource.data.keys().hasAny(['restaurantId', 'approvedMs']));
+      allow delete: if isAdmin();
+    }
+    match /partnerDocs/{id} {
+      allow read: if signedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow create, update: if signedIn() && request.resource.data.uid == request.auth.uid
+                    && id == request.auth.uid + '__' + request.resource.data.type
+                    && request.resource.data.data is string && request.resource.data.data.size() < 1000000
+                    && (!exists(/databases/$(database)/documents/partnerApps/$(request.auth.uid))
+                        || get(/databases/$(database)/documents/partnerApps/$(request.auth.uid)).data.status in ['draft', 'submitted', 'returned']);
+      allow delete: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
+    }
+    // customer's photo of a wrong / bad order (seen by the admin and that restaurant)
+    match /complaints/{orderId} {
+      allow create: if signedIn() && request.resource.data.customerUid == request.auth.uid
+                    && get(/databases/$(database)/documents/orders/$(orderId)).data.customerUid == request.auth.uid
+                    && request.resource.data.img is string && request.resource.data.img.size() < 600000;
+      allow read: if signedIn() && (resource.data.customerUid == request.auth.uid || isAdmin() || ownsRest(resource.data.restaurantId));
+      allow delete: if isAdmin();
+    }
+    // payment-gateway account ids of restaurants (server + admin only)
+    match /restPrivate/{restId} {
+      allow read, write: if isAdmin();
     }
   }
 }

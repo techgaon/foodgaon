@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import PromiseStrip from '../components/Promise.jsx';
+import { JoinCta, ShareCta } from '../components/Grow.jsx';
 import { Icon, Img, VegMark, Wordmark, Logo, Stepper, useToast } from '../ui.jsx';
 import { useApp } from '../App.jsx';
 import { useRestaurants, useItems, useBanners, useCart, cartStore, useFavs } from '../lib/data.js';
@@ -12,7 +14,7 @@ import { useOffers, isLive, offerLabel, offerTerms } from '../lib/offers.js';
 
 
 export default function Home({ nav }) {
-  const { user, config } = useApp();
+  const { user, config, roles } = useApp();
   const toast = useToast();
   const rests = useRestaurants();
   const items = useItems();
@@ -49,6 +51,7 @@ export default function Home({ nav }) {
       </header>
 
       <FreeDelivery km={config.radiusKm || 5} />
+      <PromiseStrip />
       <Banners list={(banners || []).filter((b) => b.active !== false && (!b.code || offers.some((o) => o.code === b.code)))} nav={nav} />
 
       {offers.length > 0 && (
@@ -103,6 +106,11 @@ export default function Home({ nav }) {
         <h2 className="sec-title">{rests ? `${rests.length} restaurants to explore` : 'Restaurants'}</h2>
         {!rests && [1, 2, 3].map((i) => <div key={i} className="rest-card skeleton" />)}
         {rests && rests.map((r, i) => <Reveal key={r.id}><RestCard r={r} i={0} onOpen={() => nav.openRest(r.id)} /></Reveal>)}
+      </section>
+
+      <section className="sec pad-x home-ctas">
+        <ShareCta />
+        {!(roles || []).includes('restaurant') && <JoinCta nav={nav} />}
       </section>
 
       <footer className="home-foot">

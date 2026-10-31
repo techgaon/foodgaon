@@ -49,6 +49,7 @@ export default function RestaurantPage({ id, nav }) {
         </div>
         <div className="rp-addr"><Icon name="pin" size={15} /> <span data-notr="">{rest.address}</span></div>
         <div className="rp-offer"><Icon name="bike" size={18} /> <b>FREE delivery</b> on every order</div>
+        {!rest.demo && <div className="rp-promise"><Icon name="shield" size={16} /> <span><b>Same price as the shop</b> · {rest.verified ? 'FoodGaon verified partner' : 'No platform fee'}</span></div>}
         {offers.length > 0 && (
           <div className="rp-offers">
             {offers.map((o) => (

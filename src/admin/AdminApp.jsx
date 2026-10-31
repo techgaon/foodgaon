@@ -17,6 +17,8 @@ import { DocSheet, GstReport } from '../components/Docs.jsx';
 import { UpiEditor } from '../components/Pay.jsx';
 import { dueOf } from '../restaurant/RestaurantApp.jsx';
 import { t } from '../i18n/index.js';
+import Applications, { usePartnerApps } from './Applications.jsx';
+import { linkRestaurant, restaurantPayStatus } from '../lib/gateway.js';
 
 export default function AdminApp() {
   const { logout } = useApp();
@@ -29,6 +31,9 @@ export default function AdminApp() {
   useAutoSeed();
   useMenuPack(useRestaurants(), () => true);
   useCleanup();
+  useCodGuard();
+  const apps = usePartnerApps();
+  const newApps = (apps || []).filter((a) => a.status === 'submitted').length;
   useEffect(() => { window.__ppBack = () => { if (tab !== 'dash') { setTab('dash'); return true; } return false; }; return () => { window.__ppBack = null; }; });
   return (
     <div className="panel">
@@ -51,7 +56,7 @@ export default function AdminApp() {
       <BottomNav value={tab} onChange={setTab} tabs={[
         { id: 'dash', icon: 'chart', label: 'Dashboard' },
         { id: 'orders', icon: 'receipt', label: 'Orders', badge: newCount },
-        { id: 'rest', icon: 'store', label: 'Restaurants' },
+        { id: 'rest', icon: 'store', label: 'Restaurants', badge: newApps },
         { id: 'riders', icon: 'bike', label: 'Riders' },
         { id: 'offers', icon: 'star', label: 'Offers' },
         { id: 'settings', icon: 'gear', label: 'Settings' },
@@ -145,6 +150,7 @@ function Dashboard({ orders, go }) {
         {riders.map((r) => <div key={r.id} className="small">• {r.name} ({plain(r.id)}) — {r.ts ? fmtDateTime(r.ts) : ''}</div>)}
       </div>
       <button className="btn primary block" onClick={() => go('orders')}><Icon name="receipt" size={18} /> {`Live orders (${live.length})`}</button>
+      <QualityAlerts />
       <Reports />
     </div>
   );
@@ -196,7 +202,17 @@ function Restaurants() {
   const items = useItems() || [];
   const [edit, setEdit] = useState(null);
   const [menu, setMenu] = useState(null);
+  const [view, setView] = useState(() => (sessionStorage.getItem('pp_restview') || 'list'));
+  const apps = usePartnerApps();
+  const pend = (apps || []).filter((a) => a.status === 'submitted').length;
   const toast = useToast();
+  const seg = (
+    <div className="seg">
+      <button className={view === 'list' ? 'on' : ''} onClick={() => { setView('list'); sessionStorage.setItem('pp_restview', 'list'); }}>Restaurants</button>
+      <button className={view === 'apps' ? 'on' : ''} onClick={() => { setView('apps'); sessionStorage.setItem('pp_restview', 'apps'); }}>{pend ? `Join requests (${pend})` : 'Join requests'}</button>
+    </div>
+  );
+  if (view === 'apps' && !menu) return <div className="pad-x">{seg}<Applications /></div>;
   if (menu) return (
     <div>
       <div className="pad-x row gap"><button className="btn ghost small" onClick={() => setMenu(null)}><Icon name="back" size={16} /> Back</button><b data-notr="">{menu.name}</b></div>
@@ -205,17 +221,19 @@ function Restaurants() {
   );
   return (
     <div className="pad-x">
+      {seg}
       <button className="btn primary block" onClick={() => setEdit({})}><Icon name="plus" size={18} /> Add restaurant</button>
       {rests.map((r) => (
         <div key={r.id} className="adm-rest">
           <Img src={r.cover} alt="" className="ar-img" />
           <div className="grow">
             <b data-notr="">{r.name}</b>
-            <small className="muted">{`${items.filter((i) => i.restaurantId === r.id).length} dishes · owner ${r.ownerPhone || '—'}`}{r.demo ? ' · DEMO' : ''}</small>
+            <small className="muted">{`${items.filter((i) => i.restaurantId === r.id).length} dishes · owner ${r.ownerPhone || '—'}`}{r.demo ? ' · DEMO' : ''}{r.verified ? ' · ✓ verified' : ''}{r.codBlocked ? ' · COD paused' : ''}</small>
             <div className="row gap">
               <button className="link small" onClick={() => setMenu(r)}>Menu</button>
               <button className="link small" onClick={() => setEdit(r)}>Edit</button>
               {r.ownerPhone && <a className="link small" href={tel(r.ownerPhone)}>Call</a>}
+              {r.applicationId && <OnlinePayLink r={r} />}
               {r.ownerPhone && <a className="link small wa-link" href={wa(r.ownerPhone, `नमस्ते ${r.ownerName || ''} जी, FoodGaon (TechGaon AI Services) से —`)} target="_blank" rel="noreferrer">WhatsApp</a>}
             </div>
           </div>
@@ -275,7 +293,7 @@ function RestEditor({ open, r, onClose }) {
         <Field label="Minimum order ₹"><input className="input" inputMode="numeric" value={f.minOrder} onChange={set('minOrder')} /></Field>
       </div>
       <div className="row gap">
-        <Field label="Commission %" hint={`Blank = default ${config.commissionPct}%`}><input className="input" inputMode="decimal" value={f.commissionPct} onChange={set('commissionPct')} /></Field>
+        <Field label="Fee %" hint={`Blank = default ${config.commissionPct}%${config.commissionGstExtra ? ' + GST' : ''}`}><input className="input" inputMode="decimal" value={f.commissionPct} onChange={set('commissionPct')} /></Field>
         <Field label="Delivery charge ₹" hint={`Blank = default ₹${config.restaurantDeliveryCharge}`}><input className="input" inputMode="decimal" value={f.deliveryCharge} onChange={set('deliveryCharge')} /></Field>
       </div>
       <Field label="Cooking time (min)"><input className="input" inputMode="numeric" value={f.prepMins} onChange={set('prepMins')} /></Field>
@@ -312,11 +330,11 @@ function Settings() {
   const save = async () => {
     try {
       await put('config', 'app', {
-        commissionPct: Number(f.commissionPct) || 0, customerDeliveryFee: Number(f.customerDeliveryFee) || 0, restaurantDeliveryCharge: Number(f.restaurantDeliveryCharge) || 0,
+        commissionPct: Number(f.commissionPct) || 0, commissionGstExtra: !!f.commissionGstExtra, codDueLimit: Number(f.codDueLimit) || 0, codRefuseLimit: Number(f.codRefuseLimit) || 0, qualityAlertAt: Number(f.qualityAlertAt) || 3, customerDeliveryFee: Number(f.customerDeliveryFee) || 0, restaurantDeliveryCharge: Number(f.restaurantDeliveryCharge) || 0,
         gstPct: Number(f.gstPct) || 0, radiusKm: Number(f.radiusKm) || 0, otpMode: f.otpMode === 'real' ? 'real' : 'mock',
         firmName: (f.firmName || '').trim(), firmAddress: (f.firmAddress || '').trim(), gstin: (f.gstin || '').trim().toUpperCase(), supportEmail: (f.supportEmail || '').trim(),
         minOrder: Number(f.minOrder) || 0, supportPhone: (f.supportPhone || '').trim(), upiNowEnabled: f.upiNowEnabled !== false,
-        serviceArea: f.serviceArea || '', codEnabled: !!f.codEnabled, upiEnabled: !!f.upiEnabled, showCalories: !!f.showCalories,
+        serviceArea: f.serviceArea || '', gatewayEnabled: !!f.gatewayEnabled, codEnabled: !!f.codEnabled, upiEnabled: !!f.upiEnabled, showCalories: !!f.showCalories,
       });
       toast(t('Saved'));
     } catch { toast(t('Could not save'), 'err'); }
@@ -335,9 +353,11 @@ function Settings() {
       <div className="card">
         <h4>Money</h4>
         <div className="row gap">
-          <Field label="Commission %" hint="On full bill incl. GST"><input className="input" inputMode="decimal" value={f.commissionPct} onChange={set('commissionPct')} /></Field>
+          <Field label="FoodGaon fee %" hint={f.commissionGstExtra ? 'On full bill; 18% GST added on the fee' : 'On full bill; already includes 18% GST'}><input className="input" inputMode="decimal" value={f.commissionPct} onChange={set('commissionPct')} /></Field>
           <Field label="GST on food %" hint="Added on customer bill"><input className="input" inputMode="decimal" value={f.gstPct ?? 5} onChange={set('gstPct')} /></Field>
         </div>
+        <label className="check-row"><input type="checkbox" checked={!!f.commissionGstExtra} onChange={(e) => setF({ ...f, commissionGstExtra: e.target.checked })} /> {t('Fee + GST (GST charged extra on the fee)')}</label>
+        <p className="tiny muted">{`₹100 order → ${t('restaurant gets')} ₹${Math.round((100 - (Number(f.commissionPct) || 0) * (f.commissionGstExtra ? 1.18 : 1)) * 100) / 100} ${t('(before 5% food GST)')}`}</p>
         <div className="row gap">
           <Field label="Delivery area km" hint="Default for restaurants"><input className="input" inputMode="decimal" value={f.radiusKm ?? 5} onChange={set('radiusKm')} /></Field>
           <Field label="Delivery charge ₹" hint="0 = restaurant delivers free"><input className="input" inputMode="decimal" value={f.restaurantDeliveryCharge} onChange={set('restaurantDeliveryCharge')} /></Field>
@@ -350,9 +370,15 @@ function Settings() {
       <div className="card">
         <h4>Payments</h4>
         <p className="tiny muted">Customers pay each restaurant's own UPI. FoodGaon never holds customer money.</p>
+        <label className="check-row"><input type="checkbox" checked={!!f.gatewayEnabled} onChange={(e) => setF({ ...f, gatewayEnabled: e.target.checked })} /> {t('Online payment gateway (Razorpay split) — turn on only after the server is set up')}</label>
         <label className="check-row"><input type="checkbox" checked={f.upiNowEnabled !== false} onChange={(e) => setF({ ...f, upiNowEnabled: e.target.checked })} /> Pay now by UPI</label>
         <label className="check-row"><input type="checkbox" checked={!!f.upiEnabled} onChange={(e) => setF({ ...f, upiEnabled: e.target.checked })} /> Pay on delivery by UPI</label>
         <label className="check-row"><input type="checkbox" checked={!!f.codEnabled} onChange={(e) => setF({ ...f, codEnabled: e.target.checked })} /> Cash on delivery</label>
+        <div className="row gap">
+          <Field label="Pause COD when shop owes ₹" hint="0 = never pause"><input className="input" inputMode="numeric" value={f.codDueLimit ?? 0} onChange={(e) => setF({ ...f, codDueLimit: e.target.value.replace(/\D/g, '') })} /></Field>
+          <Field label="Stop COD for a customer after refusals" hint="0 = never"><input className="input" inputMode="numeric" value={f.codRefuseLimit ?? 2} onChange={(e) => setF({ ...f, codRefuseLimit: e.target.value.replace(/\D/g, '') })} /></Field>
+        </div>
+        <Field label="Quality alert after complaints (7 days)"><input className="input" inputMode="numeric" value={f.qualityAlertAt ?? 3} onChange={(e) => setF({ ...f, qualityAlertAt: e.target.value.replace(/\D/g, '') })} /></Field>
       </div>
       <div className="card">
         <h4>App</h4>
@@ -466,4 +492,90 @@ function SeedCard({ small }) {
       <Confirm open={ask} onClose={() => setAsk(false)} title="Load starter menu?" text="This adds/updates the starter restaurants and dishes." okText="Load" onOk={run} />
     </div>
   );
+}
+
+/* complaints about taste / portion / freshness in the last 7 days, per restaurant */
+function QualityAlerts() {
+  const { config } = useApp();
+  const rests = useRestaurants() || [];
+  const since = useMemo(() => Date.now() - 7 * 86400000, []);
+  const list = useList('reviews', [['createdMs', '>=', since]], [since]);
+  const [open, setOpen] = useState(null);
+  const [img, setImg] = useState(null);
+  if (!list) return null;
+  const limit = Number(config.qualityAlertAt) || 3;
+  const bad = list.filter((x) => x.issue);
+  const by = rests.map((r) => ({ r, l: bad.filter((x) => x.restaurantId === r.id) })).filter((x) => x.l.length).sort((a, b) => b.l.length - a.l.length);
+  const photo = async (id) => { const c = await getOne('complaints', id).catch(() => null); if (c?.img) setImg(c.img); };
+  return (
+    <div className="card">
+      <h4><Icon name="star" size={18} /> Quality — last 7 days</h4>
+      {!by.length && <p className="small t-green">{`No complaints in ${list.length} reviews 👍`}</p>}
+      {by.map(({ r, l }) => (
+        <div key={r.id} className={'qa-row' + (l.length >= limit ? ' hot' : '')}>
+          <button className="row gap grow" onClick={() => setOpen(open === r.id ? null : r.id)}>
+            <b className="grow" data-notr="">{r.name}</b>
+            <span className="pill">{l.length}</span>
+            {l.length >= limit && <em className="st-mini rejected">{t('Call now')}</em>}
+          </button>
+          {open === r.id && (
+            <div className="qa-list">
+              {l.map((x) => (
+                <div key={x.id} className="small">
+                  {`★${x.rating} · `}{['taste', 'portion', 'fresh'].filter((k) => x.qc?.[k] === false).map((k) => ({ taste: 'taste', portion: 'portion', fresh: 'not fresh' }[k])).join(', ') || 'low rating'}
+                  {x.review && <span data-notr="">{` — “${x.review}”`}</span>}
+                  {' '}<button className="link small" onClick={() => photo(x.id)}>Photo</button>
+                </div>
+              ))}
+              <div className="row gap">
+                {r.ownerPhone && <a className="btn small ghost" href={tel(r.ownerPhone)}>Call</a>}
+                {r.ownerPhone && <a className="btn small ghost wa-link" href={wa(r.ownerPhone, `नमस्ते ${r.ownerName || ''} जी, FoodGaon पर पिछले 7 दिन में ${l.length} ग्राहकों ने स्वाद/मात्रा/ताज़गी की शिकायत की है। कृपया ध्यान दें — ऐप पर भी वही खाना, वही मात्रा जो दुकान पर।`)} target="_blank" rel="noreferrer">WhatsApp</a>}
+                <button className="btn small ghost danger-text" onClick={() => patch('restaurants', r.id, { open: false })}>Pause shop</button>
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
+      {img && createPortal(<div className="proof-big" onClick={() => setImg(null)}><img src={img} alt="" /><span>✕</span></div>, document.body)}
+    </div>
+  );
+}
+
+/* pause cash-on-delivery for a restaurant while its unpaid FoodGaon dues are above the limit (Settings → Payments) */
+function useCodGuard() {
+  const { config } = useApp();
+  const rests = useRestaurants();
+  const limit = Number(config.codDueLimit) || 0;
+  useEffect(() => {
+    if (!rests) return;
+    let on = true;
+    (async () => {
+      try {
+        const [orders, setts] = limit ? await Promise.all([getList('orders', [['status', '==', 'delivered']]), getList('settlements', [])]) : [[], []];
+        const ops = [];
+        rests.filter((r) => !r.demo).forEach((r) => {
+          const owed = orders.filter((o) => o.restaurantId === r.id).reduce((a, o) => a + dueOf(o), 0);
+          const got = setts.filter((x) => x.restaurantId === r.id && x.status !== 'rejected').reduce((a, x) => a + Number(x.amount || 0), 0);
+          const left = Math.round((owed - got) * 100) / 100;
+          const block = limit > 0 && left > limit;
+          if (!!r.codBlocked !== block) ops.push(['set', 'restaurants', r.id, { codBlocked: block, codDue: left }]);
+        });
+        if (on && ops.length) await bulk(ops);
+      } catch (e) { console.warn('cod guard', e); }
+    })();
+    return () => { on = false; };
+  }, [limit, rests?.length]); // eslint-disable-line
+}
+
+/* connect a restaurant's bank to the payment gateway (Razorpay Route linked account) */
+function OnlinePayLink({ r }) {
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+  const go = async (fn) => {
+    setBusy(true);
+    try { const x = await fn(r.id); toast(`${t('Online payment')}: ${x.status || 'ok'}`); } catch (e) { toast(e.message || t('Could not connect. Is the payment server set up?'), 'err'); }
+    setBusy(false);
+  };
+  if (r.onlinePay) return <span className="link small t-green">✓ {t('Online pay')}</span>;
+  return <button className="link small" disabled={busy} onClick={() => go(r.rzpLinked ? restaurantPayStatus : async (id) => { const x = await linkRestaurant(id); await patch('restaurants', id, { rzpLinked: true }); return x; })}>{busy ? '…' : r.rzpLinked ? t('Check online pay') : t('Connect online pay')}</button>;
 }

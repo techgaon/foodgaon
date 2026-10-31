@@ -7,7 +7,7 @@ import { t } from '../i18n/index.js';
 
 const r2 = (n) => Math.round(n * 100) / 100;
 const sum = (l, k) => r2(l.reduce((a, o) => a + Number(o[k] || 0), 0));
-const PAY = { cod: 'Cash on delivery', upi_rider: 'UPI on delivery', upi_now: 'UPI (paid now)' };
+const PAY = { cod: 'Cash on delivery', upi_rider: 'UPI on delivery', upi_now: 'UPI (paid now)', online: 'Paid online (FoodGaon)' };
 
 /** Sheet that shows a document and lets the user save it as PDF */
 export function DocSheet({ open, onClose, title, fileName, children }) {
@@ -87,7 +87,7 @@ export function Statement({ rest, cycle, orders, setts = [], config }) {
         <div><span>{`Orders delivered`}</span><span>{list.length}</span></div>
         <div><span>Total bills (incl. GST)</span><span>{rupee(sum(list, 'total'))}</span></div>
         <div><span>GST 5% (FoodGaon pays govt) / GST</span><span>{rupee(sum(list, 'gst'))}</span></div>
-        <div><span>{`FoodGaon commission ${config.commissionPct}% (incl. 18% GST)`}</span><span>{rupee(sum(list, 'commission'))}</span></div>
+        <div><span>{`FoodGaon fee ${list[0]?.commissionPct ?? config.commissionPct}%${(list[0]?.commissionGstExtra ?? config.commissionGstExtra) ? ' + 18% GST' : ' (incl. 18% GST)'}`}</span><span>{rupee(sum(list, 'commission'))}</span></div>
         {sum(list, 'fgCoupon') > 0 && <div><span>FoodGaon coupons (returned to you)</span><span>− {rupee(sum(list, 'fgCoupon'))}</span></div>}
         <div className="grand"><span>Send to FoodGaon</span><span>{rupee(dues)}</span></div>
         <div><span>Already paid</span><span>{rupee(paid)}</span></div>

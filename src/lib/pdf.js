@@ -29,3 +29,30 @@ export async function elementToPdf(el, fileName = 'FoodGaon.pdf', title = 'FoodG
   await Share.share({ title, text: title, url: r.uri, dialogTitle: 'Save or share PDF' });
   return true;
 }
+
+/** save / share any data URL (photo or PDF) — browser download, or the phone's share sheet in the app */
+export async function saveDataUrl(dataUrl, fileName = 'FoodGaon-file') {
+  const ext = /^data:application\/pdf/.test(dataUrl) ? '.pdf' : /^data:image\/png/.test(dataUrl) ? '.png' : '.jpg';
+  const name = /\.[a-z0-9]{2,4}$/i.test(fileName) ? fileName : fileName.replace(/[^\w\-]+/g, '_').slice(0, 60) + ext;
+  if (!isNative) {
+    const blob = await (await fetch(dataUrl)).blob();
+    const u = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(u), 60000);
+    return true;
+  }
+  const { Filesystem, Directory } = await import('@capacitor/filesystem');
+  const { Share } = await import('@capacitor/share');
+  const base64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
+  try { await Filesystem.writeFile({ path: 'FoodGaon/' + name, data: base64, directory: Directory.Documents, recursive: true }); } catch { /* keep going: share still works */ }
+  const r = await Filesystem.writeFile({ path: name, data: base64, directory: Directory.Cache });
+  await Share.share({ title: name, url: r.uri, dialogTitle: 'Save or share' });
+  return true;
+}
+/** open a data URL in a new tab (PDF) */
+export async function openDataUrl(dataUrl, fileName) {
+  if (isNative) return saveDataUrl(dataUrl, fileName);
+  const u = URL.createObjectURL(await (await fetch(dataUrl)).blob());
+  window.open(u, '_blank');
+  return true;
+}

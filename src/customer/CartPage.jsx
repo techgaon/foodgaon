@@ -5,8 +5,9 @@ import { useOffers, forRestaurant, discountFor, offerLabel, offerTerms } from '.
 import { LS, priceText, lineText } from '../lib/utils.js';
 import { Icon, VegMark, Stepper, Empty, useToast } from '../ui.jsx';
 import { useApp } from '../App.jsx';
-import { useCart, cartTotals, cartStore, useRestaurants, placeOrder, billFor, lastOrder } from '../lib/data.js';
+import { useCart, cartTotals, cartStore, useRestaurants, placeOrder, billFor, lastOrder, useList } from '../lib/data.js';
 import PayManual from './PayManual.jsx';
+import { payOnline } from '../lib/gateway.js';
 import NoteBox from './NoteBox.jsx';
 import { rupee, upiLink, km } from '../lib/utils.js';
 import { upiPay } from '../lib/native.js';
@@ -25,10 +26,15 @@ export default function CartPage({ nav, onPlaced }) {
   const addr = addrs.find((a) => a.id === sel) || addrs[0];
   const upiNow = hasUpi(rest) && config.upiNowEnabled !== false;
   const upiDel = hasUpi(rest) && config.upiEnabled !== false;
-  const cod = config.codEnabled !== false;
+  const mine = useList('orders', user ? [['customerUid', '==', user.uid]] : null, [user?.uid]);
+  const refused = (mine || []).filter((o) => o.refusedCod).length;
+  const refuseLimit = Number(config.codRefuseLimit ?? 2);
+  const codStopMe = refuseLimit > 0 && refused >= refuseLimit;
+  const cod = config.codEnabled !== false && !rest?.codBlocked && !codStopMe;
   const [pay, setPay] = useState(() => LS.get('pp_pay', 'upi_now'));
-  const payOk = (p) => (p === 'upi_now' ? upiNow : p === 'upi_rider' ? upiDel : p === 'cod' ? cod : false);
-  useEffect(() => { if (rest && !payOk(pay)) setPay(upiNow ? 'upi_now' : upiDel ? 'upi_rider' : 'cod'); }, [rest?.id, rest?.upiId, rest?.upiQr]); // eslint-disable-line
+  const online = !!config.gatewayEnabled && !!rest?.onlinePay;
+  const payOk = (p) => (p === 'online' ? online : p === 'upi_now' ? upiNow : p === 'upi_rider' ? upiDel : p === 'cod' ? cod : false);
+  useEffect(() => { if (rest && !payOk(pay)) setPay(online ? 'online' : upiNow ? 'upi_now' : upiDel ? 'upi_rider' : 'cod'); }, [rest?.id, rest?.upiId, rest?.upiQr, online]); // eslint-disable-line
   const [note, setNote] = useState('');
   const [paying, setPaying] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -72,12 +78,18 @@ export default function CartPage({ nav, onPlaced }) {
     setBusy(true);
     try {
       const payNow = pay === 'upi_now' && hasUpi(rest);
+      const viaGateway = pay === 'online' && online;
       const id = await placeOrder({
         user, customerName: user.displayName || addr.name, rest, config, cartData: cart, note, payment: pay,
-        offer: discount ? applied : null, discount, status: payNow ? 'awaiting_payment' : 'placed',
+        offer: discount ? applied : null, discount, status: payNow || viaGateway ? 'awaiting_payment' : 'placed',
         address: { label: addr.label, name: addr.name, phone: addr.phone, line: addrLine(addr), lat: addr.lat || null, lng: addr.lng || null },
       });
       LS.set('pp_pay', pay);
+      if (viaGateway) {
+        const ok = await payOnline(id, { name: user.displayName || addr.name, phone: addr.phone });
+        if (!ok) { toast(t('Payment not completed. Your order was not sent. Try again or choose another way to pay.'), 'err'); setBusy(false); return; }
+        cartStore.clear(); LS.set('pp_coupon', ''); onPlaced(id); setBusy(false); return;
+      }
       if (payNow) { setPaying({ id, amount: bill.total, code: lastOrder.code, uid: user.uid }); setBusy(false); return; } // order goes to the restaurant only after payment
       cartStore.clear(); LS.set('pp_coupon', '');
       onPlaced(id);
@@ -132,12 +144,15 @@ export default function CartPage({ nav, onPlaced }) {
           {discount > 0 && <div className="bill t-green"><span>{`Coupon (${applied.code})`}</span><span>− {rupee(discount)}</span></div>}
           {!bill.gstIncluded && <div className="bill"><span>{`GST ${bill.gstPct}%`}</span><span>+ {rupee(bill.gst)}</span></div>}
           <div className="bill"><span>Delivery fee</span><span>{fee ? rupee(fee) : <b className="t-green">FREE</b>}</span></div>
+          <div className="bill"><span>Platform fee</span><span><b className="t-green">₹0</b></span></div>
+          <div className="bill"><span>Packing charge</span><span><b className="t-green">₹0</b></span></div>
           <div className="bill total"><span>To pay</span><span>{rupee(bill.total)}</span></div>
           {list.some((x) => x.onMrp && !(Number(x.price) > 0)) && <p className="tiny mrp-note">{t('“On MRP” items are not in this total — pay the printed MRP to the restaurant at delivery.')}</p>}
           <div className="gst-split">
             <span>{`Food value ${rupee(bill.taxable)}`}</span><span>+</span><span>{`GST ${bill.gstPct}% ${rupee(bill.gst)}`}</span><span>=</span><b>{rupee(bill.total - fee)}</b>
           </div>
           <p className="tiny muted">{bill.gstIncluded ? t('Menu prices already include GST — nothing extra is added.') : t('Menu prices are without GST — GST is added in the bill.')}</p>
+          <div className="promise-mini"><Icon name="shield" size={16} /> <span>{t('Same price as the restaurant counter. No hidden charges.')}</span></div>
           {discount > 0 && <div className="saved-strip">{`🎉 You saved ${rupee(discount)} on this order`}</div>}
           {minOrder > 0 && total < minOrder && <div className="alert alert-amber">{`Add ${rupee(minOrder - total)} more — minimum order is ${rupee(minOrder)}`}</div>}
         </div>
@@ -151,16 +166,17 @@ export default function CartPage({ nav, onPlaced }) {
 
         <div className="card">
           <h4>Payment</h4>
+          {online && <PayOpt id="online" cur={pay} set={setPay} art="now" title="Pay online — UPI, card, net banking" />}
           <PayOpt id="upi_now" cur={pay} set={setPay} art="now" title="Pay now by UPI" off={!upiNow} />
           <PayOpt id="upi_rider" cur={pay} set={setPay} art="later" title="Pay on delivery by UPI" off={!upiDel} />
-          <PayOpt id="cod" cur={pay} set={setPay} art="cash" title="Cash on delivery" off={!cod} />
+          <PayOpt id="cod" cur={pay} set={setPay} art="cash" title="Cash on delivery" off={!cod} offMsg={codStopMe ? 'Cash on delivery is off for your number because earlier cash orders were refused. Please pay by UPI.' : 'Cash on delivery is not available at this restaurant right now. Please pay by UPI.'} />
         </div>
         <p className="tiny muted center">Restaurant can take 1-2 minutes to accept. You can cancel until it is accepted.</p>
       </div>
 
       <div className="place-bar">
         <div><b>{rupee(bill.total)}</b><small>TOTAL</small></div>
-        <button className="btn primary lg grow" disabled={busy} onClick={place}>{busy ? 'Placing…' : !user ? 'Log in to order' : !addr ? 'Add address' : pay === 'upi_now' ? 'Pay & place order' : 'Place order'}</button>
+        <button className="btn primary lg grow" disabled={busy} onClick={place}>{busy ? 'Placing…' : !user ? 'Log in to order' : !addr ? 'Add address' : pay === 'upi_now' || pay === 'online' ? 'Pay & place order' : 'Place order'}</button>
       </div>
       <AddressForm open={form} onClose={() => setForm(false)} />
       <Sheet open={couponOpen} onClose={() => setCouponOpen(false)} title="Coupons for you">
@@ -197,10 +213,10 @@ export default function CartPage({ nav, onPlaced }) {
 
 const kcalHint = (k) => (k <= 600 ? 'A light meal, nicely balanced.' : k <= 1200 ? 'A filling meal — great to share or for one hungry person.' : 'A big feast! Perfect for sharing with family.');
 
-function PayOpt({ id, cur, set, art, title, off }) {
+function PayOpt({ id, cur, set, art, title, off, offMsg }) {
   const on = cur === id && !off;
   const toast = useToast();
-  const pick = () => (off ? toast(t('This restaurant has not added its UPI yet. Please choose cash.'), 'err') : set(id));
+  const pick = () => (off ? toast(t(offMsg || 'This restaurant has not added its UPI yet. Please choose cash.'), 'err') : set(id));
   return (
     <div className={'pay-opt3' + (on ? ' on' : '') + (off ? ' off' : '')} onClick={pick} role="radio" aria-checked={on} aria-disabled={off} tabIndex={0}>
       <span className={'pay-ic ' + art}>{art === 'cash' ? <CashArt /> : art === 'now' ? <UpiNowArt /> : <UpiLaterArt />}</span>

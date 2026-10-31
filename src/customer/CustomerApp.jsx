@@ -11,6 +11,7 @@ import { OrdersList, TrackOrder } from './Orders.jsx';
 import Account from './Account.jsx';
 import { AddressPage } from './Address.jsx';
 import FavsPage from './FavsPage.jsx';
+import JoinRestaurant from './JoinRestaurant.jsx';
 
 export default function CustomerApp() {
   const { user } = useApp();
@@ -40,6 +41,7 @@ export default function CustomerApp() {
   else if (top?.name === 'search') page = <SearchPage nav={nav} cat={top.cat} stacked />;
   else if (top?.name === 'favs') page = <FavsPage nav={nav} />;
   else if (top?.name === 'address') page = <AddressPage nav={nav} />;
+  else if (top?.name === 'join') page = <JoinRestaurant nav={nav} />;
   else if (top?.name === 'track') page = <TrackOrder id={top.id} fresh={top.fresh} nav={nav} />;
   else if (tab === 'search') page = <SearchPage nav={nav} />;
   else if (tab === 'orders') page = <OrdersList key={hisabKey} openHisab={hisabKey > 0} orders={myOrders} nav={nav} />;
