@@ -1,0 +1,49 @@
+# FoodGaon server (online payments) + Firestore rules — run by hand: Actions → "FoodGaon server" → Run workflow
+# Needs these repository secrets (Settings → Secrets and variables → Actions):
+#   FIREBASE_SERVICE_ACCOUNT  — JSON key of a Firebase service account (Firebase console → Project settings → Service accounts)
+#   RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET — from the Razorpay dashboard (live or test)
+name: FoodGaon server
+
+on:
+  workflow_dispatch:
+    inputs:
+      what:
+        description: "What to deploy"
+        type: choice
+        options: [rules-only, server-and-rules]
+        default: rules-only
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Service account
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa.json" >> "$GITHUB_ENV"
+      - name: Firestore rules
+        run: npx -y firebase-tools@13 deploy --only firestore:rules --project petpyaar-a3ea6 --non-interactive
+      - name: Payment keys
+        if: inputs.what == 'server-and-rules'
+        env:
+          K1: ${{ secrets.RAZORPAY_KEY_ID }}
+          K2: ${{ secrets.RAZORPAY_KEY_SECRET }}
+          K3: ${{ secrets.RAZORPAY_WEBHOOK_SECRET }}
+        run: |
+          printf '%s' "$K1" | npx -y firebase-tools@13 functions:secrets:set RAZORPAY_KEY_ID --data-file=- --project petpyaar-a3ea6 --non-interactive --force
+          printf '%s' "$K2" | npx -y firebase-tools@13 functions:secrets:set RAZORPAY_KEY_SECRET --data-file=- --project petpyaar-a3ea6 --non-interactive --force
+          printf '%s' "$K3" | npx -y firebase-tools@13 functions:secrets:set RAZORPAY_WEBHOOK_SECRET --data-file=- --project petpyaar-a3ea6 --non-interactive --force
+      - name: Server functions
+        if: inputs.what == 'server-and-rules'
+        run: |
+          cd functions && npm install --no-audit --no-fund && cd ..
+          npx -y firebase-tools@13 deploy --only functions --project petpyaar-a3ea6 --non-interactive --force
+      - name: Clean up
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sa.json"

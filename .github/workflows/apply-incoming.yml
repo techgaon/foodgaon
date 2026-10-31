@@ -1,4 +1,5 @@
-# Applies a change bundle uploaded from the browser (incoming/update.patch.gz), then starts the app build
+# Applies change bundles uploaded from the browser (incoming/*.patch.gz), then starts the app build.
+# Workflow files cannot be changed by this job, so they are skipped here and added from the browser.
 name: Apply incoming update
 on:
   push:
@@ -17,14 +18,13 @@ jobs:
           set -e
           git config user.name "TechGaon"
           git config user.email "contact@techgaon.in"
-          for f in incoming/*.patch.gz; do
-            [ -f "$f" ] || continue
+          for f in $(ls incoming/*.patch.gz | sort); do
             gunzip -c "$f" > /tmp/u.patch
-            git apply --whitespace=nowarn /tmp/u.patch
+            git apply --whitespace=nowarn --exclude='.github/workflows/*' /tmp/u.patch
           done
           git rm -rq incoming
           git add -A
-          git commit -m "Restaurant onboarding, agreement, quality checks, COD rules, online payment setup"
+          git commit -m "FoodGaon update: restaurant onboarding, agreement, quality checks, COD rules, online payment, share and join info"
           git push
       - name: Start app build
         env:
