@@ -10,7 +10,7 @@ const ORBIT = ['gulab_jamun', 'pbm', 'momos', 'lassi', 'masala_dosa', 'pani_puri
 
 const errText = (e) => {
   const c = e?.code || '';
-  if (c.includes('invalid-verification-code')) return 'Wrong OTP. Please check and try again.';
+  if (c.includes('invalid-verification-code')) return 'Wrong OTP or PIN. Please check and try again.';
   if (/invalid-credential|invalid-login|wrong-password|email-already-in-use/.test(c)) return 'Wrong OTP or PIN. If your restaurant has a PIN, use that instead of default OTP.';
   if (c.includes('code-expired')) return 'OTP expired. Please request a new one.';
   if (c.includes('too-many-requests') || c.includes('quota')) return 'Too many attempts. Please try again after some time.';
@@ -31,6 +31,7 @@ export default function Login({ onClose, startStep = 'phone', startMode = 'login
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [pinOnly, setPinOnly] = useState(false);
+  const [showCode, setShowCode] = useState(false);
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
   const [left, setLeft] = useState(0);
@@ -48,6 +49,7 @@ export default function Login({ onClose, startStep = 'phone', startMode = 'login
 
   const send = async (e) => {
     e?.preventDefault();
+    if (busy) return;
     if (!(mock ? /^\d{10}$/ : /^[6-9]\d{9}$/).test(phone)) { toast(t('Enter a valid 10-digit mobile number'), 'err'); return; }
     setPinOnly(false);
     if (mock) { setStep('otp'); setOtp(''); setLeft(0); return; }
@@ -60,6 +62,7 @@ export default function Login({ onClose, startStep = 'phone', startMode = 'login
     setBusy(false);
   };
   const google = async () => {
+    if (busy) return;
     setBusy(true);
     try {
       const r = await googleSignIn();
@@ -72,7 +75,7 @@ export default function Login({ onClose, startStep = 'phone', startMode = 'login
   };
   const verify = async (e) => {
     e?.preventDefault();
-    if (!validCode) return;
+    if (busy || !validCode) return;
     setBusy(true);
     try {
       const r = mock || pinOnly ? await mockLogin(phone, otp) : await conf.current.confirm(otp);
@@ -88,13 +91,14 @@ export default function Login({ onClose, startStep = 'phone', startMode = 'login
   };
   const saveName = async (e) => {
     e?.preventDefault();
+    if (busy) return;
     const n = name.trim();
     if (n.length < 2) { toast(t('Please enter your name'), 'err'); return; }
     setBusy(true);
     try {
       await updateProfile(auth.currentUser, { displayName: n });
       await put('customers', auth.currentUser.uid, { name: n, phone: phoneOf(auth.currentUser), createdAt: serverTimestamp() });
-    } catch (er) { console.warn(er); }
+    } catch (er) { console.warn(er); toast(t('Could not save your name. Please try again.'), 'err'); setBusy(false); return; }
     onClose?.();
     location.reload();
   };
@@ -124,7 +128,8 @@ export default function Login({ onClose, startStep = 'phone', startMode = 'login
               <input inputMode="numeric" autoComplete="tel-national" maxLength={10} placeholder="10-digit mobile number" value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} autoFocus />
             </div>
-            <button className="btn primary block lg" disabled={busy || phone.length !== 10}>{busy ? 'Sending…' : 'Get OTP'}</button>
+            <button className="btn primary block lg" disabled={busy || phone.length !== 10}>{busy ? 'Sending…' : mock ? 'Continue' : 'Get OTP'}</button>
+            {mock && <p className="tiny muted center">Trial login — no SMS will be sent.</p>}
             <button type="button" className="btn ghost block" disabled={busy || !/^\d{10}$/.test(phone) || phone === ADMIN_P10} onClick={() => { setPinOnly(true); setOtp(''); setStep('otp'); }}>Restaurant PIN login</button>
             <div className="or-line"><span>or</span></div>
             <button type="button" className="btn google block lg" disabled={busy} onClick={google}>
@@ -138,11 +143,12 @@ export default function Login({ onClose, startStep = 'phone', startMode = 'login
         {step === 'otp' && (
           <form onSubmit={verify} className="login-form">
             <h3>{pinOnly ? 'Enter restaurant PIN' : mock && phone !== ADMIN_P10 ? 'Enter OTP or restaurant PIN' : 'Enter OTP'}</h3>
-            <p className="muted small">{mock || pinOnly ? `+91 ${phone}` : `Sent to +91 ${phone}`} · <button type="button" className="link" onClick={() => { setStep('phone'); setOtp(''); setPinOnly(false); }}>Change</button></p>
+            <p className="muted small">{mock || pinOnly ? `+91 ${phone}` : `Sent to +91 ${phone}`} · <button type="button" className="link" disabled={busy} onClick={() => { setStep('phone'); setOtp(''); setPinOnly(false); setShowCode(false); }}>Change</button></p>
             {mock && !pinOnly && phone !== ADMIN_P10 && <div className="mock-otp big"><span>Default OTP: <b data-notr="">{MOCK_OTP}</b><small>Trial restaurant PIN: first 4 digits of your registered mobile number.</small></span></div>}
             {pinOnly && <p className="small muted">Trial mode: use the first 4 digits of your registered mobile number.</p>}
-            <input ref={otpRef} className="otp-input" type="password" inputMode="numeric" aria-label={pinOnly ? 'Restaurant PIN' : 'OTP or PIN'} autoComplete={pinOnly ? 'current-password' : 'one-time-code'} maxLength={6} value={otp} placeholder={pinOnly || !mock ? '••••••' : '••••'}
+            <input ref={otpRef} className="otp-input" type={showCode ? 'text' : 'password'} disabled={busy} inputMode="numeric" aria-label={pinOnly ? 'Restaurant PIN' : 'OTP or PIN'} autoComplete={pinOnly ? 'current-password' : 'one-time-code'} maxLength={6} value={otp} placeholder={mock ? '••••' : '••••••'}
               onChange={(e) => { const v = e.target.value.replace(/\D/g, '').slice(0, 6); setOtp(v); }} />
+            <button type="button" className="link" aria-pressed={showCode} onClick={() => setShowCode(!showCode)}>{showCode ? 'Hide code' : 'Show code'}</button>
             <button id="otp-go" className="btn primary block lg" disabled={busy || !validCode}>{busy ? 'Checking…' : 'Verify & continue'}</button>
             {!mock && !pinOnly && <p className="small center">
               {left > 0 ? <span className="muted">{`Resend OTP in ${left}s`}</span> : <button type="button" className="link" onClick={send}>Resend OTP</button>}
@@ -155,7 +161,7 @@ export default function Login({ onClose, startStep = 'phone', startMode = 'login
             <h3>What should we call you?</h3>
             <p className="small muted" style={{ marginTop: -4 }}>Last step — your account is almost ready</p>
             <input className="input" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} autoFocus maxLength={40} />
-            <button className="btn primary block lg" disabled={busy}>Let's eat!</button>
+            <button className="btn primary block lg" disabled={busy || name.trim().length < 2}>{busy ? 'Saving…' : "Let's eat!"}</button>
           </form>
         )}
         <div id="recaptcha-box" />

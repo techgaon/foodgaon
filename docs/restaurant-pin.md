@@ -1,5 +1,13 @@
 # Restaurant login PIN
 
+## Active trial configuration
+
+Registered owners currently enter the FIRST FOUR digits of their registered mobile number. Customers use 1234; admin authentication is unchanged. No SMS is sent. The UI hides private PIN set/reset controls because the callable has not been deployed and the project remains on the free Spark plan.
+
+This is a small supervised trial, not secure proof of phone ownership: the four-digit check uses the existing test account authentication. Do not describe it as a private password or real OTP. The six-digit implementation below is retained for a future explicitly authorized backend deployment.
+
+## Future private PIN implementation (inactive UI)
+
 The web client supports existing default OTP 1234 accounts and six-digit restaurant PINs. Setting a PIN replaces the actual Firebase Auth password, so the default password cannot authenticate afterward. PINs are never stored in public restaurant/staff records or logs. Firebase Auth handles password verification and throttling.
 
 - Admin: Restaurants → Set / reset login PIN. Assign a new PIN after checking the registered owner number. Reset means assigning a new PIN, not revealing the previous PIN.

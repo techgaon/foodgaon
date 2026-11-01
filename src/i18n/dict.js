@@ -1,6 +1,13 @@
 // [English (source), हिंदी, अवधी]
 // {} = changing part (name, amount, number). Use {0},{1} in a translation to reorder.
 export const DICT = [
+  ['Trial login — no SMS will be sent.', 'ट्रायल लॉगिन — SMS नहीं भेजा जाएगा।', 'ट्रायल लॉगिन — SMS नाहीं भेजा जाई।'],
+  ['Show code', 'कोड दिखाएँ', 'कोड देखावौ'],
+  ['Hide code', 'कोड छिपाएँ', 'कोड छिपावौ'],
+  ['Wrong OTP or PIN. Please check and try again.', 'OTP या PIN गलत है। जाँचकर दोबारा कोशिश करें।', 'OTP या PIN गलत अहै। जाँचि के फेर कोशिश करौ।'],
+  ['Could not save your name. Please try again.', 'आपका नाम सेव नहीं हुआ। दोबारा कोशिश करें।', 'आपक नाउँ सेव नाहीं भवा। फेर कोशिश करौ।'],
+  ['Trial restaurant PIN: first 4 digits of your registered mobile number.', 'ट्रायल रेस्टोरेंट PIN: आपके रजिस्टर्ड मोबाइल नंबर के पहले 4 अंक।', 'ट्रायल रेस्टोरेंट PIN: आपक रजिस्टर्ड मोबाइल नंबर के पहिले 4 अंक।'],
+  ['Trial mode: use the first 4 digits of your registered mobile number.', 'ट्रायल में अपने रजिस्टर्ड मोबाइल नंबर के पहले 4 अंक डालें।', 'ट्रायल मा अपने रजिस्टर्ड मोबाइल नंबर के पहिले 4 अंक डालौ।'],
   // brand / common
   ['Pure veg · Pure pyaar', 'शुद्ध शाकाहारी · शुद्ध प्यार', 'सुद्ध सकाहारी · सुद्ध प्यार'],
   ['Pure veg. Pure pyaar.', 'शुद्ध शाकाहारी, शुद्ध प्यार।', 'सुद्ध सकाहारी, सुद्ध प्यार।'],
