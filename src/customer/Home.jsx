@@ -1,3 +1,4 @@
+import Celebrations from './Celebrations.jsx';
 import { useAddresses } from './Address.jsx';
 import { servesAddress } from '../lib/delivery.js';
 import React, { useEffect, useRef, useState } from 'react';
@@ -55,6 +56,7 @@ export default function Home({ nav }) {
         <div className="veg-ribbon"><VegMark size={14} /> Pure veg · FREE delivery on all orders</div>
       </header>
 
+      <Celebrations />
       <FreeDelivery km={config.radiusKm || 5} />
       <PromiseStrip />
       <Banners list={(banners || []).filter((b) => b.active !== false && (!b.code || offers.some((o) => o.code === b.code)))} nav={nav} />

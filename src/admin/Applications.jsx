@@ -61,6 +61,16 @@ function AppFile({ a, onClose }) {
   const [agr, setAgr] = useState(false);
   const [busy, setBusy] = useState(false);
   const [edit, setEdit] = useState({});
+  const deleteRequest = async () => {
+    if (busy || a.status === 'approved' || a.restaurantId) return;
+    setBusy(true);
+    try {
+      const attached = await loadDocs(uid);
+      await bulk([...attached.map(d => ['del', 'partnerDocs', d.id]), ['del', 'partnerApps', uid]]);
+      toast(t('Request deleted')); onClose();
+    } catch { toast(t('Could not delete the request. Please try again.'), 'err'); }
+    finally { setBusy(false); }
+  };
   useEffect(() => { loadDocs(uid).then(setDocs).catch(() => setDocs([])); }, [uid, a.updatedMs]);
   const doc = (type) => (docs || []).find((d) => d.type === type);
 
@@ -188,6 +198,7 @@ function AppFile({ a, onClose }) {
       )}
 
       <div className="file-actions">
+        {a.status !== 'approved' && !a.restaurantId && <button className="btn danger block" disabled={busy} onClick={() => setAct('delete')}>Delete request</button>}
         {a.status !== 'approved' && <button className="btn green block lg" onClick={() => setAct('approve')}><Icon name="check" size={18} stroke={3} /> Approve</button>}
         <div className="row gap">
           {a.status !== 'approved' && <button className="btn ghost grow" onClick={() => { setNote(''); setAct('returned'); }}>Send back</button>}
@@ -196,6 +207,14 @@ function AppFile({ a, onClose }) {
         </div>
       </div>
 
+      <Sheet open={act === 'delete'} onClose={() => !busy && setAct(null)} title="Delete request">
+        <p>Delete this restaurant request and its uploaded documents? This cannot be undone. The owner can submit a new request.</p>
+        <b data-notr="">{a.restName} · {plain(a.ownerPhone)}</b>
+        <div className="row gap" style={{marginTop: 18}}>
+          <button className="btn ghost grow" disabled={busy} onClick={() => setAct(null)}>Cancel</button>
+          <button className="btn danger grow" disabled={busy} onClick={deleteRequest}>{busy ? 'Deleting…' : 'Delete request'}</button>
+        </div>
+      </Sheet>
       <Sheet open={act === 'approve'} onClose={() => setAct(null)} title="Approve restaurant">
         <p className="small">{t('This creates the restaurant on FoodGaon (closed until the owner adds the menu and opens it) and gives the owner the restaurant panel.')}</p>
         <div className="row gap">
