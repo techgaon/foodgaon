@@ -24,6 +24,8 @@ export const ROLE_INFO = {
 
 export default function App() {
   const [user, setUser] = useState(undefined);
+  const [profile, setProfile] = useState(null);
+  useEffect(() => { setProfile(null); if (!user?.uid) return; return watchDoc('customers', user.uid, setProfile); }, [user?.uid]);
   const [staff, setStaff] = useState(null);
   const [staffReady, setStaffReady] = useState(false);
   const [config, setConfig] = useState(DEFAULT_CONFIG);
@@ -63,7 +65,7 @@ export default function App() {
   const logout = async () => { LS.del('pp_role'); setRoleState(null); await fullSignOut(); location.reload(); };
   const activeRole = !user ? 'customer' : roles.includes(role) ? role : roles.length > 1 ? null : roles[0];
 
-  const value = { user, phone, staff, config, roles, role: activeRole, setRole, logout, askLogin: () => setLoginOpen(true) };
+  const value = { user, profile, phone, staff, config, roles, role: activeRole, setRole, logout, askLogin: () => setLoginOpen(true) };
 
   let body;
   if (splash || user === undefined || (user && !staffReady)) body = <Splash />;

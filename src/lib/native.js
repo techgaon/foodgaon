@@ -48,13 +48,13 @@ export async function getPosition() {
       const r = await Geolocation.requestPermissions({ permissions: ['location'] });
       if (r.location !== 'granted' && r.coarseLocation !== 'granted') throw new Error('Location permission denied');
     }
-    const p = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 15000 });
+    const p = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
     return { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy };
   }
   return new Promise((res, rej) => {
     if (!navigator.geolocation) return rej(new Error('GPS not available'));
     navigator.geolocation.getCurrentPosition((p) => res({ lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy }),
-      (e) => rej(new Error(e.code === 1 ? 'Location permission denied' : 'Could not get location')), { enableHighAccuracy: true, timeout: 15000 });
+      (e) => rej(new Error(e.code === 1 ? 'Location permission denied' : 'Could not get location')), { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
   });
 }
 /** keep sending position; returns stop() */

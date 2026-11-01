@@ -33,21 +33,22 @@ export function useSyncAddresses() {
 export const addrLine = (a) => [a.house, a.area, a.landmark && `${t('Near')} ${a.landmark}`].filter(Boolean).join(', ');
 
 export function AddressForm({ open, onClose, initial }) {
-  const { user } = useApp();
+  const { user, profile } = useApp();
   const toast = useToast();
   const [a, setA] = useState(null);
   const [locating, setLocating] = useState(false);
   useEffect(() => {
-    if (open) setA(initial || { id: 'a' + Date.now(), label: 'Home', name: user?.displayName || '', phone: phoneOf(user).replace('+91', ''), house: '', area: '', landmark: '', lat: null, lng: null });
+    if (open) setA(initial || { id: 'a' + Date.now(), label: 'Home', name: user?.displayName || '', phone: (phoneOf(user) || profile?.phone || '').replace('+91', ''), house: '', area: '', landmark: '', lat: null, lng: null });
   }, [open]); // eslint-disable-line
   const set = (k) => (e) => setA((x) => ({ ...x, [k]: e.target ? e.target.value : e }));
   const locate = async () => {
     setLocating(true);
-    try { const p = await getPosition(); setA((x) => ({ ...x, lat: p.lat, lng: p.lng })); toast(t('Location found. Drag the pin if needed.')); } catch (e) { toast(t(e.message || 'Could not get location'), 'err'); }
+    try { const p = await getPosition(); setA((x) => ({ ...x, lat: p.lat, lng: p.lng, accuracy: p.acc, pinConfirmed: true })); toast(t('Location found. Drag the pin if needed.')); } catch (e) { toast(t(e.message || 'Could not get location'), 'err'); }
     setLocating(false);
   };
   useEffect(() => { if (open && !initial) locate(); }, [open]); // eslint-disable-line
   const save = () => {
+    if (a.lat == null || a.lng == null) { toast(t('Choose your exact location on the map'), 'err'); return; }
     if (!a.house.trim() || !a.area.trim()) { toast(t('Please fill house / street and area / village'), 'err'); return; }
     if (!/^[6-9]\d{9}$/.test(a.phone)) { toast(t('Enter a valid 10-digit mobile number'), 'err'); return; }
     addrStore.save({ ...a, house: a.house.trim(), area: a.area.trim(), landmark: a.landmark.trim() }, user?.uid);
@@ -57,9 +58,11 @@ export function AddressForm({ open, onClose, initial }) {
   return (
     <Sheet open={open} onClose={onClose} title={initial ? 'Edit address' : 'Add delivery address'} full>
       <div className="addr-map">
-        <MapView height={280} points={a.lat ? [{ id: 'me', kind: 'home', lat: a.lat, lng: a.lng }] : []} draggable="me" onDrag={(p) => setA((x) => ({ ...x, ...p }))} />
+        <MapView height={320} follow line={false} points={a.lat ? [{ id: 'me', kind: 'home', lat: a.lat, lng: a.lng }] : []} draggable="me" onDrag={(p) => setA((x) => ({ ...x, ...p, pinConfirmed: true, accuracy: null }))} />
         <button className="btn small gps-btn" onClick={locate} disabled={locating}><Icon name="gps" size={16} /> {locating ? 'Finding…' : 'Use current location'}</button>
       </div>
+      <p className="tiny muted">Nearby roads and places appear on the map. Zoom in, then tap or drag the pin to your exact entrance.</p>
+      {a.accuracy > 100 && <div className="alert alert-amber">GPS accuracy is low. Move the pin to your exact location before saving.</div>}
       {!a.lat && <p className="tiny muted">Turn on GPS so the delivery partner reaches your exact door.</p>}
       <div className="seg">
         {['Home', 'Work', 'Other'].map((l) => <button key={l} className={a.label === l ? 'on' : ''} onClick={() => setA((x) => ({ ...x, label: l }))}>{l}</button>)}

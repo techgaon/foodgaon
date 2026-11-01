@@ -17,9 +17,10 @@ export function setLang(l) { try { localStorage.setItem(KEY, l); } catch { /* ig
 
 const LAT = /[A-Za-z]/;
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const dictionaries = new Map();
 let exact = null; let patterns = null;
-function build() {
-  const col = lang === 'awa' ? 2 : 1;
+function build(language = lang) {
+  const col = language === 'awa' ? 2 : 1;
   exact = new Map(); patterns = [];
   for (const row of DICT) {
     const src = row[0]; const tgt = row[col] || row[1];
@@ -30,21 +31,23 @@ function build() {
     } else exact.set(src.trim(), tgt);
   }
   patterns.sort((a, b) => b.weight - a.weight);
+  dictionaries.set(language, { exact, patterns });
 }
 function fill(tgt, groups) {
   if (/\{\d\}/.test(tgt)) return tgt.replace(/\{(\d)\}/g, (_, n) => groups[+n] ?? '');
   let i = 0; return tgt.replace(/\{\}/g, () => groups[i++] ?? '');
 }
-export function tr(text, depth = 0) {
-  if (lang === 'en' || !text || !LAT.test(text)) return text;
-  if (!exact) build();
+export function tr(text, depth = 0, language = lang) {
+  if (language === 'en' || !text || !LAT.test(text)) return text;
+  if (!dictionaries.has(language)) build(language);
+  const { exact, patterns } = dictionaries.get(language);
   const m = text.match(/^(\s*)([\s\S]*?)(\s*)$/);
   const core = m[2];
   let out = exact.get(core);
   if (out == null && depth < 3) {
     for (const p of patterns) {
       const g = core.match(p.re);
-      if (g) { out = fill(p.tgt, g.slice(1).map((x) => tr(x, depth + 1))); break; }
+      if (g) { out = fill(p.tgt, g.slice(1).map((x) => tr(x, depth + 1, language))); break; }
     }
   }
   return m[1] + (out ?? core) + m[3];
@@ -59,11 +62,12 @@ function doText(n) {
   const v = n.nodeValue;
   if (seen.get(n) === v || !LAT.test(v)) return;
   if (skip(n.parentElement)) return;
-  const x = tr(v); seen.set(n, x); if (x !== v) n.nodeValue = x;
+  const language = n.parentElement?.closest('[data-ui-lang]')?.getAttribute('data-ui-lang') || lang;
+  const x = tr(v, 0, language); seen.set(n, x); if (x !== v) n.nodeValue = x;
 }
 function doEl(el) {
   if (el.closest && el.closest('[data-notr]')) return;
-  for (const a of ATTRS) { const v = el.getAttribute(a); if (v && LAT.test(v)) { const x = tr(v); if (x !== v) el.setAttribute(a, x); } }
+  for (const a of ATTRS) { const v = el.getAttribute(a); if (v && LAT.test(v)) { const language = el.closest?.('[data-ui-lang]')?.getAttribute('data-ui-lang') || lang; const x = tr(v, 0, language); if (x !== v) el.setAttribute(a, x); } }
 }
 function walk(root) {
   if (root.nodeType === 3) { doText(root); return; }
@@ -74,7 +78,6 @@ function walk(root) {
 }
 export function startTranslator() {
   document.documentElement.lang = lang === 'en' ? 'en' : 'hi';
-  if (lang === 'en') return;
   walk(document.body);
   new MutationObserver((list) => {
     for (const m of list) {
@@ -85,10 +88,10 @@ export function startTranslator() {
   }).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ATTRS });
 }
 
-/** Always Hindi (or Awadhi when Awadhi is chosen) — for screens that must stay in the local language
- *  even when the app is in English, e.g. the UPI payment screen. Use with data-notr on the container. */
+/** Legacy helper: preserve selected language, including default English. */
 let hiMap = null;
 export function hi(src, ...vals) {
+  if (lang === 'en') { let out = src; vals.forEach((v) => { out = out.replace('{}', v); }); return out; }
   const col = lang === 'awa' ? 2 : 1;
   if (!hiMap || hiMap.col !== col) { hiMap = new Map(); hiMap.col = col; for (const r of DICT) if (r[col] || r[1]) hiMap.set(r[0], r[col] || r[1]); }
   let out = hiMap.get(src) ?? src;

@@ -1,3 +1,7 @@
+import Celebrations from './Celebrations.jsx';
+import EverydayScene, { EVERYDAY_BANNERS } from '../components/EverydayScenes.jsx';
+import { useAddresses } from './Address.jsx';
+import { servesAddress } from '../lib/delivery.js';
 import React, { useEffect, useRef, useState } from 'react';
 import PromiseStrip from '../components/Promise.jsx';
 import { JoinCta, ShareCta } from '../components/Grow.jsx';
@@ -14,18 +18,21 @@ import { useOffers, isLive, offerLabel, offerTerms } from '../lib/offers.js';
 
 
 export default function Home({ nav }) {
-  const { user, config, roles } = useApp();
+  const { user, profile, config, roles } = useApp();
   const toast = useToast();
-  const rests = useRestaurants();
+  const allRests = useRestaurants();
+  const addresses = useAddresses();
+  const address = addresses.list.find(a => a.id === addresses.sel) || addresses.list[0];
+  const rests = allRests?.filter(r => servesAddress(r, address, config));
   const items = useItems();
   const banners = useBanners();
   const addr = LS.get('pp_addr_label');
-  const name = (user?.displayName || '').split(' ')[0];
+  const name = profile?.name || user?.displayName || '';
   const [view, setView] = useState(null);
   const offers = (useOffers() || []).filter(isLive);
   const favs = useFavs();
-  const favItems = favs.map((id) => (items || []).find((i) => i.id === id)).filter(Boolean).slice(0, 12);
-  const best = (items || []).filter((i) => i.bestseller && i.available !== false && (rests || []).find((r) => r.id === i.restaurantId)?.open !== false).slice(0, 10);
+  const favItems = favs.map((id) => (items || []).find((i) => i.id === id)).filter(i => i && rests?.some(r => r.id === i.restaurantId)).slice(0, 12);
+  const best = (items || []).filter((i) => i.bestseller && i.available !== false && (rests || []).some((r) => r.id === i.restaurantId && r.open !== false)).slice(0, 10);
 
   return (
     <div className="home">
@@ -40,19 +47,20 @@ export default function Home({ nav }) {
           <Logo size={38} />
         </div>
         <div className="pranam" data-notr="" lang="hi">
-          <span className="pr-badge" aria-hidden="true"><i className="pr-rays" /><b>🙏</b></span>
-          <span className="pr-txt"><b className="pr-word">प्रणाम{name ? ',' : ''}</b>{name && <span className="pr-name">{`${name} जी`}</span>}</span>
+          <span className="pr-badge" aria-hidden="true"><i className="pr-rays" /><b><svg viewBox="0 0 64 64" width="44" height="44"><path d="M32 9C28 9 28 17 26 24L17 39 24 48 32 38Z" fill="#f4bb84" stroke="#b56a37" strokeWidth="1.5" /><path d="M32 9C36 9 36 17 38 24L47 39 40 48 32 38Z" fill="#ffd9ad" stroke="#b56a37" strokeWidth="1.5" /><path d="M10 44 19 35 30 46 21 57Z" fill="#e8461a" /><path d="M54 44 45 35 34 46 43 57Z" fill="#1e9e55" /><path d="M32 13V37M16 16l4 4M48 16l-4 4M32 2v3" fill="none" stroke="#b56a37" strokeWidth="2" strokeLinecap="round" /></svg></b></span>
+          <span className="pr-txt"><b className="pr-word">प्रणाम</b>{name && <span className="pr-name">{`${name} ${profile?.gender === 'female' ? 'बहन जी' : profile?.gender === 'transgender' ? 'जी' : 'भैया जी'}`}</span>}</span>
         </div>
         <h1 className="hero-title"><em className="ht-2">What would you like to eat?</em></h1>
         <button className="search-bar" onClick={() => nav.go({ name: 'search' })}>
           <Icon name="search" size={20} /><Typewriter prefix="Search" words={['Paneer Butter Masala', 'Sweet Lassi', 'Veg Steamed Momos', 'Gajar ka Halwa', 'Masala Dosa', 'Chocolate Shake', 'Hot Jalebi']} />
         </button>
-        <div className="veg-ribbon"><VegMark size={14} /> Pure veg · FREE delivery within 5 km</div>
+        <div className="veg-ribbon"><VegMark size={14} /> Pure veg · FREE delivery on all orders</div>
       </header>
 
+      <Celebrations />
       <FreeDelivery km={config.radiusKm || 5} />
       <PromiseStrip />
-      <Banners list={(banners || []).filter((b) => b.active !== false && (!b.code || offers.some((o) => o.code === b.code)))} nav={nav} />
+      <Banners list={[...EVERYDAY_BANNERS, ...(banners || []).filter((b) => b.active !== false && (!['b1', 'b2', 'b3'].includes(b.id) || b.code || b.link) && (!b.code || offers.some((o) => o.code === b.code)))]} nav={nav} />
 
       {offers.length > 0 && (
         <Reveal as="section" className="sec">
@@ -72,6 +80,7 @@ export default function Home({ nav }) {
         </Reveal>
       )}
 
+      {address?.lat != null && rests && !rests.length && <div className="pad-x"><div className="alert alert-amber"><b>Sorry, not available at your location.</b><p>Please choose a nearby village or town where delivery is available.</p><button className="btn ghost block" onClick={() => nav.go({ name: 'address' })}>Choose another location</button></div></div>}
       <Reveal as="section" className="sec">
         <h2 className="sec-title">What's on your mind?</h2>
         <div className="cat-row">
@@ -95,7 +104,7 @@ export default function Home({ nav }) {
 
       {best.length > 0 && (
         <Reveal as="section" className="sec">
-          <h2 className="sec-title"><Icon name="fire" size={20} className="t-orange" /> Bestsellers in town</h2>
+          <h2 className="sec-title"><Icon name="fire" size={20} className="t-orange" /> Bestsellers in villages and towns</h2>
           <div className="best-row">
             {best.map((it) => <BestCard key={it.id} it={it} rest={rests.find((r) => r.id === it.restaurantId)} onView={() => setView(it)} showKcal={config.showCalories} />)}
           </div>
@@ -126,26 +135,41 @@ export default function Home({ nav }) {
 
 function Banners({ list, nav }) {
   const ref = useRef(null);
+  const programScroll = useRef(false);
   const [i, setI] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [reduced, setReduced] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const n = list?.length || 0;
   useEffect(() => {
-    if (n < 2) return;
-    const x = setInterval(() => setI((v) => (v + 1) % n), 3800);
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const change = e => setReduced(e.matches);
+    media.addEventListener('change', change);
+    return () => media.removeEventListener('change', change);
+  }, []);
+  useEffect(() => {
+    if (n < 2 || paused || reduced) return;
+    const x = setInterval(() => setI((v) => (v + 1) % n), 6500);
     return () => clearInterval(x);
-  }, [n]);
-  useEffect(() => { const el = ref.current; if (el) el.scrollTo({ left: i * el.clientWidth, behavior: 'smooth' }); }, [i]);
+  }, [n, paused, reduced]);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    programScroll.current = true;
+    el.scrollTo({ left: i * el.clientWidth, behavior: reduced ? 'instant' : 'smooth' });
+    const timer = setTimeout(() => { programScroll.current = false; }, reduced ? 0 : 650);
+    return () => { clearTimeout(timer); programScroll.current = false; };
+  }, [i, reduced]);
   if (!n) return <div className="banners"><div className="banner skeleton" /></div>;
   return (
-    <div className="banners">
-      <div className="banner-track" ref={ref} onScroll={(e) => { const w = e.currentTarget.clientWidth; const k = Math.round(e.currentTarget.scrollLeft / w); if (k !== i) setI(k); }}>
+    <div className={'banners everyday-banners' + (paused ? ' scenes-paused' : '')} role="region" aria-label="FoodGaon stories">
+      <div className="banner-track" ref={ref} onPointerDown={() => { setPaused(true); programScroll.current = false; }} onFocusCapture={() => setPaused(true)} onScroll={(e) => { if (programScroll.current) return; const w = e.currentTarget.clientWidth; if (!w) return; const k = Math.max(0, Math.min(n - 1, Math.round(e.currentTarget.scrollLeft / w))); if (k !== i) setI(k); }}>
         {list.map((b) => (
-          <div key={b.id} className={'banner' + (b.link ? ' clickable' : '')} onClick={() => b.link && nav.openRest(b.link)}>
-            <Img src={b.img} alt="" className="banner-img kenburns" />
-            <div className="banner-txt"><b>{b.title}</b><span>{b.sub}</span>{b.code && <em className="code-pill" data-notr="">{b.code}</em>}</div>
+          <div key={b.id} className={'banner' + (b.scene ? ` everyday-banner everyday-${b.scene}` : '') + (b.link ? ' clickable' : '')} data-notr={b.scene ? '' : undefined} lang={b.scene ? 'hi' : undefined} onClick={() => b.link && nav.openRest(b.link)}>
+            {b.scene ? <><EverydayScene kind={b.scene} /><div className="everyday-copy"><small>FoodGaon के साथ</small><b>{b.title}</b><strong>{b.sub}</strong><span>{b.note}</span></div></> : <><Img src={b.img} alt="" className="banner-img kenburns" /><div className="banner-txt"><b>{b.title === 'Your town, your taste' ? 'Your village, your town, your taste' : b.title}</b><span>{b.sub}</span>{b.code && <em className="code-pill" data-notr="">{b.code}</em>}</div></>}
           </div>
         ))}
       </div>
-      <div className="dots">{list.map((b, k) => <i key={b.id} className={k === i ? 'on' : ''} />)}</div>
+      <div className="scene-controls"><div className="scene-dots">{list.map((b, k) => <button key={b.id} aria-label={`Banner ${k + 1}`} aria-pressed={k === i} className={k === i ? 'on' : ''} onClick={() => { setPaused(true); setI(k); }} />)}</div><button className="scene-pause" aria-label={paused ? 'Play banners' : 'Pause banners'} onClick={() => setPaused(v => !v)}>{paused ? '▶' : 'Ⅱ'}</button></div>
     </div>
   );
 }

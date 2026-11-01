@@ -38,7 +38,7 @@ export const shortId = () => {
 
 /** distance in km between two {lat,lng} */
 export function km(a, b) {
-  if (!a?.lat || !b?.lat) return null;
+  if (a?.lat == null || a?.lng == null || b?.lat == null || b?.lng == null) return null;
   const R = 6371, r = (x) => (x * Math.PI) / 180;
   const dLat = r(b.lat - a.lat), dLng = r(b.lng - a.lng);
   const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLng / 2) ** 2;
@@ -86,6 +86,13 @@ export function compressImage(file, maxSide = 720, maxLen = 180000) {
         const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); ctx.drawImage(img, 0, 0, w, h);
         let q = 0.8, out = c.toDataURL('image/jpeg', q);
         while (out.length > maxLen && q > 0.35) { q -= 0.1; out = c.toDataURL('image/jpeg', q); }
+        while (out.length > maxLen && c.width > 320) {
+          w = Math.round(c.width * 0.8); h = Math.round(c.height * 0.8);
+          c.width = w; c.height = h;
+          ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); ctx.drawImage(img, 0, 0, w, h);
+          out = c.toDataURL('image/jpeg', 0.6);
+        }
+        if (out.length > maxLen) { reject(new Error('File is too large. Please choose a smaller PDF or photo.')); return; }
         resolve(out);
       };
       img.src = fr.result;

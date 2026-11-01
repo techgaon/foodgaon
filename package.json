@@ -4,7 +4,7 @@
   "description": "PetPyaar food delivery - Pandey Techno",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node tests/foodgaon.cjs"
   },
   "keywords": [],
   "author": "",

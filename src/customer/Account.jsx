@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ProfileEditor from './ProfileEditor.jsx';
 import { Icon, LangSwitch, Sheet, Logo, Wordmark, useToast } from '../ui.jsx';
 import { auth, updateProfile, put, phoneOf } from '../lib/fb.js';
 import { t } from '../i18n/index.js';
@@ -10,29 +11,24 @@ import { JoinCta, ShareCta } from '../components/Grow.jsx';
 
 export default function Account({ nav, openHisab }) {
   const favs = useFavs();
-  const { user, config, roles, setRole, logout, askLogin } = useApp();
+  const { user, profile, config, roles, setRole, logout, askLogin } = useApp();
   const [credits, setCredits] = useState(false);
   const [more, setMore] = useState({});
   React.useEffect(() => { if (credits) import('../data/paragMenu.js').then((m) => setMore(m.PHOTO_CREDITS || {})).catch(() => {}); }, [credits]);
   const [about, setAbout] = useState(false);
   const [nameOpen, setNameOpen] = useState(false);
-  const [name, setName] = useState('');
-  const toast = useToast();
-  const saveName = async () => {
-    const n = name.trim(); if (n.length < 2) return;
-    try { await updateProfile(auth.currentUser, { displayName: n }); await put('customers', user.uid, { name: n, phone: phoneOf(user) }); location.reload(); } catch { toast(t('Could not save'), 'err'); }
-  };
   return (
     <div className="page account">
       <div className="acc-head">
-        <span className="acc-av">{(user?.displayName || '?').slice(0, 1).toUpperCase()}</span>
+        <span className="acc-av">{profile?.photo ? <img src={profile.photo} alt="Your profile photo" style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} /> : (user?.displayName || '?').slice(0, 1).toUpperCase()}</span>
         <div className="grow">
-          {user ? <><b data-notr="">{user.displayName || 'Hello!'}</b><small>{plain(phoneOf(user)) || user.email}</small></> : <><b>Welcome!</b><small>Log in to order and track food</small></>}
+          {user ? <><b data-notr="">{user.displayName || 'Hello!'}</b><small>{plain(phoneOf(user) || profile?.phone) || user.email}</small></> : <><b>Welcome!</b><small>Log in to order and track food</small></>}
         </div>
         {!user && <button className="btn light small" onClick={askLogin}>Log in</button>}
-        {user && <button className="icon-btn light" onClick={() => { setName(user.displayName || ''); setNameOpen(true); }} aria-label="Edit name"><Icon name="edit" size={20} /></button>}
+        {user && <button className="icon-btn light" onClick={() => setNameOpen(true)} aria-label="Edit profile"><Icon name="edit" size={20} /></button>}
       </div>
       <div className="pad-x">
+        {user && <button className="btn ghost block" onClick={() => setNameOpen(true)}>Edit profile & family</button>}
         <div className="card">
           <h4><Icon name="lang" size={18} /> Language</h4>
           <LangSwitch />
@@ -59,13 +55,12 @@ export default function Account({ nav, openHisab }) {
         <p className="center tiny muted">FoodGaon v1.0 · <span data-notr="">TechGaon AI Services</span></p>
       </div>
 
-      <Sheet open={nameOpen} onClose={() => setNameOpen(false)} title="Your name">
-        <input className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} autoFocus />
-        <button className="btn primary block" onClick={saveName}>Save</button>
+      <Sheet open={nameOpen} onClose={() => setNameOpen(false)} title="Your profile" full>
+        {nameOpen && user && <ProfileEditor key={user.uid} user={user} profile={profile} onSaved={() => setNameOpen(false)} />}
       </Sheet>
       <Sheet open={about} onClose={() => setAbout(false)} title="About FoodGaon">
         <div className="center"><Logo size={64} /><br /><Wordmark size={30} /></div>
-        <p>FoodGaon brings hot, fresh, 100% vegetarian food from your town's favourite kitchens to your door — with free delivery.</p>
+        <p>FoodGaon brings hot, fresh, 100% vegetarian food from favourite kitchens in your villages and towns to your door — with free delivery.</p>
         <p>Our promise: the same price, portion and quality as at the restaurant counter — with no platform fee, no packing charge and free delivery. We charge restaurants only a very small fee, so local food stays affordable for everyone.</p>
         <p className="muted small">A product of <b data-notr="">TechGaon AI Services</b>.</p>
         <button className="link tiny" onClick={() => { setAbout(false); setCredits(true); }}>Photo credits</button>

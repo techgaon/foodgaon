@@ -1,3 +1,4 @@
+import { editableDeliverySlabs, validSlabs } from '../lib/delivery.js';
 import PayManual from '../customer/PayManual.jsx';
 import { hi } from '../i18n/index.js';
 import { useMenuPack } from '../lib/menuPack.js';
@@ -19,6 +20,7 @@ import { useReviews, QualityCard } from '../components/Reviews.jsx';
 import PhotoPick from '../components/PhotoPick.jsx';
 import { t, tr } from '../i18n/index.js';
 import PartnerAgreement from '../components/PartnerAgreement.jsx';
+import RestaurantPin from '../components/RestaurantPin.jsx';
 import { feeTerms, feeLine } from '../lib/partner.js';
 
 /* rings while there are un-accepted orders */
@@ -211,7 +213,7 @@ export function OrderCard({ o, showRest, admin }) {
         <div className="time-pick">
           <p className="small"><b>{t('Food will be ready in how many minutes?')}</b></p>
           <div className="time-grid">
-            {[10, 15, 20, 25, 30, 35, 40].map((m) => <button key={m} className="btn time-btn" disabled={busy} onClick={() => accept(m)}>{`${m} min`}</button>)}
+            {[5, 10, 15, 20, 25, 30, 35, 40].map((m) => <button key={m} className="btn time-btn" disabled={busy} onClick={() => accept(m)}>{`${m} min`}</button>)}
           </div>
           <div className="row gap">
             <input className="input slim grow" inputMode="numeric" placeholder={t('Other — type minutes')} value={custom} onChange={(e) => setCustom(e.target.value.replace(/\D/g, '').slice(0, 3))} />
@@ -365,17 +367,19 @@ export function Earnings({ orders, title }) {
 
 function ShopSettings({ rest }) {
   const toast = useToast();
-  const [f, setF] = useState({ tagline: rest.tagline || '', address: rest.address || '', prepMins: rest.prepMins || 20, ownerPhone: rest.ownerPhone || '', fssai: rest.fssai || '', gstin: rest.gstin || '', radiusKm: rest.radiusKm ?? 5, minOrder: rest.minOrder ?? 50, openTime: rest.openTime || '', closeTime: rest.closeTime || '', priceInclGst: rest.priceInclGst !== false });
+  const [f, setF] = useState({ tagline: rest.tagline || '', address: rest.address || '', prepMins: rest.prepMins || 20, ownerPhone: rest.ownerPhone || '', fssai: rest.fssai || '', gstin: rest.gstin || '', radiusKm: rest.radiusKm ?? 5, minOrder: rest.minOrder ?? 50, deliverySlabs: editableDeliverySlabs(rest), openTime: rest.openTime || '', closeTime: rest.closeTime || '', priceInclGst: rest.priceInclGst !== false });
   const [busy, setBusy] = useState(false);
   const save = async (extra = {}) => {
+    if (![f.prepMins, f.radiusKm, f.minOrder, ...f.deliverySlabs.flatMap(s => [s.upToKm, s.minOrder])].every((v) => v !== '' && Number.isFinite(Number(v)) && Number(v) >= 0) || Number(f.prepMins) < 5 || Number(f.radiusKm) <= 0 || !validSlabs(f.deliverySlabs, f.radiusKm)) { toast(t('Check settings: cooking time is at least 5 minutes; distance limits must increase and end at your delivery radius.'), 'err'); return; }
     setBusy(true);
-    try { await patch('restaurants', rest.id, { ...f, prepMins: Number(f.prepMins) || 20, radiusKm: Number(f.radiusKm) || 5, minOrder: Number(f.minOrder) || 0, fssai: f.fssai.trim(), gstin: f.gstin.trim().toUpperCase(), ...extra }); toast(t('Saved')); } catch { toast(t('Could not save'), 'err'); }
+    try { await patch('restaurants', rest.id, { ...f, deliverySlabs: f.deliverySlabs.map(s => ({ upToKm: Number(s.upToKm), minOrder: Number(s.minOrder) })), prepMins: Number(f.prepMins) || 20, radiusKm: Number(f.radiusKm), minOrder: Number(f.minOrder) || 0, fssai: f.fssai.trim(), gstin: f.gstin.trim().toUpperCase(), ...extra }); toast(t('Saved')); } catch { toast(t('Could not save'), 'err'); }
     setBusy(false);
   };
   const gps = async () => { try { const p = await getPosition(); await save({ lat: p.lat, lng: p.lng }); } catch (e) { toast(t(e.message), 'err'); } };
   const cover = async (e) => { const file = e.target.files?.[0]; if (!file) return; try { const img = await compressImage(file, 1000, 220000); await save({ cover: img }); } catch (er) { toast(t(er.message), 'err'); } };
   return (
     <div className="pad-x">
+      <div className="card"><RestaurantPin restaurant={rest} /></div>
       <div className="card">
         <div className="cover-edit"><Img src={rest.cover} alt="" /></div>
         <p className="tiny muted">Shop photo</p>
@@ -394,6 +398,14 @@ function ShopSettings({ rest }) {
           <Field label="Delivery area (km)"><input className="input" inputMode="decimal" value={f.radiusKm} onChange={(e) => setF({ ...f, radiusKm: e.target.value.replace(/[^\d.]/g, '') })} /></Field>
           <Field label="Minimum order ₹"><input className="input" inputMode="numeric" value={f.minOrder} onChange={(e) => setF({ ...f, minOrder: e.target.value.replace(/\D/g, '') })} /></Field>
         </div>
+        <p className="field-label">Minimum order by delivery distance</p>
+        {f.deliverySlabs.map((slab, index) => <div className="row gap" key={index}>
+          <Field label={`${index ? f.deliverySlabs[index - 1].upToKm : 0} km to (km)`}><input className="input" inputMode="decimal" value={slab.upToKm} onChange={e => setF({ ...f, deliverySlabs: f.deliverySlabs.map((s, i) => i === index ? { ...s, upToKm: e.target.value.replace(/[^0-9.]/g, '') } : s) })} /></Field>
+          <Field label="Minimum order ₹"><input className="input" inputMode="numeric" value={slab.minOrder} onChange={e => setF({ ...f, deliverySlabs: f.deliverySlabs.map((s, i) => i === index ? { ...s, minOrder: e.target.value.replace(/[^0-9]/g, '') } : s) })} /></Field>
+          <button className="icon-btn" aria-label="Remove distance slab" onClick={() => setF({ ...f, deliverySlabs: f.deliverySlabs.filter((_, i) => i !== index) })}><Icon name="trash" size={16} /></button>
+        </div>)}
+        <button className="btn ghost block" disabled={f.deliverySlabs.length >= 8} onClick={() => setF({ ...f, deliverySlabs: [...f.deliverySlabs, { upToKm: '', minOrder: '' }] })}>Add distance slab</button>
+        <p className="tiny muted">Example: up to 5 km ₹149, over 5 to 10 km ₹299, over 10 to 20 km ₹1000. Set delivery area to 20 km. Limits must increase; the last limit must match your delivery area. With no slabs, the general minimum order applies.</p>
         <div className="gst-mode">
           <p className="small"><b>{t('Menu prices are…')}</b></p>
           <div className="seg">

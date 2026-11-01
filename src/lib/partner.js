@@ -8,14 +8,12 @@ export const AGREEMENT_VERSION = '2026-11-v1';
 export const DOC_TYPES = [
   { id: 'shop', label: 'Shop / kitchen photo', need: true, hint: 'A clear photo of your shop front or kitchen' },
   { id: 'fssai', label: 'FSSAI licence / registration', need: true, hint: 'Photo or PDF of the certificate' },
+  { id: 'aadhaar', label: 'Owner Aadhaar card', need: true, hint: 'Clear photo or PDF of the owner Aadhaar card' },
   { id: 'pan', label: 'PAN card of the owner', need: true, hint: 'Front side' },
   { id: 'bank', label: 'Bank passbook first page or cancelled cheque', need: true, hint: 'Name, account number and IFSC must be readable' },
   { id: 'gst', label: 'GST certificate', need: false, hint: 'Only if you have GST' },
   // signed agreement pages are uploaded on the agreement step
-  { id: 'agreement', label: 'Signed agreement — page 1', need: false, step: 'agreement', hint: 'Photo of the signed page' },
-  { id: 'agreement2', label: 'Signed agreement — page 2', need: false, step: 'agreement', hint: 'Photo of the signed page' },
-  { id: 'agreement3', label: 'Signed agreement — page 3', need: false, step: 'agreement', hint: 'Photo of the signed page' },
-  { id: 'agreement4', label: 'Signed agreement — page 4', need: false, step: 'agreement', hint: 'Only if there is a 4th page' },
+  { id: 'agreementPdf', label: 'Complete signed agreement PDF', need: false, step: 'agreement', hint: 'All signed pages in one PDF (up to 650 KB)', pdfOnly: true },
 ];
 export const FORM_DOCS = DOC_TYPES.filter((d) => d.step !== 'agreement');
 export const SIGN_DOCS = DOC_TYPES.filter((d) => d.step === 'agreement');
@@ -50,9 +48,9 @@ export const feeLineHi = (f) => (f.gstExtra
 export const blankApp = (user) => ({
   status: 'draft', ownerPhone: phoneOf(user), uid: user.uid,
   restName: '', tagline: '', address: '', town: '', landmark: '', pincode: '', ownerName: user.displayName || '', altPhone: '', email: '',
-  fssai: '', gstin: '', pan: '', vegOnly: true, priceInclGst: true, openTime: '10:00', closeTime: '22:00', prepMins: 20, radiusKm: 5,
+  aadhaar: '', fssai: '', gstin: '', pan: '', vegOnly: true, priceInclGst: true, openTime: '10:00', closeTime: '22:00', prepMins: 20, radiusKm: 5,
   ownRiders: 1, bankName: '', bankHolder: '', bankAcc: '', bankIfsc: '', upiId: '',
-  docs: {}, history: [],
+  docs: {}, history: [], note: '',
 });
 
 export const PAN_RE = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
@@ -65,6 +63,7 @@ export function missing(a) {
   if (!a.restName?.trim()) m.push('Restaurant name');
   if (!a.address?.trim()) m.push('Full address');
   if (!/^\d{6}$/.test(a.pincode || '')) m.push('PIN code');
+  if (!/^\d{12}$/.test(a.aadhaar || '')) m.push('Owner Aadhaar number (12 digits)');
   if (!a.ownerName?.trim()) m.push('Owner name');
   if (!(Number(a.ownRiders) >= 1)) m.push('At least 1 delivery boy');
   if (!/^\d{14}$/.test(a.fssai || '')) m.push('FSSAI number (14 digits)');
@@ -77,7 +76,8 @@ export function missing(a) {
   return m;
 }
 
-export const saveApp = (uid, data) => put('partnerApps', uid, data);
+export const applicationData = (data) => Object.fromEntries(Object.entries(data).filter(([, value]) => value !== undefined));
+export const saveApp = (uid, data) => put('partnerApps', uid, applicationData(data));
 export const loadApp = (uid) => getOne('partnerApps', uid);
 export async function saveDoc(uid, type, { name, data }) {
   await put('partnerDocs', docId(uid, type), { uid, type, name: String(name || type).slice(0, 80), data, ms: Date.now() }, false);
@@ -90,11 +90,16 @@ export const setAppStatus = (uid, app, status, by, note, extra = {}) =>
   patch('partnerApps', uid, { status, history: addHistory(app, by, status, note), [`${status}Ms`]: Date.now(), ...extra });
 
 /** read a file → data URL; photos are shrunk, PDFs must be small */
-export async function fileToDoc(file, compressImage) {
-  if (file.type.startsWith('image/')) return { name: file.name, data: await compressImage(file, 1600, 420000) };
+export async function fileToDoc(file, compressImage, onProgress = () => {}) {
+  if (file.type.startsWith('image/')) {
+    const data = await compressImage(file, 1600, 420000);
+    if (data.length >= 900000) throw new Error('File is too large. Please choose a smaller PDF or photo.');
+    onProgress(100);
+    return { name: file.name, data };
+  }
   if (file.type === 'application/pdf') {
     if (file.size > 650 * 1024) throw new Error('PDF is bigger than 650 KB. Send a photo instead.');
-    const data = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error('Could not read the file')); r.readAsDataURL(file); });
+    const data = await new Promise((res, rej) => { const r = new FileReader(); r.onprogress = (e) => { if (e.lengthComputable) onProgress(Math.round(e.loaded / e.total * 100)); }; r.onload = () => res(r.result); r.onerror = () => rej(new Error('Could not read the file')); r.readAsDataURL(file); });
     return { name: file.name, data };
   }
   throw new Error('Use a photo or a PDF');
