@@ -304,7 +304,7 @@ export function ShareCta() {
         <button className="sc-why" onClick={() => setInfo(true)}>
           <span className="q">?</span> Why share? <small>Read</small> <Icon name="right" size={16} />
         </button>
-        <div className="sc-btns">
+        <div className="sc-btns" data-ui-lang="en">
           <a className="btn wa" href={wa} target="_blank" rel="noreferrer"><Icon name="chat" size={18} /> WhatsApp</a>
           <button className="btn light" onClick={() => shareApp(config, toast)}><Icon name="swap" size={18} /> Share elsewhere</button>
         </div>
@@ -339,7 +339,7 @@ export function ShareCta() {
             <Icon name="shield" size={18} />
             <span><b>To be clear:</b> Sharing comes with <b>no rewards</b>. Share if you want to support local businesses.</span>
           </div>
-          <div className="sc-btns">
+          <div className="sc-btns" data-ui-lang="en">
             <a className="btn wa" href={wa} target="_blank" rel="noreferrer"><Icon name="chat" size={18} /> Share on WhatsApp</a>
             <button className="btn light" onClick={() => shareApp(config, toast)}><Icon name="swap" size={18} /> Elsewhere</button>
           </div>

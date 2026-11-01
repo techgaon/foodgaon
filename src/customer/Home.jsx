@@ -45,14 +45,14 @@ export default function Home({ nav }) {
           <Logo size={38} />
         </div>
         <div className="pranam" data-notr="" lang="hi">
-          <span className="pr-badge" aria-hidden="true"><i className="pr-rays" /><b>🙏</b></span>
+          <span className="pr-badge" aria-hidden="true"><i className="pr-rays" /><b><svg viewBox="0 0 64 64" width="44" height="44"><path d="M32 9C28 9 28 17 26 24L17 39 24 48 32 38Z" fill="#f4bb84" stroke="#b56a37" strokeWidth="1.5" /><path d="M32 9C36 9 36 17 38 24L47 39 40 48 32 38Z" fill="#ffd9ad" stroke="#b56a37" strokeWidth="1.5" /><path d="M10 44 19 35 30 46 21 57Z" fill="#e8461a" /><path d="M54 44 45 35 34 46 43 57Z" fill="#1e9e55" /><path d="M32 13V37M16 16l4 4M48 16l-4 4M32 2v3" fill="none" stroke="#b56a37" strokeWidth="2" strokeLinecap="round" /></svg></b></span>
           <span className="pr-txt"><b className="pr-word">प्रणाम</b>{name && <span className="pr-name">{`${name} ${profile?.gender === 'female' ? 'बहन जी' : 'भैया जी'}`}</span>}</span>
         </div>
         <h1 className="hero-title"><em className="ht-2">What would you like to eat?</em></h1>
         <button className="search-bar" onClick={() => nav.go({ name: 'search' })}>
           <Icon name="search" size={20} /><Typewriter prefix="Search" words={['Paneer Butter Masala', 'Sweet Lassi', 'Veg Steamed Momos', 'Gajar ka Halwa', 'Masala Dosa', 'Chocolate Shake', 'Hot Jalebi']} />
         </button>
-        <div className="veg-ribbon"><VegMark size={14} /> Pure veg · FREE delivery within 5 km</div>
+        <div className="veg-ribbon"><VegMark size={14} /> Pure veg · FREE delivery on all orders</div>
       </header>
 
       <FreeDelivery km={config.radiusKm || 5} />

@@ -6,9 +6,9 @@ import { Icon, BottomNav, Toggle, Empty, Sheet, Field, useToast, Img, Logo, Conf
 import { useApp, RoleSwitchButton } from '../App.jsx';
 import { useRestaurants, useItems, useList, ACTIVE , isRealOrder } from '../lib/data.js';
 import { put, patch, remove, bulk, getList, watchList, getOne } from '../lib/fb.js';
-import { rupee, todayKey, dayKey, plain, unlockAudio, askNotifyPermission, fmtDateTime, tel, wa } from '../lib/utils.js';
+import { rupee, todayKey, dayKey, plain, fmtDateTime, tel, wa } from '../lib/utils.js';
 import { RESTAURANTS, ITEMS, BANNERS, DEFAULT_CONFIG, STAFF, OFFERS, DEMO_OFFER_IDS, OLD_STAFF, TEST_DATA_BEFORE } from '../data/menu.js';
-import { OrderCard, useNewOrderAlert, Earnings } from '../restaurant/RestaurantApp.jsx';
+import { OrderCard, Earnings } from '../restaurant/RestaurantApp.jsx';
 import MenuManager from '../restaurant/MenuManager.jsx';
 import Team from '../restaurant/Team.jsx';
 import MapView from '../components/MapView.jsx';
@@ -26,8 +26,8 @@ export default function AdminApp() {
   const days = useMemo(() => [todayKey(), dayKey(Date.now() - 86400000)], []);
   const orders0 = useList('orders', [['day', 'in', days]], [days.join()]);
   const orders = orders0 && orders0.filter(isRealOrder);
-  const newCount = useNewOrderAlert(orders, 'New order on FoodGaon!');
-  useEffect(() => { askNotifyPermission(); window.addEventListener('pointerdown', unlockAudio, { once: true }); }, []);
+  // Admin monitors orders visually; audible alerts belong to the restaurant.
+  const newCount = (orders || []).filter(o => o.status === 'placed').length;
   useAutoSeed();
   useMenuPack(useRestaurants(), () => true);
   useCleanup();

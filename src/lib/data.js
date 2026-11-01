@@ -48,7 +48,9 @@ export const cartStore = {
     if (cart.restaurantId && cart.restaurantId !== item.restaurantId) return false;
     const cur = cart.items[item.id]?.qty || 0;
     cart = { restaurantId: item.restaurantId, items: { ...cart.items, [item.id]: { id: item.id, name: item.name, price: item.price, kcal: item.kcal || 0, onMrp: !!item.onMrp, qty: cur + 1 } } };
-    emit(); return true;
+    emit();
+    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('foodgaon:cart-added', { detail: { name: item.name } }));
+    return true;
   },
   sub(id) {
     const cur = cart.items[id]?.qty || 0;

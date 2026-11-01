@@ -1522,3 +1522,8 @@ DICT.push(
  ['Shop name and address', 'दुकान का नाम और पता', 'दुकान कै नाम अउर पता'],
  ['Bank account and documents (Aadhaar, FSSAI, PAN, passbook)', 'बैंक खाता और दस्तावेज़ (आधार, FSSAI, PAN, पासबुक)', 'बैंक खाता अउर कागज (आधार, FSSAI, PAN, पासबुक)']
 );
+DICT.push(
+ ['Pure veg · FREE delivery on all orders', 'शुद्ध शाकाहारी · सभी ऑर्डर पर मुफ़्त डिलीवरी', 'शुद्ध शाकाहारी · सब ऑर्डर पर मुफ्त डिलीवरी'],
+ ['on all orders', 'सभी ऑर्डर पर', 'सब ऑर्डर पर'],
+ ['Added to cart', 'कार्ट में जुड़ गया', 'कार्ट मा जुड़ गवा']
+);

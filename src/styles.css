@@ -1270,3 +1270,25 @@ body.noscroll .cart-bar, body.noscroll .live-bar { display: none; }
   .row.gap > .field { flex-basis: 120px; }
   .stt { width: 65px; }
 }
+/* Refined welcome and cart feedback; retain FoodGaon's orange/green palette. */
+.pranam { gap: 14px; margin: 12px 0 8px; padding: 10px 12px; border: 1px solid #ffffff35; border-radius: 20px; background: linear-gradient(110deg,#ffffff18,#ffffff05); width: fit-content; max-width: 100%; }
+.pr-badge { width: 60px; height: 60px; }
+.pr-badge b { width: 54px; height: 54px; background: linear-gradient(145deg,#fffdf2,#ffe4a2); box-shadow: 0 0 0 4px #ffffff28,0 5px 12px #8e2e1620; animation: namaste 4s ease-in-out infinite; }
+.pr-rays { inset: -2px; background: none; border: 1px dashed #ffe4a2; mask: none; -webkit-mask: none; animation-duration: 30s; }
+.pr-txt { min-width: 0; gap: 5px; line-height: 1.25; }
+.pr-word { font-size: 2.15rem; animation: none; }
+.pr-name { font-size: 1.08rem; overflow-wrap: anywhere; }
+.fd-village { position: absolute; inset: 0; width: 100%; height: 100%; }
+.fd-scooter { filter: drop-shadow(0 4px 3px #00381e35); animation-duration: 8s; }
+.fd-bounce { animation-duration: 1.2s; }
+.fd-light { animation: none; }
+.cart-added { position: fixed; bottom: 150px; left: 50%; transform: translateX(-50%); z-index: 1500; display: flex; align-items: center; gap: 12px; width: min(320px,calc(100vw - 32px)); padding: 14px 18px; border: 1px solid #d6eadb; border-radius: 20px; background: #fffdf7; color: #175932; box-shadow: 0 10px 35px #193e2926; pointer-events: none; animation: cartCelebrate .4s ease-out; }
+.cart-added > span:last-child { min-width: 0; display: flex; flex-direction: column; }
+.cart-added small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #59685d; }
+.cart-added-art { display: grid; place-items: center; position: relative; width: 46px; height: 46px; flex: none; border-radius: 15px; background: #e7f6e9; transform: rotate(-8deg); }
+.cart-added-art i,.cart-bag i { position: absolute; right: -3px; bottom: -2px; display: grid; place-items: center; background: #1e9e55; color: white; border: 2px solid white; border-radius: 50%; width: 20px; height: 20px; font-size: 11px; font-style: normal; }
+.cart-bag { position: relative; flex: none; animation: pop .35s ease-out; margin-right: 10px; }
+.cart-bar .cb-left { flex: 1; min-width: 0; }
+.jh-chip { white-space: normal; line-height: 1.5; }
+@keyframes cartCelebrate { from { opacity: 0; transform: translate(-50%,14px) scale(.93); } to { opacity: 1; transform: translate(-50%,0) scale(1); } }
+@media(prefers-reduced-motion:reduce) { .cart-added,.cart-bag,.pr-badge b,.pr-rays,.fd-puff circle { animation:none; } }

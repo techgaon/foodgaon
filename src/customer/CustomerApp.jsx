@@ -18,6 +18,18 @@ export default function CustomerApp() {
   const [tab, setTab] = useState('home');
   const [hisabKey, setHisabKey] = useState(0);
   const [stack, setStack] = useState([]);
+  const [added, setAdded] = useState(null);
+  useEffect(() => {
+    let timer;
+    let sequence = 0;
+    const celebrate = (event) => {
+      clearTimeout(timer);
+      setAdded({ name: event.detail.name, key: ++sequence });
+      timer = setTimeout(() => setAdded(null), 1800);
+    };
+    window.addEventListener('foodgaon:cart-added', celebrate);
+    return () => { clearTimeout(timer); window.removeEventListener('foodgaon:cart-added', celebrate); };
+  }, []);
   const cart = useCart();
   const { count, total } = cartTotals(cart);
   const myOrders0 = useList('orders', user ? [['customerUid', '==', user.uid]] : null, [user?.uid]);
@@ -54,9 +66,10 @@ export default function CustomerApp() {
   return (
     <div className={'cust' + (stack.length ? ' has-stack' : '')}>
       <div className="page-anim" key={(top?.name || tab) + (top?.id || '')}>{page}</div>
+      {added && <div className="cart-added" key={added.key} role="status"><span className="cart-added-art" aria-hidden="true"><Icon name="bag" size={29} /><i><Icon name="check" size={12} stroke={3} /></i></span><span><b>Added to cart</b><small data-notr="">{added.name}</small></span></div>}
       {showCartBar && (
         <button className="cart-bar" onClick={nav.openCart}>
-          <span className="cb-left"><b key={count} className="bump">{`${count} item${count > 1 ? 's' : ''} added`}</b><small>{rupee(total)} · FREE delivery</small></span>
+          <span className="cart-bag" key={'bag-' + count} aria-hidden="true"><Icon name="bag" size={24} /><i>✓</i></span><span className="cb-left"><b key={count} className="bump">{`${count} item${count > 1 ? 's' : ''} added`}</b><small>{rupee(total)} · FREE delivery</small></span>
           <span className="cb-right">View cart <Icon name="right" size={18} stroke={3} /></span>
         </button>
       )}

@@ -83,11 +83,11 @@ function Intro({ config, app, onStart, loggedOut }) {
     <div className="pad-x join-intro" data-ui-lang={getLang() === "awa" ? "awa" : "hi"}>
       <div className="join-hero">
         <div className="jh-glow" />
-        <span className="jh-chip">For restaurant owners</span>
-        <h2>Your kitchen, on every phone in town</h2>
+        <span className="jh-chip" data-ui-lang="en">For restaurant, dhaba, cafe & sweet shop owners</span>
+        <h2 data-notr="" lang="hi">आपकी रसोई, कस्बे व गाँव के हर फ़ोन पर</h2>
         <p>Take orders on FoodGaon. Your food, your delivery boys, your customers — and the money comes to your own account.</p>
       </div>
-      {app && <button className="btn primary block" onClick={onStart}>Continue my form <Icon name="right" size={18} /></button>}
+      {app && <button className="btn primary block" data-ui-lang="en" onClick={onStart}>Continue my form <Icon name="right" size={18} /></button>}
       <GrowStory />
       <div className="card compare-card" data-ui-lang="en">
         <h4>On ₹100 of food</h4>
@@ -97,14 +97,14 @@ function Intro({ config, app, onStart, loggedOut }) {
         <div className="cmp-row"><span>Price on app</span><span>Often higher</span><span className="fg">Same as counter</span></div>
         <p className="tiny muted">FoodGaon figure after 5% GST (paid by FoodGaon) and the FoodGaon fee. Big-app figures are typical commission + fees reported in news; they vary.</p>
       </div>
-      <div className="card">
+      <div className="card" data-ui-lang="en">
         <h4><Icon name="list" size={18} /> Keep these ready</h4>
         <ul className="ready-list">
           <li>FSSAI licence or registration</li><li>Owner Aadhaar card</li><li>Owner's PAN card</li><li>Bank passbook first page or a cancelled cheque</li><li>A photo of your shop / kitchen</li><li>GST certificate (only if you have GST)</li>
         </ul>
         <p className="tiny muted">Takes about 10 minutes. You can stop and continue later — your form is saved.</p>
       </div>
-      <button className="btn primary block lg" onClick={onStart}>{loggedOut ? 'Log in to start' : app ? 'Continue my form' : 'Start — it is free'} <Icon name="right" size={18} /></button>
+      <button className="btn primary block lg" data-ui-lang="en" onClick={onStart}>{loggedOut ? 'Log in to start' : app ? 'Continue my form' : 'Start — it is free'} <Icon name="right" size={18} /></button>
     </div>
   );
 }
