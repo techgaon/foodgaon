@@ -211,7 +211,7 @@ export function OrderCard({ o, showRest, admin }) {
         <div className="time-pick">
           <p className="small"><b>{t('Food will be ready in how many minutes?')}</b></p>
           <div className="time-grid">
-            {[10, 15, 20, 25, 30, 35, 40].map((m) => <button key={m} className="btn time-btn" disabled={busy} onClick={() => accept(m)}>{`${m} min`}</button>)}
+            {[5, 10, 15, 20, 25, 30, 35, 40].map((m) => <button key={m} className="btn time-btn" disabled={busy} onClick={() => accept(m)}>{`${m} min`}</button>)}
           </div>
           <div className="row gap">
             <input className="input slim grow" inputMode="numeric" placeholder={t('Other — type minutes')} value={custom} onChange={(e) => setCustom(e.target.value.replace(/\D/g, '').slice(0, 3))} />
@@ -365,11 +365,12 @@ export function Earnings({ orders, title }) {
 
 function ShopSettings({ rest }) {
   const toast = useToast();
-  const [f, setF] = useState({ tagline: rest.tagline || '', address: rest.address || '', prepMins: rest.prepMins || 20, ownerPhone: rest.ownerPhone || '', fssai: rest.fssai || '', gstin: rest.gstin || '', radiusKm: rest.radiusKm ?? 5, minOrder: rest.minOrder ?? 50, openTime: rest.openTime || '', closeTime: rest.closeTime || '', priceInclGst: rest.priceInclGst !== false });
+  const [f, setF] = useState({ tagline: rest.tagline || '', address: rest.address || '', prepMins: rest.prepMins || 20, ownerPhone: rest.ownerPhone || '', fssai: rest.fssai || '', gstin: rest.gstin || '', radiusKm: rest.radiusKm ?? 5, minOrder: rest.minOrder ?? 50, minOrderBands: rest.minOrderBands || {}, openTime: rest.openTime || '', closeTime: rest.closeTime || '', priceInclGst: rest.priceInclGst !== false });
   const [busy, setBusy] = useState(false);
   const save = async (extra = {}) => {
+    if (![f.prepMins, f.radiusKm, f.minOrder, ...Object.values(f.minOrderBands)].every((v) => v !== '' && Number.isFinite(Number(v)) && Number(v) >= 0) || Number(f.prepMins) < 5) { toast(t('Enter valid settings. Cooking time must be at least 5 minutes.'), 'err'); return; }
     setBusy(true);
-    try { await patch('restaurants', rest.id, { ...f, prepMins: Number(f.prepMins) || 20, radiusKm: Number(f.radiusKm) || 5, minOrder: Number(f.minOrder) || 0, fssai: f.fssai.trim(), gstin: f.gstin.trim().toUpperCase(), ...extra }); toast(t('Saved')); } catch { toast(t('Could not save'), 'err'); }
+    try { await patch('restaurants', rest.id, { ...f, minOrderBands: Object.fromEntries(Object.entries(f.minOrderBands).map(([k, v]) => [k, Number(v)])), prepMins: Number(f.prepMins) || 20, radiusKm: Number(f.radiusKm), minOrder: Number(f.minOrder) || 0, fssai: f.fssai.trim(), gstin: f.gstin.trim().toUpperCase(), ...extra }); toast(t('Saved')); } catch { toast(t('Could not save'), 'err'); }
     setBusy(false);
   };
   const gps = async () => { try { const p = await getPosition(); await save({ lat: p.lat, lng: p.lng }); } catch (e) { toast(t(e.message), 'err'); } };
@@ -394,6 +395,9 @@ function ShopSettings({ rest }) {
           <Field label="Delivery area (km)"><input className="input" inputMode="decimal" value={f.radiusKm} onChange={(e) => setF({ ...f, radiusKm: e.target.value.replace(/[^\d.]/g, '') })} /></Field>
           <Field label="Minimum order ₹"><input className="input" inputMode="numeric" value={f.minOrder} onChange={(e) => setF({ ...f, minOrder: e.target.value.replace(/\D/g, '') })} /></Field>
         </div>
+        <p className="field-label">Minimum order by delivery distance</p>
+        {[["near", "Up to 4 km"], ["mid", "Over 4 to 8 km"], ["far", "Over 8 to 20 km"]].map(([key, label]) => <Field key={key} label={t(label)} hint="Minimum food order ₹"><input className="input" inputMode="numeric" value={f.minOrderBands[key] ?? ''} placeholder={String(f.minOrder)} onChange={(e) => { const bands = { ...f.minOrderBands }; const v = e.target.value.replace(/\D/g, ''); if (v === '') delete bands[key]; else bands[key] = v; setF({ ...f, minOrderBands: bands }); }} /></Field>)}
+        <p className="tiny muted">Leave a distance band blank to use the general minimum order. Delivery area still applies.</p>
         <div className="gst-mode">
           <p className="small"><b>{t('Menu prices are…')}</b></p>
           <div className="seg">

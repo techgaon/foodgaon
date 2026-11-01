@@ -5,7 +5,7 @@ import { app, put, patch, remove, newId } from '../lib/fb.js';
 import { useItems } from '../lib/data.js';
 import { useOffers, offerLabel, offerTerms, OFFER_COLORS, isLive } from '../lib/offers.js';
 import { rupee } from '../lib/utils.js';
-import { t } from '../i18n/index.js';
+import { t, getLang } from '../i18n/index.js';
 
 const MODELS = ['gemini-3.5-flash', 'gemini-3-flash-preview', 'gemini-3.5-flash-lite'];
 const OUT = Schema.object({ properties: {
@@ -16,7 +16,7 @@ async function aiOffer({ rest, kind, value, minOrder, dish, idea }) {
   const ai = getAI(app, { backend: new GoogleAIBackend() });
   const prompt = `You write short, catchy food-delivery offers for a small-town Indian vegetarian restaurant on the FoodGaon app.
 Restaurant: ${rest.name}. Offer: ${kind === 'flat' ? `flat ₹${value} off` : `${value}% off`}${minOrder ? ` on orders above ₹${minOrder}` : ''}${dish ? `, highlight: ${dish}` : ''}.${idea ? ` Owner's idea: ${idea}.` : ''}
-Give: title (English, max 6 words, catchy, include the discount), sub (English, max 8 words), hindi (one warm Devanagari Hindi line, max 12 words, e.g. "गरमा-गरम पनीर, अब और भी सस्ता!"),
+Give: title (English, max 6 words, catchy, include the discount), sub (English, max 8 words), hindi (a warm promotional line, max 12 words, in ${getLang() === "en" ? "English" : getLang() === "awa" ? "Awadhi in Devanagari" : "Hindi in Devanagari"}),
 codes: 3 coupon code suggestions (6-10 CAPITAL letters/digits, easy to say, related to the restaurant or dish, e.g. PARAG20, PANEER50), color: one of the given colours that suits the food.`;
   let last;
   for (const m of MODELS) {
@@ -40,7 +40,7 @@ export function OfferBanner({ o, img, restName }) {
       <div className="ofb-burst"><b>{o.type === 'flat' ? `₹${o.value}` : `${o.value}%`}</b><small>OFF</small></div>
       <div className="ofb-txt">
         <b>{o.title}</b>
-        {o.hindi && <span lang="hi" data-notr="">{o.hindi}</span>}
+        {o.hindi && <span data-notr="">{o.hindi}</span>}
         <small>{[restName, offerTerms(o)].filter(Boolean).join(' · ')}</small>
         {o.code && <em className="code-pill" data-notr="">{o.code}</em>}
       </div>
@@ -72,7 +72,7 @@ export default function RestOffers({ rest }) {
   );
 }
 
-function OfferMaker({ rest, onClose }) {
+export function OfferMaker({ rest, onClose, admin = false }) {
   const toast = useToast();
   const items = (useItems() || []).filter((i) => i.restaurantId === rest.id && i.img);
   const [f, setF] = useState({ type: 'percent', value: 10, minOrder: 199, maxOff: 50, dish: '', idea: '', until: '' });
@@ -83,7 +83,7 @@ function OfferMaker({ rest, onClose }) {
   const img = dish?.img || rest.cover || items[0]?.img || '';
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
   const gen = async () => {
-    if (!(Number(f.value) > 0)) { toast(t('Enter the discount'), 'err'); return; }
+    if (!(Number(f.value) > 0) || (f.type === 'percent' && Number(f.value) > 100) || Number(f.minOrder) < 0 || Number(f.maxOff) < 0) { toast(t('Enter the discount'), 'err'); return; }
     setBusy(true);
     try { const r = await aiOffer({ rest, kind: f.type, value: f.value, minOrder: Number(f.minOrder) || 0, dish: dish?.name, idea: f.idea }); setO(r); setCode(r.codes[0] || ''); }
     catch (e) { toast(t('AI could not make the offer — check internet and try again'), 'err'); }
@@ -96,7 +96,7 @@ function OfferMaker({ rest, onClose }) {
     try {
       const id = newId('offers'); const bid = newId('banners');
       await put('banners', bid, { title: data.title, sub: data.hindi || data.sub, img, code: data.code, link: rest.id, restaurantId: rest.id, active: true, sort: 5, createdMs: Date.now() }, false);
-      await put('offers', id, { ...data, restaurantId: rest.id, fundedBy: 'restaurant', active: true, until: f.until || '', sort: 5, img, bannerId: bid, createdBy: 'restaurant', createdMs: Date.now() }, false);
+      await put('offers', id, { ...data, restaurantId: rest.id, fundedBy: admin ? 'admin' : 'restaurant', active: true, until: f.until || '', sort: 5, img, bannerId: bid, createdBy: admin ? 'admin' : 'restaurant', createdMs: Date.now() }, false);
       toast(t('Offer is live for customers!')); onClose();
     } catch (e) { console.warn(e); toast(t('Could not save'), 'err'); }
     setBusy(false);
@@ -124,9 +124,9 @@ function OfferMaker({ rest, onClose }) {
           <div className="row gap wrap">{o.codes.map((c) => <button key={c} className={'chip-btn' + (code === c ? ' on' : '')} onClick={() => setCode(c)} data-notr="">{c}</button>)}</div>
           <input className="input" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} maxLength={12} data-notr="" />
           <Field label="Title"><input className="input" value={o.title} onChange={(e) => setO({ ...o, title: e.target.value })} /></Field>
-          <Field label="Hindi line"><input className="input" value={o.hindi} onChange={(e) => setO({ ...o, hindi: e.target.value })} lang="hi" data-notr="" /></Field>
+          <Field label="Offer line"><input className="input" value={o.hindi} onChange={(e) => setO({ ...o, hindi: e.target.value })} data-notr="" /></Field>
           <div className="row gap wrap">{OFFER_COLORS.map((c) => <button key={c} className={'swatch' + (o.color === c ? ' on' : '')} style={{ background: c }} onClick={() => setO({ ...o, color: c })} aria-label={c} />)}</div>
-          <p className="tiny muted">{`${t('You give this discount from your side.')} ${f.type === 'flat' ? rupee(f.value) : f.value + '%'} ${t('off')}${f.minOrder ? ` · ${t('min order')} ${rupee(f.minOrder)}` : ''}`}</p>
+          <p className="tiny muted">{`${t(admin ? 'FoodGaon pays this discount.' : 'You give this discount from your side.')} ${f.type === 'flat' ? rupee(f.value) : f.value + '%'} ${t('off')}${f.minOrder ? ` · ${t('min order')} ${rupee(f.minOrder)}` : ''}`}</p>
           <button className="btn green block lg" disabled={busy} onClick={save}><Icon name="check" size={18} /> {t('Publish offer & banner')}</button>
         </div>
       )}

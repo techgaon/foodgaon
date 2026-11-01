@@ -1,3 +1,4 @@
+import { getLang } from '../i18n/index.js';
 import React from 'react';
 import { Logo, Wordmark } from '../ui.jsx';
 import { feeTerms, feeLine, feeLineHi, AGREEMENT_VERSION } from '../lib/partner.js';
@@ -20,12 +21,12 @@ export default function PartnerAgreement({ a = {}, config = {}, accepted }) {
     <div className="agreement" data-notr="">
       <div className="doc-head">
         <div className="row gap"><Logo size={40} /><div><Wordmark size={24} /><div className="doc-firm">{FIRM.name}</div></div></div>
-        <div className="doc-title"><b>Restaurant Partner Agreement</b><small>रेस्टोरेंट पार्टनर अनुबंध · {AGREEMENT_VERSION}</small></div>
+        <div className="doc-title"><b>Restaurant Partner Agreement</b><small>{getLang() === "en" ? "Restaurant Partner Agreement" : "रेस्टोरेंट पार्टनर अनुबंध"} · {AGREEMENT_VERSION}</small></div>
       </div>
 
       <div className="ag-parties">
         <div>
-          <small>Platform / प्लेटफ़ॉर्म</small>
+          <small>Platform</small>
           <b>FoodGaon — a service of {FIRM.name}</b>
           <span>Proprietor: {FIRM.owner}</span>
           <span>{firmAddr}</span>
@@ -33,7 +34,7 @@ export default function PartnerAgreement({ a = {}, config = {}, accepted }) {
           <span>{FIRM.phone} · {FIRM.email}</span>
         </div>
         <div>
-          <small>Restaurant partner / रेस्टोरेंट</small>
+          <small>Restaurant partner</small>
           <span>Name: {blank(a.restName)}</span>
           <span>Owner: {blank(a.ownerName)} · Mobile: {blank(plain(a.ownerPhone), 90)}</span>
           <span>Address: {blank(a.address, 220)}</span>
@@ -42,6 +43,7 @@ export default function PartnerAgreement({ a = {}, config = {}, accepted }) {
         </div>
       </div>
 
+      {getLang() === 'en' ? <div className="ag-promise"><b>Our promise to customers</b><span>Same counter price</span><span>Same portion and quality</span><span>No extra fees</span><span>Free home delivery</span></div> : <>
       <div className="ag-promise" lang="hi">
         <b>FoodGaon का वादा — ग्राहक से</b>
         <span>✔ वही दाम जो दुकान पर</span><span>✔ वही मात्रा, वही स्वाद</span><span>✔ कोई प्लेटफ़ॉर्म फ़ीस, पैकिंग चार्ज या छुपा शुल्क नहीं</span><span>✔ घर तक मुफ़्त डिलीवरी</span>
@@ -60,6 +62,7 @@ export default function PartnerAgreement({ a = {}, config = {}, accepted }) {
         <li>कोई भी पक्ष 7 दिन की लिखित सूचना (WhatsApp/ईमेल भी) देकर अलग हो सकता है; बकाया हिसाब साफ़ करना होगा। फ़ीस बदलनी हो तो 15 दिन पहले बताया जाएगा।</li>
       </ol>
 
+      </>}
       <h4 className="ag-h">Terms</h4>
       <ol className="ag-list en">
         <li><b>Service.</b> FoodGaon lists the Restaurant's menu on its app and website and passes customer orders to the Restaurant. The Restaurant prepares, packs and delivers each order with its own delivery staff, within its delivery area.</li>

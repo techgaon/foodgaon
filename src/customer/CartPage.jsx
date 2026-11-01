@@ -1,3 +1,4 @@
+import { minimumOrderFor } from '../lib/delivery.js';
 import React, { useEffect, useState } from 'react';
 import { hasUpi, UpiAppStrip, chosenApp } from '../components/Pay.jsx';
 import { Sheet } from '../ui.jsx';
@@ -48,9 +49,9 @@ export default function CartPage({ nav, onPlaced }) {
   const applied = offers.find((o) => o.code === code);
   const discount = applied ? discountFor(applied, total) : 0;
   const bill = billFor({ itemTotal: total, discount, discountBy: applied?.fundedBy === 'restaurant' ? 'restaurant' : 'admin', rest: rest || {}, config });
-  const minOrder = Number(rest?.minOrder ?? config.minOrder ?? 0);
   const radius = Number(rest?.radiusKm ?? config.radiusKm ?? 0);
   const dist = addr?.lat && rest?.lat ? km({ lat: addr.lat, lng: addr.lng }, { lat: rest.lat, lng: rest.lng }) : null;
+  const minOrder = minimumOrderFor(rest || {}, config, dist);
   const far = radius > 0 && dist != null && dist > radius;
   const best = offers.map((o) => ({ o, d: discountFor(o, total) })).filter((x) => x.d > 0).sort((a, b) => b.d - a.d)[0];
   const apply = (c) => {
@@ -73,6 +74,7 @@ export default function CartPage({ nav, onPlaced }) {
     if (!user) { askLogin(); return; }
     if (!addr) { setForm(true); return; }
     if (!rest || rest.open === false) { toast(t('Restaurant is closed right now'), 'err'); return; }
+    if (Object.keys(rest.minOrderBands || {}).length && dist == null) { toast(t('Set the shop location and your delivery GPS pin to calculate the minimum order.'), 'err'); return; }
     if (minOrder && total < minOrder) { toast(t('Minimum order is {}').replace('{}', rupee(minOrder)), 'err'); return; }
     if (far) { toast(t('Sorry, this restaurant delivers only within {} km').replace('{}', radius), 'err'); return; }
     setBusy(true);

@@ -208,7 +208,6 @@ export function TrackOrder({ id, fresh, nav }) {
         {dead && o.payment === 'online' && o.paid && <div className="alert alert-amber">{o.rzpRefundId ? t('Your money is being returned to the same account/UPI. It usually takes 5–7 working days.') : t('Your refund will start shortly.')}</div>}
 
         {o.riderPhone && live && <RiderCard o={o} />}
-        )}
         <div className="card person">
           <span className="avatar"><Icon name="store" size={22} /></span>
           <div className="grow"><b data-notr="">{o.restaurantName}</b><small className="muted" data-notr="">{o.restaurantAddr}</small></div>

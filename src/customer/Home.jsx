@@ -39,9 +39,9 @@ export default function Home({ nav }) {
           </button>
           <Logo size={38} />
         </div>
-        <div className="pranam" data-notr="" lang="hi">
+        <div className="pranam">
           <span className="pr-badge" aria-hidden="true"><i className="pr-rays" /><b>🙏</b></span>
-          <span className="pr-txt"><b className="pr-word">प्रणाम{name ? ',' : ''}</b>{name && <span className="pr-name">{`${name} जी`}</span>}</span>
+          <span className="pr-txt"><b className="pr-word">{t('Welcome')}{name ? ',' : ''}</b>{name && <span className="pr-name">{name}</span>}</span>
         </div>
         <h1 className="hero-title"><em className="ht-2">What would you like to eat?</em></h1>
         <button className="search-bar" onClick={() => nav.go({ name: 'search' })}>

@@ -1,3 +1,4 @@
+import { OfferMaker } from '../restaurant/RestOffers.jsx';
 import React, { useState } from 'react';
 import { Icon, Sheet, Field, useToast, Img, Toggle, Confirm, Empty } from '../ui.jsx';
 import { useApp } from '../App.jsx';
@@ -29,12 +30,16 @@ function Coupons() {
   const rests = useRestaurants() || [];
   const [edit, setEdit] = useState(null);
   const [smart, setSmart] = useState(false);
+  const [offerRest, setOfferRest] = useState('');
   const toast = useToast();
   return (
     <>
       <button className="btn primary block" onClick={() => setEdit({})}><Icon name="plus" size={18} /> New coupon / offer</button>
-      <button className="btn ai-btn block" onClick={() => setSmart(true)} data-notr="">✨ AI से ऑफ़र बनाएँ</button>
-      <SmartOffers open={smart} rests={rests} onClose={() => setSmart(false)} onUse={(o) => { setSmart(false); setEdit(o); }} />
+      <button className="ai-cta offer" onClick={() => setSmart(true)}><em className="new-badge">NEW</em><span className="ai-spark">🎁</span><span className="grow"><b>{t('Make an offer with AI')}</b><small>{t('AI writes the offer, suggests a coupon code and makes a banner for your shop')}</small></span><Icon name="right" size={18} /></button>
+      {smart && !offerRest && <Sheet open onClose={() => setSmart(false)} title="Choose a restaurant">
+        <Field label="Restaurant"><select className="input" value="" onChange={(e) => setOfferRest(e.target.value)}><option value="">{t('Choose a restaurant')}</option>{rests.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select></Field>
+      </Sheet>}
+      {smart && rests.some((r) => r.id === offerRest) && <OfferMaker admin rest={rests.find((r) => r.id === offerRest)} onClose={() => { setSmart(false); setOfferRest(''); }} />}
       <p className="tiny muted">Coupons show on the home page and restaurant page. Customers apply them in the cart.</p>
       {!offers.length && <Empty icon="star" title="No offers yet" text="Create your first coupon, e.g. PYAAR20 — 20% off up to ₹50." />}
       {offers.map((o) => (
@@ -50,85 +55,6 @@ function Coupons() {
       ))}
       <CouponEditor open={!!edit} o={edit} rests={rests} onClose={() => setEdit(null)} />
     </>
-  );
-}
-
-/* ---------------- smart offer ideas from the last 30 days of orders ---------------- */
-const DAY = ['रविवार', 'सोमवार', 'मंगलवार', 'बुधवार', 'गुरुवार', 'शुक्रवार', 'शनिवार'];
-const up50 = (n) => Math.max(99, Math.ceil(n / 50) * 50 - 1);
-const r10 = (n) => Math.max(10, Math.round(n / 10) * 10);
-const iso = (ms) => { const d = new Date(ms); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
-const FESTIVALS = [['2026-11-08', 'DIWALI', 'दिवाली'], ['2026-12-25', 'XMAS', 'क्रिसमस'], ['2027-01-01', 'NEWYEAR', 'नया साल']];
-
-function SmartOffers({ open, rests, onClose, onUse }) {
-  const { config } = useApp();
-  const [orders, setOrders] = useState(null);
-  React.useEffect(() => {
-    if (!open) return;
-    setOrders(null);
-    getList('orders', [['day', '>=', iso(Date.now() - 30 * 864e5)]]).then(setOrders).catch(() => setOrders([]));
-  }, [open]);
-  if (!open) return null;
-  const ok = (orders || []).filter((o) => !['cancelled', 'rejected', 'payment_failed', 'awaiting_payment'].includes(o.status));
-  const n = ok.length;
-  const avg = n ? ok.reduce((a, o) => a + Number(o.itemTotal || o.total || 0), 0) / n : 200;
-  const fee = Number(config.commissionPct || 4.9);
-  const byDay = Array(7).fill(0); ok.forEach((o) => { byDay[new Date(o.createdMs || Date.now()).getDay()] += 1; });
-  const slow = byDay.indexOf(Math.min(...byDay));
-  const live = rests.filter((r) => !r.demo);
-  const cnt = (rid) => ok.filter((o) => o.restaurantId === rid).length;
-  const weak = live.length > 1 ? [...live].sort((a, b) => cnt(a.id) - cnt(b.id))[0] : null;
-  const custs = {}; ok.forEach((o) => { custs[o.customerUid] = (custs[o.customerUid] || 0) + 1; });
-  const once = Object.values(custs).filter((c) => c === 1).length;
-  const nextSun = (() => { const d = new Date(); d.setDate(d.getDate() + ((7 - d.getDay()) % 7 || 7)); return iso(d.getTime()); })();
-  const plus = (days) => iso(Date.now() + days * 864e5);
-
-  const ideas = [];
-  const bigMin = up50(avg * 1.3);
-  const bigOff = r10(bigMin * 0.07);
-  ideas.push({ why: `औसत ऑर्डर ₹${Math.round(avg)} का है। ₹${bigMin + 1} से ऊपर पर छूट देने से लोग एक-दो चीज़ ज़्यादा मँगाएँगे — बिक्री बढ़ेगी।`,
-    o: { code: `BADA${bigOff}`, title: `₹${bigMin + 1}+ के ऑर्डर पर ₹${bigOff} की छूट`, sub: 'पूरे परिवार के लिए मँगाइए', type: 'flat', value: bigOff, minOrder: bigMin + 1, maxOff: 0, until: plus(14) } });
-  ideas.push({ why: once > 0 ? `${once} ग्राहकों ने पिछले 30 दिनों में सिर्फ़ एक बार ऑर्डर किया। यह ऑफ़र उन्हें दोबारा बुलाने के लिए है।` : 'ग्राहकों को दोबारा ऑर्डर करने का बहाना देने वाला छोटा ऑफ़र।',
-    o: { code: 'PHIRSE15', title: '15% छूट — फिर से स्वाद लीजिए', sub: '₹30 तक की छूट', type: 'percent', value: 15, minOrder: up50(avg * 0.8) + 1, maxOff: 30, until: plus(7) } });
-  if (n >= 7) ideas.push({ why: `सबसे कम ऑर्डर ${DAY[slow]} को आते हैं। यह वीकेंड तक चलने वाला ऑफ़र है — ${DAY[slow]} को WhatsApp पर याद दिलाएँ।`,
-    o: { code: 'WEEKEND10', title: '10% छूट — इस हफ़्ते', sub: '₹40 तक', type: 'percent', value: 10, minOrder: up50(avg) + 1, maxOff: 40, until: nextSun } });
-  if (weak) ideas.push({ why: `"${weak.name}" पर पिछले 30 दिनों में सिर्फ़ ${cnt(weak.id)} ऑर्डर आए। सिर्फ़ उसी रेस्टोरेंट पर छूट से उसकी बिक्री बढ़ेगी।`,
-    o: { code: `TRY${String(weak.name || 'NEW').replace(/[^A-Za-z]/g, '').slice(0, 5).toUpperCase() || 'NEW'}`, title: `${weak.name} पर 15% छूट`, sub: 'नया स्वाद आज़माइए', type: 'percent', value: 15, minOrder: 149, maxOff: 30, restaurantId: weak.id, until: plus(10) } });
-  const today = iso(Date.now());
-  FESTIVALS.forEach(([d, code, name]) => {
-    const diff = (new Date(d) - new Date(today)) / 864e5;
-    if (diff >= -1 && diff <= 14) ideas.push({ why: `${name} नज़दीक है — त्योहार पर घर में मेहमान और ऑर्डर दोनों बढ़ते हैं।`,
-      o: { code, title: `${name} स्पेशल — ₹40 की छूट`, sub: `₹${up50(avg * 1.5) + 1}+ के ऑर्डर पर`, type: 'flat', value: 40, minOrder: up50(avg * 1.5) + 1, maxOff: 0, until: iso(new Date(d).getTime() + 864e5) } });
-  });
-
-  const offAt = (o) => (o.type === 'flat' ? (avg >= o.minOrder ? o.value : o.value) : Math.min(Math.max(avg, o.minOrder) * o.value / 100, o.maxOff || 1e9));
-  return (
-    <Sheet open={open} onClose={onClose} title="✨ AI ऑफ़र सुझाव" full>
-      <div data-notr="">
-        {orders === null ? <div className="skeleton" style={{ height: 160 }} /> : (
-          <>
-            <div className="ai-sum">
-              <span>🧠</span>
-              <p>{n ? `पिछले 30 दिनों के ${n} ऑर्डर देखकर ये ऑफ़र बनाए गए हैं — औसत ऑर्डर ₹${Math.round(avg)}.` : 'अभी ऑर्डर कम हैं, इसलिए शुरुआत वाले ऑफ़र सुझाए गए हैं (औसत ऑर्डर ₹200 मानकर)।'}</p>
-            </div>
-            {ideas.map(({ why, o }, i) => {
-              const off = Math.round(offAt(o));
-              const earn = Math.round((Math.max(avg, o.minOrder) * fee) / 100);
-              return (
-                <div key={i} className="ai-idea" style={{ '--c': OFFER_COLORS[i % OFFER_COLORS.length] }}>
-                  <div className="ai-top"><b>{o.code}</b><span>{o.type === 'flat' ? `₹${o.value} OFF` : `${o.value}% OFF`}</span></div>
-                  <p className="ai-title">{o.title}</p>
-                  <p className="ai-why">💡 {why}</p>
-                  <p className="ai-cost">हर ऑर्डर पर लगभग ₹{off} की छूट आपकी जेब से · आपकी फ़ीस लगभग ₹{earn} {off > earn ? <em>— फ़ीस से ज़्यादा, सीमित समय तक ही चलाएँ</em> : null}</p>
-                  <button className="btn primary block" onClick={() => onUse({ ...o, fundedBy: 'admin', restaurantId: o.restaurantId || '', color: OFFER_COLORS[i % OFFER_COLORS.length], active: true, sort: 3 })}>इसे इस्तेमाल करें (बदल भी सकते हैं)</button>
-                </div>
-              );
-            })}
-            <p className="tiny muted">ये सुझाव आपके ऐप के ऑर्डर के आँकड़ों से अपने-आप बनते हैं। सेव करने से पहले हर चीज़ बदल सकते हैं।</p>
-          </>
-        )}
-      </div>
-    </Sheet>
   );
 }
 

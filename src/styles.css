@@ -1254,3 +1254,19 @@ body.noscroll .cart-bar, body.noscroll .live-bar { display: none; }
 .ai-title { font-weight: 700; margin: 6px 0 4px; }
 .ai-why { font-size: .84rem; margin: 0 0 6px; color: #4a3a30; }
 .ai-cost { font-size: .78rem; color: var(--muted); margin: 0 0 10px; } .ai-cost em { color: #b3261e; font-style: normal; font-weight: 700; }
+
+/* Preserve mobile viewport width, including long uploaded filenames. */
+.app-shell, .page, .panel, .sheet { width: 100%; min-width: 0; }
+.input { min-width: 0; max-width: 100%; }
+.doc-up, .du-body, .doc-up-list, .join-form, .ag-box { min-width: 0; max-width: 100%; }
+.du-name, .du-err, .doc-up b, .sign-steps small { overflow-wrap: anywhere; }
+.doc-up { flex-wrap: wrap; }
+.du-act { flex-shrink: 0; }
+.ag-box { overflow-x: auto; }
+@media (max-width: 380px) {
+  .pad-x { padding-left: 12px; padding-right: 12px; }
+  .doc-up .du-act { margin-left: auto; }
+  .join-steps small { font-size: .67rem; }
+  .row.gap > .field { flex-basis: 120px; }
+  .stt { width: 65px; }
+}

@@ -85,10 +85,10 @@ export function startTranslator() {
   }).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ATTRS });
 }
 
-/** Always Hindi (or Awadhi when Awadhi is chosen) — for screens that must stay in the local language
- *  even when the app is in English, e.g. the UPI payment screen. Use with data-notr on the container. */
+/** Legacy helper: preserve selected language, including default English. */
 let hiMap = null;
 export function hi(src, ...vals) {
+  if (lang === 'en') { let out = src; vals.forEach((v) => { out = out.replace('{}', v); }); return out; }
   const col = lang === 'awa' ? 2 : 1;
   if (!hiMap || hiMap.col !== col) { hiMap = new Map(); hiMap.col = col; for (const r of DICT) if (r[col] || r[1]) hiMap.set(r[0], r[col] || r[1]); }
   let out = hiMap.get(src) ?? src;
