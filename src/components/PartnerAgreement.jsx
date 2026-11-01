@@ -1,11 +1,12 @@
 import { getLang } from '../i18n/index.js';
 import React from 'react';
+import { PLATFORM_GSTIN } from '../lib/business.js';
 import { Logo, Wordmark } from '../ui.jsx';
 import { feeTerms, feeLine, feeLineHi, AGREEMENT_VERSION } from '../lib/partner.js';
 import { fmtDateTime, plain } from '../lib/utils.js';
 
 const FIRM = {
-  name: 'TECHGAON AI SERVICES', owner: 'Suraj Bhan Pandey', gstin: '09DBSPP3533H1Z5',
+  name: 'TECHGAON AI SERVICES', owner: 'Suraj Bhan Pandey', gstin: PLATFORM_GSTIN,
   addr: '00, Pandey Home, PO & PS Subeha, Rampur, Haidergarh, District Barabanki, Uttar Pradesh – 225125',
   udyam: 'UDYAM-UP-14-0065110', email: 'contact@techgaon.in', phone: '+91 91292 03268',
 };

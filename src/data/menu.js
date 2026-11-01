@@ -1,5 +1,6 @@
 // Starter data — 100% vegetarian. Calories are rough estimates per serving shown.
 import { photo } from './photos.js';
+import { PLATFORM_GSTIN } from '../lib/business.js';
 import { extraPhotos } from './gallery.js';
 import { storyFor } from './stories.js';
 
@@ -201,7 +202,7 @@ export const DEFAULT_CONFIG = {
   appName: 'FoodGaon',
   firmName: 'TechGaon AI Services',
   firmAddress: '00, Pandey Home, PO & PS Subeha, Rampur, Haidergarh, Barabanki, Uttar Pradesh – 225125',
-  gstin: '09DBSPP3533H1Z5',
+  gstin: PLATFORM_GSTIN,
   supportEmail: 'contact@techgaon.in',
   appLink: 'https://techgaon.in/foodgaon',
   otpMode: 'mock',
