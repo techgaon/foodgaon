@@ -1365,3 +1365,13 @@ body.noscroll .cart-bar, body.noscroll .live-bar { display: none; }
 
 .scene-handover { animation: scene-handover 3s ease-in-out infinite; }
 @keyframes scene-handover { 0%,100% { transform: translateX(1px); } 50% { transform: translateX(-3px); } }
+
+/* Refined scooter proportions and relaxed riding movement */
+.fd-scene { height: 94px; }
+.fd-scooter { bottom: -5px; animation: fdRideRefined 8s ease-in-out infinite; filter: drop-shadow(0 3px 2px #00381e25); }
+.fd-wheel { animation-duration: 1.05s; }
+.fd-bounce { animation-duration: 1.1s; }
+.fd-speed { animation-duration: 1.8s; }
+@keyframes fdRideRefined { 0%,100% { transform: translateX(-13px); } 50% { transform: translateX(1px); } }
+@media(max-width:360px) { .fd-scooter { width: 132px; height: 88px; } .fd-scene { min-width: 118px; } }
+@media(prefers-reduced-motion:reduce) { .fd-scooter,.fd-wheel,.fd-bounce,.fd-speed { animation:none; } }
