@@ -33,12 +33,12 @@ export function useSyncAddresses() {
 export const addrLine = (a) => [a.house, a.area, a.landmark && `${t('Near')} ${a.landmark}`].filter(Boolean).join(', ');
 
 export function AddressForm({ open, onClose, initial }) {
-  const { user } = useApp();
+  const { user, profile } = useApp();
   const toast = useToast();
   const [a, setA] = useState(null);
   const [locating, setLocating] = useState(false);
   useEffect(() => {
-    if (open) setA(initial || { id: 'a' + Date.now(), label: 'Home', name: user?.displayName || '', phone: phoneOf(user).replace('+91', ''), house: '', area: '', landmark: '', lat: null, lng: null });
+    if (open) setA(initial || { id: 'a' + Date.now(), label: 'Home', name: user?.displayName || '', phone: (phoneOf(user) || profile?.phone || '').replace('+91', ''), house: '', area: '', landmark: '', lat: null, lng: null });
   }, [open]); // eslint-disable-line
   const set = (k) => (e) => setA((x) => ({ ...x, [k]: e.target ? e.target.value : e }));
   const locate = async () => {

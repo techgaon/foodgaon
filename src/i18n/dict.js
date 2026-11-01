@@ -1,6 +1,10 @@
 // [English (source), हिंदी, अवधी]
 // {} = changing part (name, amount, number). Use {0},{1} in a translation to reorder.
 export const DICT = [
+  ['Welcome to FoodGaon', 'FoodGaon में आपका स्वागत है', 'FoodGaon मा आपक स्वागत अहै'],
+  ['Continue with mobile number', 'मोबाइल नंबर से आगे बढ़ें', 'मोबाइल नंबर से आगे बढ़ौ'],
+  ['This is my mobile number', 'यह मेरा मोबाइल नंबर है', 'ई हमार मोबाइल नंबर अहै'],
+  ['Prefer not to say', 'अभी नहीं बताना चाहते', 'अबहिन नाहीं बतावै का'],
   ['Trial login — no SMS will be sent.', 'ट्रायल लॉगिन — SMS नहीं भेजा जाएगा।', 'ट्रायल लॉगिन — SMS नाहीं भेजा जाई।'],
   ['Show code', 'कोड दिखाएँ', 'कोड देखावौ'],
   ['Hide code', 'कोड छिपाएँ', 'कोड छिपावौ'],

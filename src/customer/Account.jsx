@@ -21,14 +21,14 @@ export default function Account({ nav, openHisab }) {
   const toast = useToast();
   const saveName = async () => {
     const n = name.trim(); if (n.length < 2) return;
-    try { await updateProfile(auth.currentUser, { displayName: n }); await put('customers', user.uid, { name: n, phone: phoneOf(user), gender }); location.reload(); } catch { toast(t('Could not save'), 'err'); }
+    try { await updateProfile(auth.currentUser, { displayName: n }); await put('customers', user.uid, { name: n, phone: phoneOf(user) || profile?.phone || '', gender }); location.reload(); } catch { toast(t('Could not save'), 'err'); }
   };
   return (
     <div className="page account">
       <div className="acc-head">
         <span className="acc-av">{(user?.displayName || '?').slice(0, 1).toUpperCase()}</span>
         <div className="grow">
-          {user ? <><b data-notr="">{user.displayName || 'Hello!'}</b><small>{plain(phoneOf(user)) || user.email}</small></> : <><b>Welcome!</b><small>Log in to order and track food</small></>}
+          {user ? <><b data-notr="">{user.displayName || 'Hello!'}</b><small>{plain(phoneOf(user) || profile?.phone) || user.email}</small></> : <><b>Welcome!</b><small>Log in to order and track food</small></>}
         </div>
         {!user && <button className="btn light small" onClick={askLogin}>Log in</button>}
         {user && <button className="icon-btn light" onClick={() => { setName(user.displayName || ''); setGender(profile?.gender || ''); setNameOpen(true); }} aria-label="Edit name"><Icon name="edit" size={20} /></button>}

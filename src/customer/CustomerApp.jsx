@@ -17,7 +17,15 @@ export default function CustomerApp() {
   const { user } = useApp();
   const [tab, setTab] = useState('home');
   const [hisabKey, setHisabKey] = useState(0);
-  const [stack, setStack] = useState([]);
+  const [stack, setStack] = useState(() => {
+    try {
+      if (user && sessionStorage.getItem('fg_login_return') === 'cart') {
+        sessionStorage.removeItem('fg_login_return');
+        return [{ name: 'cart' }];
+      }
+    } catch {}
+    return [];
+  });
   const [added, setAdded] = useState(null);
   useEffect(() => {
     let timer;

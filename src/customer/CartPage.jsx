@@ -71,7 +71,7 @@ export default function CartPage({ nav, onPlaced }) {
   );
 
   const place = async () => {
-    if (!user) { askLogin(); return; }
+    if (!user) { try { sessionStorage.setItem('fg_login_return', 'cart'); } catch {} askLogin(); return; }
     if (!addr) { setForm(true); return; }
     if (!rest || rest.open === false) { toast(t('Restaurant is closed right now'), 'err'); return; }
     if (deliverySlabs(rest).length && dist == null) { toast(t('Set the shop location and your delivery GPS pin to calculate the minimum order.'), 'err'); return; }

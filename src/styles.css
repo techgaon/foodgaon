@@ -108,6 +108,15 @@ textarea.input { resize: vertical; }
 .login-brand { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 18px; }
 .login-brand p { margin: 0; color: var(--muted); font-size: .9rem; }
 .login-form h3 { font-size: 1.35rem; }
+.login-form label { display: block; margin: 12px 0; }
+.login-form label .input { display: block; width: 100%; margin-top: 6px; }
+.phone-input input { min-width: 0; }
+@media (max-width: 600px) {
+  .login-details .login-card { height: 100dvh; max-height: 100dvh; border-radius: 0; padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+  .login-details .login-brand > :first-child { display: none; }
+  .login-details .login-brand { margin-bottom: 12px; }
+  .login-form input, .login-form select { font-size: max(16px, 1em); }
+}
 .phone-input { display: flex; align-items: center; border: 1.5px solid var(--line); background: #fff; border-radius: 15px; overflow: hidden; margin: 12px 0; }
 .phone-input:focus-within { border-color: var(--brand-2); box-shadow: 0 0 0 4px rgba(255,138,31,.15); }
 .phone-input span { padding: 0 12px 0 16px; font-weight: 600; color: var(--ink-2); border-right: 1.5px solid var(--line); }
