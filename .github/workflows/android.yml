@@ -1,4 +1,4 @@
-# FoodGaon — builds the Android app and the web version automatically on every push
+# FoodGaon â€” builds the Android app and the web version automatically on every push
 # install.apk  = install directly on a phone (testing)
 # unsigned.aab = for Play Store; sign with the upload key before uploading (key is NOT kept on GitHub)
 name: Build FoodGaon
@@ -19,6 +19,7 @@ concurrency:
 
 jobs:
   android:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

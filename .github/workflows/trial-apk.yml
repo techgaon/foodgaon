@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: trial-apk-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -40,21 +44,21 @@ jobs:
       - name: Build installable trial APK
         working-directory: android
         env:
-          VERSION_CODE: '10'
-          VERSION_NAME: 1.0.10-trial
+          VERSION_CODE: '12'
+          VERSION_NAME: 1.0.12-trial
         run: |
           chmod +x gradlew
           ./gradlew --no-daemon assembleDebug
       - name: Verify APK signature and collect
         run: |
           mkdir -p out
-          cp android/app/build/outputs/apk/debug/app-debug.apk out/FoodGaon-v1.0.10-trial.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk out/FoodGaon-v1.0.12-trial.apk
           TOOLS=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)
-          "$TOOLS/apksigner" verify --verbose --print-certs out/FoodGaon-v1.0.10-trial.apk
-          "$TOOLS/aapt" dump badging out/FoodGaon-v1.0.10-trial.apk | head -5
-          sha256sum out/FoodGaon-v1.0.10-trial.apk > out/SHA256SUMS.txt
+          "$TOOLS/apksigner" verify --verbose --print-certs out/FoodGaon-v1.0.12-trial.apk
+          "$TOOLS/aapt" dump badging out/FoodGaon-v1.0.12-trial.apk | head -5
+          sha256sum out/FoodGaon-v1.0.12-trial.apk > out/SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: FoodGaon-v1.0.10-trial
+          name: FoodGaon-v1.0.12-trial
           path: out/
           retention-days: 14
