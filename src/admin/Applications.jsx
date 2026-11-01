@@ -136,7 +136,7 @@ function AppFile({ a, onClose }) {
         <div className="kv" data-notr="">
           <span>Owner</span><b>{a.ownerName} · {plain(a.ownerPhone)}{a.altPhone ? ` / ${a.altPhone}` : ''}</b>
           {a.email && <><span>Email</span><b>{a.email}</b></>}
-          <span>Town</span><b>{[a.town, a.landmark, a.pincode].filter(Boolean).join(' · ') || '—'}</b>
+          <span>Village / town</span><b>{[a.town, a.landmark, a.pincode].filter(Boolean).join(' · ') || '—'}</b>
           <span>Timing</span><b>{`${a.openTime || '?'} – ${a.closeTime || '?'} · cook ${a.prepMins || '?'} min · ${a.radiusKm || '?'} km · ${a.ownRiders || 0} delivery boys`}</b>
           <span>Prices</span><b>{a.priceInclGst !== false ? 'Include GST' : 'Without GST'} · {a.vegOnly ? 'Pure veg' : 'NOT pure veg'}</b>
           <span>FSSAI</span><b>{a.fssai}</b>
