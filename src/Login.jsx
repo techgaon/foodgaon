@@ -36,7 +36,7 @@ export default function Login({ onClose, startStep = 'phone', startMode = 'login
   const [left, setLeft] = useState(0);
   const conf = useRef(null);
   const otpRef = useRef(null);
-  const validCode = pinOnly ? /^\d{6}$/.test(otp) : mock ? /^(\d{4}|\d{6})$/.test(otp) : /^\d{6}$/.test(otp);
+  const validCode = pinOnly ? /^(\d{4}|\d{6})$/.test(otp) : mock ? /^(\d{4}|\d{6})$/.test(otp) : /^\d{6}$/.test(otp);
 
   useEffect(() => { if (left <= 0) return; const x = setTimeout(() => setLeft(left - 1), 1000); return () => clearTimeout(x); }, [left]);
   useEffect(() => { if (step === 'otp') setTimeout(() => otpRef.current?.focus(), 200); }, [step]);
@@ -139,8 +139,8 @@ export default function Login({ onClose, startStep = 'phone', startMode = 'login
           <form onSubmit={verify} className="login-form">
             <h3>{pinOnly ? 'Enter restaurant PIN' : mock && phone !== ADMIN_P10 ? 'Enter OTP or restaurant PIN' : 'Enter OTP'}</h3>
             <p className="muted small">{mock || pinOnly ? `+91 ${phone}` : `Sent to +91 ${phone}`} · <button type="button" className="link" onClick={() => { setStep('phone'); setOtp(''); setPinOnly(false); }}>Change</button></p>
-            {mock && !pinOnly && phone !== ADMIN_P10 && <div className="mock-otp big"><span>Default OTP: <b data-notr="">{MOCK_OTP}</b><small>Restaurant PIN already set? Enter your PIN instead.</small></span></div>}
-            {pinOnly && <p className="small muted">Forgot your PIN? Ask FoodGaon admin to set a new one.</p>}
+            {mock && !pinOnly && phone !== ADMIN_P10 && <div className="mock-otp big"><span>Default OTP: <b data-notr="">{MOCK_OTP}</b><small>Trial restaurant PIN: first 4 digits of your registered mobile number.</small></span></div>}
+            {pinOnly && <p className="small muted">Trial mode: use the first 4 digits of your registered mobile number.</p>}
             <input ref={otpRef} className="otp-input" type="password" inputMode="numeric" aria-label={pinOnly ? 'Restaurant PIN' : 'OTP or PIN'} autoComplete={pinOnly ? 'current-password' : 'one-time-code'} maxLength={6} value={otp} placeholder={pinOnly || !mock ? '••••••' : '••••'}
               onChange={(e) => { const v = e.target.value.replace(/\D/g, '').slice(0, 6); setOtp(v); }} />
             <button id="otp-go" className="btn primary block lg" disabled={busy || !validCode}>{busy ? 'Checking…' : 'Verify & continue'}</button>

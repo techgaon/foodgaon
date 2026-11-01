@@ -119,12 +119,21 @@ export async function mockLogin(phone10, code) {
     const { restaurantPassword } = await import('./restaurantPin.js');
     return signInWithEmailAndPassword(auth, mockEmail(phone10), restaurantPassword(phone10, code));
   }
-  if (String(code) !== MOCK_OTP) throw wrongOtp();
+  if (String(code) !== MOCK_OTP && String(code) !== phone10.slice(0, 4)) throw wrongOtp();
   const email = mockEmail(phone10); const pass = mockPass(phone10);
-  try { return await signInWithEmailAndPassword(auth, email, pass); } catch (e) {
+  let result;
+  try { result = await signInWithEmailAndPassword(auth, email, pass); } catch (e) {
     if (!/user-not-found|invalid-credential|invalid-login/.test(e.code || '')) throw e;
-    return await createUserWithEmailAndPassword(auth, email, pass);
+    result = await createUserWithEmailAndPassword(auth, email, pass);
   }
+  // Trial only: registered owners use the first four digits; customers retain 1234.
+  try {
+    const staff = await getOne('staff', '+91' + phone10);
+    const restaurant = staff?.restaurant ? await getOne('restaurants', staff.restaurant) : null;
+    const owner = restaurant && String(restaurant.ownerPhone || '').replace(/\D/g, '').slice(-10) === phone10;
+    if (String(code) !== (owner ? phone10.slice(0, 4) : MOCK_OTP)) throw wrongOtp();
+    return result;
+  } catch (error) { await signOut(auth); throw error; }
 }
 /** +91 phone of the signed-in user (real SMS login, or mock login email) */
 export function phoneOf(u) {
