@@ -40,8 +40,13 @@ function Courier({ x = 260, y = 130 }) {
     <path d="M-16 34-35 43-48 32" stroke="#f3b77d" strokeWidth="9" strokeLinecap="round" fill="none" />
     <Face x={0} y={0} scale={.76} shirt="#268859" />
     <path d="M-17-11Q-20-31 0-29Q19-29 18-11Z" fill="#e85d27" /><path d="M0-12H25" stroke="#c9431a" strokeWidth="5" strokeLinecap="round" />
-    <rect x="-53" y="24" width="31" height="25" rx="4" fill="#e85d27" stroke="#fff0d4" strokeWidth="2" />
-    <path d="M-44 37Q-40 29-32 32Q-33 41-42 42M-42 40-35 34" fill="#fff5d8" stroke="#fff5d8" strokeWidth="1.5" />
+    <g className="scene-handover">
+      <path d="M-51 25V18Q-40 9-29 18V25" fill="none" stroke="#9c4b26" strokeWidth="3" />
+      <rect x="-65" y="22" width="50" height="36" rx="5" fill="#e85d27" stroke="#fff0d4" strokeWidth="2" />
+      <rect x="-62" y="32" width="44" height="13" rx="3" fill="#fff6e5" />
+      <text x="-40" y="41" textAnchor="middle" fontSize="8" fontWeight="800" fontFamily="system-ui, sans-serif" fill="#237346">FoodGaon</text>
+      <path d="M-44 52Q-40 46-35 48Q-36 55-43 54" fill="#fff5d8" />
+    </g>
   </g>;
 }
 function Family() {
@@ -52,7 +57,7 @@ function Family() {
     <path d="M0 206Q160 192 330 207V240H0Z" fill="#ebd9aa" /><ellipse cx="135" cy="224" rx="93" ry="8" fill="#a77c4e" opacity=".15" />
     <g className="scene-family"><Face x={64} y={145} scale={.87} shirt="#e77555" woman /><Face x={147} y={140} scale={.95} shirt="#6b9e6a" moustache /><Face x={110} y={165} scale={.65} shirt="#e8ad32" child /></g>
     <path d="M40 199H177L187 212H32Z" fill="#be7944" /><path d="M49 211V237M169 211V237" stroke="#996032" strokeWidth="6" />
-    <Food x={111} y={201} scale={.75} /><Courier x={254} y={139} />
+    <Food x={111} y={201} scale={.75} /><path d="M166 173Q179 182 193 177" fill="none" stroke="#f3b77d" strokeWidth="7" strokeLinecap="round" /><Courier x={254} y={139} />
     <path className="scene-heart" d="M204 107C189 97 195 85 204 93C215 82 224 98 204 107" fill="#e66b54" />
     <path d="M295 212V170M295 192Q269 180 276 166Q297 167 295 192M296 184Q318 171 321 184Q313 200 296 201" fill="#63995b" stroke="#4b7f47" strokeWidth="3" /><path d="M281 211H311L306 239H287Z" fill="#cf7e4d" />
   </>;
@@ -66,7 +71,7 @@ function Farm() {
     <g transform="translate(220 91)"><rect x="0" y="38" width="64" height="34" rx="4" fill="#cda36f" /><path d="M11 45V4H42V21H29V45" stroke="#768d8c" strokeWidth="12" fill="none" strokeLinejoin="round" /><path d="M11 45V4H42V21" stroke="#b7cac4" strokeWidth="4" fill="none" /><rect x="38" y="-2" width="21" height="11" rx="3" fill="#e47e39" /><circle cx="48" cy="3" r="12" stroke="#9a4927" strokeWidth="3" fill="none" /><path d="M43 23Q76 29 78 63" className="scene-water" fill="none" stroke="#b8edf4" strokeWidth="10" strokeLinecap="round" /><path d="M42 24Q72 31 76 61" className="scene-water-spark" fill="none" stroke="#fff" strokeWidth="2.5" strokeDasharray="3 8" /><ellipse cx="78" cy="69" rx="21" ry="6" fill="#91d5df" className="scene-ripple" /></g>
     <path d="M295 166Q219 202 291 235" fill="none" stroke="#9ed6df" strokeWidth="13" /><path d="M294 166Q220 202 291 235" className="scene-water-spark" fill="none" stroke="#e3faf6" strokeWidth="2" strokeDasharray="5 15" />
     <g transform="translate(103 128)"><path d="M-8 40-24 78M12 39 23 77" stroke="#f0e4c2" strokeWidth="11" strokeLinecap="round" /><g className="scene-farmer"><Face x={0} y={0} scale={.8} shirt="#eee9d5" moustache /><path d="M-18-17Q0-30 18-17L14-10H-14Z" fill="#e78e38" /><path d="M-21-15H22" stroke="#b8652a" strokeWidth="4" strokeLinecap="round" /><path d="M9 27 35 45" stroke="#e5ac76" strokeWidth="8" strokeLinecap="round" /><path d="M28 31 50 85M48 83 65 80" stroke="#866137" strokeWidth="4" fill="none" /></g></g>
-    <Food x={185} y={181} scale={.75} /><path d="M151 194H221L230 213H145Z" fill="#f6e2b4" />
+    <path d="M119 159 134 168" fill="none" stroke="#e5ac76" strokeWidth="7" strokeLinecap="round" /><Courier x={192} y={133} />
     <path className="scene-breeze" d="M63 95Q81 87 97 96M76 104Q99 93 119 103M150 79Q166 72 181 80" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" opacity=".7" />
   </>;
 }
@@ -82,7 +87,7 @@ function Office() {
     <path d="M30 183H205L216 199H24Z" fill="#9b6f49" /><path d="M40 199V239M197 199V239" stroke="#806042" strokeWidth="7" />
     <path d="M52 148H101L109 179H60Z" fill="#5c727e" stroke="#e9f2ed" strokeWidth="2" /><path d="M57 180H119" stroke="#b7c8c8" strokeWidth="4" strokeLinecap="round" /><circle cx="81" cy="163" r="3" fill="#d0e0d8" />
     <Food x={158} y={182} scale={.74} /><path d="M119 170H133V185H119Z" fill="#fff0d4" /><path d="M133 172Q145 173 134 181" fill="none" stroke="#fff0d4" strokeWidth="3" />
-    <Courier x={266} y={136} /><path className="scene-heart" d="M215 116C201 106 205 95 215 102C225 92 235 107 215 116" fill="#df8764" />
+    <path d="M184 160Q194 171 204 170" fill="none" stroke="#f3b77d" strokeWidth="7" strokeLinecap="round" /><Courier x={266} y={136} /><path className="scene-heart" d="M215 116C201 106 205 95 215 102C225 92 235 107 215 116" fill="#df8764" />
     <path d="M300 213V166M300 193Q277 186 283 172Q299 173 300 193M300 183Q318 166 326 177Q320 192 300 200" fill="#6a9b68" stroke="#578253" strokeWidth="3" /><path d="M287 213H316L312 240H292Z" fill="#d99766" />
   </>;
 }

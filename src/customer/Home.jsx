@@ -165,7 +165,7 @@ function Banners({ list, nav }) {
       <div className="banner-track" ref={ref} onPointerDown={() => { setPaused(true); programScroll.current = false; }} onFocusCapture={() => setPaused(true)} onScroll={(e) => { if (programScroll.current) return; const w = e.currentTarget.clientWidth; if (!w) return; const k = Math.max(0, Math.min(n - 1, Math.round(e.currentTarget.scrollLeft / w))); if (k !== i) setI(k); }}>
         {list.map((b) => (
           <div key={b.id} className={'banner' + (b.scene ? ` everyday-banner everyday-${b.scene}` : '') + (b.link ? ' clickable' : '')} data-notr={b.scene ? '' : undefined} lang={b.scene ? 'hi' : undefined} onClick={() => b.link && nav.openRest(b.link)}>
-            {b.scene ? <><EverydayScene kind={b.scene} /><div className="everyday-copy"><small>FoodGaon के साथ</small><b>{b.title}</b><strong>{b.sub}</strong><span>{b.note}</span><em>शुद्ध शाकाहारी · मुफ़्त डिलीवरी</em></div></> : <><Img src={b.img} alt="" className="banner-img kenburns" /><div className="banner-txt"><b>{b.title === 'Your town, your taste' ? 'Your village, your town, your taste' : b.title}</b><span>{b.sub}</span>{b.code && <em className="code-pill" data-notr="">{b.code}</em>}</div></>}
+            {b.scene ? <><EverydayScene kind={b.scene} /><div className="everyday-copy"><small>FoodGaon के साथ</small><b>{b.title}</b><strong>{b.sub}</strong><span>{b.note}</span></div></> : <><Img src={b.img} alt="" className="banner-img kenburns" /><div className="banner-txt"><b>{b.title === 'Your town, your taste' ? 'Your village, your town, your taste' : b.title}</b><span>{b.sub}</span>{b.code && <em className="code-pill" data-notr="">{b.code}</em>}</div></>}
           </div>
         ))}
       </div>
