@@ -11,7 +11,7 @@ import {
   DOC_TYPES, FORM_DOCS, SIGN_DOCS, APP_STATUS, AGREEMENT_VERSION, blankApp, missing, saveApp, saveDoc, loadDoc, dropDoc, fileToDoc,
   feeTerms, addHistory, PAN_RE, IFSC_RE, GSTIN_RE, maskAcc,
 } from '../lib/partner.js';
-import { t } from '../i18n/index.js';
+import { t, getLang } from '../i18n/index.js';
 
 const STEPS = [
   { id: 'details', label: 'Restaurant', icon: 'store' },
@@ -31,7 +31,7 @@ export default function JoinRestaurant({ nav }) {
   const head = (
     <div className="page-head row gap">
       <button className="icon-btn" onClick={() => (step !== 'intro' && step !== 'status' && app?.status !== 'submitted' ? setStep(prevStep(step)) : nav.back())} aria-label="Back"><Icon name="back" /></button>
-      <h2 className="grow">List your restaurant</h2>
+      <h2 className="grow" data-ui-lang={getLang() === "awa" ? "awa" : "hi"}>List your restaurant</h2>
     </div>
   );
 
@@ -80,7 +80,7 @@ const prevStep = (s) => { const i = STEPS.findIndex((x) => x.id === s); return i
 function Intro({ config, app, onStart, loggedOut }) {
   const f = feeTerms(config);
   return (
-    <div className="pad-x join-intro">
+    <div className="pad-x join-intro" data-ui-lang={getLang() === "awa" ? "awa" : "hi"}>
       <div className="join-hero">
         <div className="jh-glow" />
         <span className="jh-chip">For restaurant owners</span>
@@ -89,7 +89,7 @@ function Intro({ config, app, onStart, loggedOut }) {
       </div>
       {app && <button className="btn primary block" onClick={onStart}>Continue my form <Icon name="right" size={18} /></button>}
       <GrowStory />
-      <div className="card compare-card">
+      <div className="card compare-card" data-ui-lang="en">
         <h4>On ₹100 of food</h4>
         <div className="cmp-row head"><span /><span>Big delivery apps</span><span className="fg">FoodGaon</span></div>
         <div className="cmp-row"><span>Restaurant gets</span><span>₹60–70</span><span className="fg">{`₹${Math.round((100 - 100 * 5 / 105 - f.onHundred) * 100) / 100}`}</span></div>
@@ -100,7 +100,7 @@ function Intro({ config, app, onStart, loggedOut }) {
       <div className="card">
         <h4><Icon name="list" size={18} /> Keep these ready</h4>
         <ul className="ready-list">
-          <li>FSSAI licence or registration</li><li>Owner's PAN card</li><li>Bank passbook first page or a cancelled cheque</li><li>A photo of your shop / kitchen</li><li>GST certificate (only if you have GST)</li>
+          <li>FSSAI licence or registration</li><li>Owner Aadhaar card</li><li>Owner's PAN card</li><li>Bank passbook first page or a cancelled cheque</li><li>A photo of your shop / kitchen</li><li>GST certificate (only if you have GST)</li>
         </ul>
         <p className="tiny muted">Takes about 10 minutes. You can stop and continue later — your form is saved.</p>
       </div>

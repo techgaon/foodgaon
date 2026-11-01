@@ -1517,3 +1517,8 @@ DICT.push(
  ['Previously uploaded file is still available', 'पहले अपलोड की हुई फ़ाइल सुरक्षित है', 'पहिले अपलोड भई फाइल सुरक्षित अहै'],
  ['Upload one PDF containing all signed pages.', 'सभी हस्ताक्षरित पन्नों की एक PDF अपलोड करें।', 'सब दस्तखत वाले पन्ना कै एक PDF अपलोड करौ।']
 );
+
+DICT.push(
+ ['Shop name and address', 'दुकान का नाम और पता', 'दुकान कै नाम अउर पता'],
+ ['Bank account and documents (Aadhaar, FSSAI, PAN, passbook)', 'बैंक खाता और दस्तावेज़ (आधार, FSSAI, PAN, पासबुक)', 'बैंक खाता अउर कागज (आधार, FSSAI, PAN, पासबुक)']
+);

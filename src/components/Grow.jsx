@@ -114,6 +114,7 @@ export function GrowStory({ onJoin, joinLabel = 'Join now' }) {
           ))}
         </div>
 
+        <section data-ui-lang="en">
         <h4 className="gi-h">Where does a ₹100 order go?</h4>
         <div className="gi-split">
           <div className="gi-bar">
@@ -129,7 +130,6 @@ export function GrowStory({ onJoin, joinLabel = 'Join now' }) {
           <p className="tiny muted">No separate platform or packing fees for customers.</p>
         </div>
 
-        <section data-ui-lang="en">
         <h4 className="gi-h">Explore potential growth 🚀</h4>
         <div className="gi-double">
           <svg viewBox="0 0 320 150" role="img" aria-label="Example: 40 counter orders plus 40 app orders makes 80 orders">
