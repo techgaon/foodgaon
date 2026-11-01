@@ -25,11 +25,15 @@ console.log('PASS: distance boundaries, fallback/zero settings, English/Hindi/Aw
  const result=await esbuild.build({entryPoints:['src/lib/partner.js'],bundle:true,platform:'node',format:'cjs',write:false,plugins:[{name:'mock-firebase',setup(build){build.onResolve({filter:/\/fb\.js$/},()=>({path:'fb',namespace:'test'}));build.onLoad({filter:/.*/,namespace:'test'},()=>({contents:'export const put=()=>{},patch=()=>{},getOne=()=>{},getList=()=>{},remove=()=>{},phoneOf=()=>"+910000000000";'}));}}]});
  const context={module:{exports:{}},exports:{},FileReader:class {readAsDataURL(){this.result='data:application/pdf;base64,AA==';this.onload();}}};
  vm.runInNewContext(result.outputFiles[0].text,context);
- const {fileToDoc,FORM_DOCS,SIGN_DOCS,missing,blankApp}=context.module.exports;
+ const {fileToDoc,FORM_DOCS,SIGN_DOCS,missing,blankApp,applicationData}=context.module.exports;
  assert(FORM_DOCS.some(d=>d.id==='aadhaar'&&d.need));
  assert(!FORM_DOCS.some(d=>d.step==='agreement'));
  assert(!SIGN_DOCS.some(d=>d.id==='agreement4'));
+ assert.equal(SIGN_DOCS.length,1);
  assert(SIGN_DOCS.some(d=>d.id==='agreementPdf'&&d.pdfOnly));
+ const saved=applicationData({...blankApp({uid:'test'}),note:undefined});
+ assert(!Object.prototype.hasOwnProperty.call(saved,'note'),'Screenshot regression: undefined note must never reach setDoc');
+ assert.equal(applicationData({note:'',restName:'Kitchen'}).note,'');
  await assert.rejects(()=>fileToDoc({type:'application/pdf',size:651*1024},()=>{}),/650 KB/);
  await assert.rejects(()=>fileToDoc({type:'text/plain',size:10},()=>{}),/photo or a PDF/);
  await assert.rejects(()=>fileToDoc({type:'image/png',name:'scan.png'},async()=> 'x'.repeat(1000000)),/too large/);
@@ -66,3 +70,17 @@ assert.equal(draft.offerTarget({admin:true,restaurantId:'',fundedBy:'restaurant'
 assert.equal(draft.offerTarget({admin:false,restaurantId:'parag',fundedBy:'admin'}).fundedBy,'restaurant');
 assert.equal(draft.offerTarget({admin:true,restaurantId:'parag',fundedBy:'restaurant'}).restaurantId,'parag');
 console.log('PASS: FoodGaon-branded codes, Devanagari fallback, all-restaurant and specific-restaurant funding.');
+
+const delivery=load('src/lib/delivery.js');
+const custom={radiusKm:20,minOrder:50,deliverySlabs:[{upToKm:5,minOrder:149},{upToKm:10,minOrder:299},{upToKm:20,minOrder:1000}]};
+for(const [d,min] of [[0,149],[5,149],[5.01,299],[10,299],[10.01,1000],[20,1000]]) assert.equal(delivery.minimumOrderFor(custom,{},d),min);
+assert(delivery.validSlabs(custom.deliverySlabs,20));
+assert(!delivery.validSlabs([{upToKm:5,minOrder:149},{upToKm:4,minOrder:299}],4));
+assert(!delivery.validSlabs([{upToKm:5,minOrder:149}],20));
+assert(delivery.servesAddress({lat:26.6,lng:81.3,radiusKm:5},{lat:26.6,lng:81.3}));
+assert(!delivery.servesAddress({lat:26.6,lng:81.3,radiusKm:5},{lat:28.6,lng:77.2}));
+assert(!delivery.servesAddress({radiusKm:5},{lat:26.6,lng:81.3}));
+const en=load('src/i18n/index.js','en');
+assert.equal(en.tr('Share FoodGaon',0,'hi'),'FoodGaon शेयर करें');
+assert.equal(en.tr('Try your own estimate',0,'en'),'Try your own estimate');
+console.log('PASS: custom delivery slabs, location coverage and independent Hindi/English sections.');

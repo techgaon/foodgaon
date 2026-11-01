@@ -13,7 +13,7 @@ const icon = (kind) => L.divIcon({ className: 'mpin-wrap', html: pinHtml(kind), 
  * points: [{ id, kind: 'rest'|'home'|'rider', lat, lng }]
  * draggable: id of a point the user can drag (onDrag gets {lat,lng})
  */
-export default function MapView({ points = [], height = 220, draggable, onDrag, line = true, className = '' }) {
+export default function MapView({ points = [], height = 220, draggable, onDrag, line = true, follow = false, className = '' }) {
   const el = useRef(null);
   const map = useRef(null);
   const markers = useRef({});
@@ -54,14 +54,14 @@ export default function MapView({ points = [], height = 220, draggable, onDrag, 
 
   useEffect(() => {
     const m = map.current; if (!m) return;
-    const valid = points.filter((p) => p && p.lat && p.lng);
+    const valid = points.filter((p) => p && p.lat != null && p.lng != null && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)));
     const seen = new Set();
     valid.forEach((p) => {
       seen.add(p.id);
       let mk = markers.current[p.id];
       if (!mk) {
         mk = L.marker([p.lat, p.lng], { icon: icon(p.kind), draggable: draggable === p.id }).addTo(m);
-        if (draggable === p.id) mk.on('dragend', () => { const ll = mk.getLatLng(); onDrag?.({ lat: ll.lat, lng: ll.lng }); });
+        if (draggable === p.id) mk.on('dragend', () => { const ll = mk.getLatLng(); dragRef.current?.({ lat: ll.lat, lng: ll.lng }); });
         markers.current[p.id] = mk;
       } else {
         const cur = mk.getLatLng();
@@ -73,13 +73,13 @@ export default function MapView({ points = [], height = 220, draggable, onDrag, 
     if (line && valid.length > 1) {
       poly.current = L.polyline(valid.map((p) => [p.lat, p.lng]), { color: '#e8461a', weight: 4, opacity: 0.7, dashArray: '8 10' }).addTo(m);
     }
-    const key = valid.map((p) => p.id).join(',');
+    const key = valid.map((p) => follow ? `${p.id}:${p.lat}:${p.lng}` : p.id).join(',');
     if (key && fitted.current !== key) {
       fitted.current = key;
       if (valid.length === 1) m.setView([valid[0].lat, valid[0].lng], 17);
       else m.fitBounds(L.latLngBounds(valid.map((p) => [p.lat, p.lng])), { padding: [40, 40], maxZoom: 17 });
     }
-  }, [points, draggable, line]); // eslint-disable-line
+  }, [points, draggable, line, follow]); // eslint-disable-line
 
   return (
     <div className={'mapwrap ' + className} style={{ height }}>

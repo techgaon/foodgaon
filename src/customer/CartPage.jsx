@@ -1,4 +1,4 @@
-import { minimumOrderFor } from '../lib/delivery.js';
+import { minimumOrderFor, deliverySlabs, servesAddress } from '../lib/delivery.js';
 import React, { useEffect, useState } from 'react';
 import { hasUpi, UpiAppStrip, chosenApp } from '../components/Pay.jsx';
 import { Sheet } from '../ui.jsx';
@@ -40,7 +40,7 @@ export default function CartPage({ nav, onPlaced }) {
   const [paying, setPaying] = useState(null);
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState(false);
-  const fee = Number(config.customerDeliveryFee || 0);
+  const fee = 0;
   const offers = forRestaurant(useOffers(), cart.restaurantId);
   const [code, setCode] = useState(() => LS.get('pp_coupon', ''));
   const [couponOpen, setCouponOpen] = useState(false);
@@ -74,9 +74,9 @@ export default function CartPage({ nav, onPlaced }) {
     if (!user) { askLogin(); return; }
     if (!addr) { setForm(true); return; }
     if (!rest || rest.open === false) { toast(t('Restaurant is closed right now'), 'err'); return; }
-    if (Object.keys(rest.minOrderBands || {}).length && dist == null) { toast(t('Set the shop location and your delivery GPS pin to calculate the minimum order.'), 'err'); return; }
+    if (deliverySlabs(rest).length && dist == null) { toast(t('Set the shop location and your delivery GPS pin to calculate the minimum order.'), 'err'); return; }
     if (minOrder && total < minOrder) { toast(t('Minimum order is {}').replace('{}', rupee(minOrder)), 'err'); return; }
-    if (far) { toast(t('Sorry, this restaurant delivers only within {} km').replace('{}', radius), 'err'); return; }
+    if (far || !servesAddress(rest, addr, config)) { toast(t('Sorry, this restaurant delivers only within {} km').replace('{}', radius), 'err'); return; }
     setBusy(true);
     try {
       const payNow = pay === 'upi_now' && hasUpi(rest);
@@ -145,8 +145,8 @@ export default function CartPage({ nav, onPlaced }) {
           <div className="bill"><span>{`Item total (${list.reduce((a, x) => a + x.qty, 0)} items)`}</span><span>{rupee(total)}</span></div>
           {discount > 0 && <div className="bill t-green"><span>{`Coupon (${applied.code})`}</span><span>− {rupee(discount)}</span></div>}
           {!bill.gstIncluded && <div className="bill"><span>{`GST ${bill.gstPct}%`}</span><span>+ {rupee(bill.gst)}</span></div>}
-          <div className="bill"><span>Delivery fee</span><span>{fee ? rupee(fee) : <b className="t-green">FREE</b>}</span></div>
-          <div className="bill"><span>Platform fee</span><span><b className="t-green">₹0</b></span></div>
+          <div className="bill"><span>Delivery fee</span><span><del className="muted">₹20</del> <b className="t-green">₹00</b></span></div>
+          <div className="bill"><span>Platform fee</span><span><del className="muted">₹7</del> <b className="t-green">₹00</b></span></div>
           <div className="bill"><span>Packing charge</span><span><b className="t-green">₹0</b></span></div>
           <div className="bill total"><span>To pay</span><span>{rupee(bill.total)}</span></div>
           {list.some((x) => x.onMrp && !(Number(x.price) > 0)) && <p className="tiny mrp-note">{t('“On MRP” items are not in this total — pay the printed MRP to the restaurant at delivery.')}</p>}
@@ -156,6 +156,7 @@ export default function CartPage({ nav, onPlaced }) {
           <p className="tiny muted">{bill.gstIncluded ? t('Menu prices already include GST — nothing extra is added.') : t('Menu prices are without GST — GST is added in the bill.')}</p>
           <div className="promise-mini"><Icon name="shield" size={16} /> <span>{t('Same price as the restaurant counter. No hidden charges.')}</span></div>
           {discount > 0 && <div className="saved-strip">{`🎉 You saved ${rupee(discount)} on this order`}</div>}
+          <p className="small"><b>{`Minimum order for your location: ${rupee(minOrder)}`}</b></p>
           {minOrder > 0 && total < minOrder && <div className="alert alert-amber">{`Add ${rupee(minOrder - total)} more — minimum order is ${rupee(minOrder)}`}</div>}
         </div>
 

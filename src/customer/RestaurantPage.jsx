@@ -1,3 +1,6 @@
+import { useAddresses } from './Address.jsx';
+import { hasPoint, servesAddress, minimumOrderFor } from '../lib/delivery.js';
+import { km } from '../lib/utils.js';
 import React, { useMemo, useState } from 'react';
 import { Icon, Img, VegMark, Stepper, useToast, Sheet } from '../ui.jsx';
 import { useApp } from '../App.jsx';
@@ -11,6 +14,8 @@ import { useOffers, forRestaurant, offerLabel, offerTerms } from '../lib/offers.
 
 export default function RestaurantPage({ id, nav }) {
   const { config } = useApp();
+  const addresses = useAddresses();
+  const address = addresses.list.find(a => a.id === addresses.sel) || addresses.list[0];
   const rest = (useRestaurants() || []).find((r) => r.id === id);
   const all = useItems() || [];
   const [q, setQ] = useState('');
@@ -32,6 +37,9 @@ export default function RestaurantPage({ id, nav }) {
 
   if (!rest) return <div className="page"><TopBar onBack={nav.back} /><div className="skeleton" style={{ height: 200, margin: 16 }} /></div>;
 
+  const distance = hasPoint(rest) && hasPoint(address) ? km(rest, address) : null;
+  const minimum = minimumOrderFor(rest, config, distance);
+  const availableHere = servesAddress(rest, address, config);
   return (
     <div className="rest-page">
       <div className="rp-hero">
@@ -60,6 +68,7 @@ export default function RestaurantPage({ id, nav }) {
             ))}
           </div>
         )}
+        <div className="alert alert-amber">{availableHere ? `${distance != null ? distance.toFixed(1) + ' km · ' : ''}Minimum order: ${rupee(minimum)}` : 'Sorry, not available at your location. Please choose a location in your nearest town or kasba.'}</div>
         {rest.open === false && <div className="alert alert-red">This restaurant is closed right now. You can see the menu, ordering opens when it is back.</div>}
       </div>
 

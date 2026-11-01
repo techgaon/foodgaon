@@ -38,7 +38,7 @@ export const shortId = () => {
 
 /** distance in km between two {lat,lng} */
 export function km(a, b) {
-  if (!a?.lat || !b?.lat) return null;
+  if (a?.lat == null || a?.lng == null || b?.lat == null || b?.lng == null) return null;
   const R = 6371, r = (x) => (x * Math.PI) / 180;
   const dLat = r(b.lat - a.lat), dLng = r(b.lng - a.lng);
   const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLng / 2) ** 2;

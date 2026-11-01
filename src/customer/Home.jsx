@@ -1,3 +1,5 @@
+import { useAddresses } from './Address.jsx';
+import { servesAddress } from '../lib/delivery.js';
 import React, { useEffect, useRef, useState } from 'react';
 import PromiseStrip from '../components/Promise.jsx';
 import { JoinCta, ShareCta } from '../components/Grow.jsx';
@@ -14,18 +16,21 @@ import { useOffers, isLive, offerLabel, offerTerms } from '../lib/offers.js';
 
 
 export default function Home({ nav }) {
-  const { user, config, roles } = useApp();
+  const { user, profile, config, roles } = useApp();
   const toast = useToast();
-  const rests = useRestaurants();
+  const allRests = useRestaurants();
+  const addresses = useAddresses();
+  const address = addresses.list.find(a => a.id === addresses.sel) || addresses.list[0];
+  const rests = allRests?.filter(r => servesAddress(r, address, config));
   const items = useItems();
   const banners = useBanners();
   const addr = LS.get('pp_addr_label');
-  const name = (user?.displayName || '').split(' ')[0];
+  const name = profile?.name || user?.displayName || '';
   const [view, setView] = useState(null);
   const offers = (useOffers() || []).filter(isLive);
   const favs = useFavs();
-  const favItems = favs.map((id) => (items || []).find((i) => i.id === id)).filter(Boolean).slice(0, 12);
-  const best = (items || []).filter((i) => i.bestseller && i.available !== false && (rests || []).find((r) => r.id === i.restaurantId)?.open !== false).slice(0, 10);
+  const favItems = favs.map((id) => (items || []).find((i) => i.id === id)).filter(i => i && rests?.some(r => r.id === i.restaurantId)).slice(0, 12);
+  const best = (items || []).filter((i) => i.bestseller && i.available !== false && (rests || []).some((r) => r.id === i.restaurantId && r.open !== false)).slice(0, 10);
 
   return (
     <div className="home">
@@ -39,9 +44,9 @@ export default function Home({ nav }) {
           </button>
           <Logo size={38} />
         </div>
-        <div className="pranam">
+        <div className="pranam" data-notr="" lang="hi">
           <span className="pr-badge" aria-hidden="true"><i className="pr-rays" /><b>🙏</b></span>
-          <span className="pr-txt"><b className="pr-word">{t('Welcome')}{name ? ',' : ''}</b>{name && <span className="pr-name">{name}</span>}</span>
+          <span className="pr-txt"><b className="pr-word">प्रणाम</b>{name && <span className="pr-name">{`${name} ${profile?.gender === 'female' ? 'बहन जी' : 'भैया जी'}`}</span>}</span>
         </div>
         <h1 className="hero-title"><em className="ht-2">What would you like to eat?</em></h1>
         <button className="search-bar" onClick={() => nav.go({ name: 'search' })}>
@@ -72,6 +77,7 @@ export default function Home({ nav }) {
         </Reveal>
       )}
 
+      {address?.lat != null && rests && !rests.length && <div className="pad-x"><div className="alert alert-amber"><b>Sorry, not available at your location.</b><p>Please choose a location in your nearest town or kasba.</p><button className="btn ghost block" onClick={() => nav.go({ name: 'address' })}>Choose another location</button></div></div>}
       <Reveal as="section" className="sec">
         <h2 className="sec-title">What's on your mind?</h2>
         <div className="cat-row">

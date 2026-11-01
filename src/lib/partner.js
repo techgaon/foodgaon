@@ -13,9 +13,6 @@ export const DOC_TYPES = [
   { id: 'bank', label: 'Bank passbook first page or cancelled cheque', need: true, hint: 'Name, account number and IFSC must be readable' },
   { id: 'gst', label: 'GST certificate', need: false, hint: 'Only if you have GST' },
   // signed agreement pages are uploaded on the agreement step
-  { id: 'agreement', label: 'Signed agreement — page 1', need: false, step: 'agreement', hint: 'Photo of the signed page' },
-  { id: 'agreement2', label: 'Signed agreement — page 2', need: false, step: 'agreement', hint: 'Photo of the signed page' },
-  { id: 'agreement3', label: 'Signed agreement — page 3', need: false, step: 'agreement', hint: 'Photo of the signed page' },
   { id: 'agreementPdf', label: 'Complete signed agreement PDF', need: false, step: 'agreement', hint: 'All signed pages in one PDF (up to 650 KB)', pdfOnly: true },
 ];
 export const FORM_DOCS = DOC_TYPES.filter((d) => d.step !== 'agreement');
@@ -53,7 +50,7 @@ export const blankApp = (user) => ({
   restName: '', tagline: '', address: '', town: '', landmark: '', pincode: '', ownerName: user.displayName || '', altPhone: '', email: '',
   aadhaar: '', fssai: '', gstin: '', pan: '', vegOnly: true, priceInclGst: true, openTime: '10:00', closeTime: '22:00', prepMins: 20, radiusKm: 5,
   ownRiders: 1, bankName: '', bankHolder: '', bankAcc: '', bankIfsc: '', upiId: '',
-  docs: {}, history: [],
+  docs: {}, history: [], note: '',
 });
 
 export const PAN_RE = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
@@ -79,7 +76,8 @@ export function missing(a) {
   return m;
 }
 
-export const saveApp = (uid, data) => put('partnerApps', uid, data);
+export const applicationData = (data) => Object.fromEntries(Object.entries(data).filter(([, value]) => value !== undefined));
+export const saveApp = (uid, data) => put('partnerApps', uid, applicationData(data));
 export const loadApp = (uid) => getOne('partnerApps', uid);
 export async function saveDoc(uid, type, { name, data }) {
   await put('partnerDocs', docId(uid, type), { uid, type, name: String(name || type).slice(0, 80), data, ms: Date.now() }, false);

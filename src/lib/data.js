@@ -92,7 +92,7 @@ export function billFor({ itemTotal, discount = 0, discountBy = '', rest = {}, c
   const taxable = incl ? r2((food * 100) / (100 + gstPct)) : food; // food value without GST
   const gst = incl ? r2(food - taxable) : r2((food * gstPct) / 100);
   const foodIncl = r2(taxable + gst);                             // what the customer pays for food, GST included
-  const deliveryFee = Number(config.customerDeliveryFee || 0);
+  const deliveryFee = 0; // Delivery and platform fees are waived for customers.
   const total = r2(foodIncl + deliveryFee);
   // fee mode: "x% incl. GST" (default) or "x% + GST" (config/restaurant commissionGstExtra) — `commission` is always the full amount incl. its GST
   const gstExtra = !!(rest.commissionGstExtra ?? config.commissionGstExtra);

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Icon, Field, useToast, Empty } from '../ui.jsx';
 import { useApp } from '../App.jsx';
-import { watchDoc, patch } from '../lib/fb.js';
+import { watchDoc, patch, getOne } from '../lib/fb.js';
 import { compressImage, fmtDateTime, plain } from '../lib/utils.js';
 import { saveDataUrl, openDataUrl } from '../lib/pdf.js';
 import { DocSheet } from '../components/Docs.jsx';
@@ -50,16 +50,16 @@ const TOWNS = ['Haidergarh', 'Subeha', 'Barabanki', 'Ramsanehighat', 'Trivedigan
 const BANKS = ['State Bank of India', 'Punjab National Bank', 'Bank of Baroda', 'Bank of India', 'Union Bank of India', 'Aryavart Bank', 'HDFC Bank', 'ICICI Bank'];
 
 /** input whose empty placeholder "types itself" with an example */
-function TypedInput({ ex, area, plain: noTr, className = '', ...props }) {
+function TypedInput({ ex, area, animate = false, plain: noTr, className = '', ...props }) {
   const [n, setN] = useState(0);
   const empty = !props.value;
   const example = noTr ? ex : t(ex);
   useEffect(() => {
-    if (!empty) return undefined;
+    if (!empty || !animate) return undefined;
     const id = setInterval(() => setN((x) => (x + 1) % (example.length + 14)), 120);
     return () => clearInterval(id);
-  }, [empty, example]);
-  const ph = t('e.g. ') + example.slice(0, Math.min(n, example.length)) + (n < example.length ? '│' : '');
+  }, [empty, example, animate]);
+  const ph = animate ? 'जैसे: ' + example.slice(0, Math.min(n, example.length)) + (n < example.length ? '│' : '') : t('e.g. ') + example;
   const p = { className: 'input ' + className, placeholder: ph, ...props };
   return area ? <textarea rows={2} {...p} /> : <input {...p} />;
 }
@@ -126,7 +126,7 @@ function Wizard({ user, config, app, step, setStep }) {
   const toast = useToast();
   const [f, setF] = useState(() => { const x = { ...blankApp(user), ...(app || {}) }; x.bankAcc2 = ''; return x; });
   const [busy, setBusy] = useState(false);
-  useEffect(() => { if (app) setF((x) => ({ ...x, docs: app.docs || {}, status: app.status, note: app.note })); }, [app?.docs, app?.status]); // eslint-disable-line
+  useEffect(() => { if (app) setF((x) => ({ ...x, docs: app.docs || {}, status: app.status, note: app.note || '' })); }, [app?.docs, app?.status]); // eslint-disable-line
   const set = (k, fn = (v) => v) => (e) => setF({ ...f, [k]: fn(e.target.value) });
   const up = (v) => v.toUpperCase().replace(/\s/g, '');
   const digits = (v) => v.replace(/\D/g, '');
@@ -165,7 +165,7 @@ function Wizard({ user, config, app, step, setStep }) {
           </label>
           {!f.vegOnly && <div className="alert alert-amber small">FoodGaon accepts only pure vegetarian restaurants. Kitchens serving non-vegetarian food cannot be approved.</div>}
           <Field label="Restaurant name *"><TypedInput value={f.restName} onChange={set('restName')} maxLength={60} ex="Sharma Bhojanalaya" /></Field>
-          <Field label="One line about your food"><TypedInput value={f.tagline} onChange={set('tagline')} maxLength={80} ex={t("Famous chole bhature since 1995")} /></Field>
+          <Field label="One line about your food"><TypedInput value={f.tagline} onChange={set('tagline')} maxLength={80} animate plain ex="1995 से मशहूर छोले-भटूरे" /></Field>
           <Field label="Full address *"><TypedInput area value={f.address} onChange={set('address')} maxLength={200} ex="Main Road, opposite bus stand, Haidergarh" /></Field>
           <Field label="Town"><TypedInput value={f.town} onChange={set('town')} maxLength={40} ex={t("Haidergarh")} /></Field>
           <Chips options={TOWNS} value={f.town} onPick={(v) => setF({ ...f, town: v })} />
@@ -264,7 +264,7 @@ function DocUpload({ uid, d, f, setF, save }) {
     setErr(''); setPct(5);
     // File preparation has measurable progress; Firestore persistence is indeterminate.
     try {
-      if (!f.status || ['draft', 'returned'].includes(f.status)) await save(); // Persist a new draft before attaching documents.
+      if (!(await getOne('partnerApps', uid))) await save(); // Persist a new draft before attaching documents.
       const doc = await fileToDoc(file, compressImage, setPct);
       setPct(-1);
       await saveDoc(uid, d.id, doc);
@@ -279,7 +279,7 @@ function DocUpload({ uid, d, f, setF, save }) {
     } catch (er) {
       setPct(null);
       const m = String(er?.code || er?.message || '');
-      const msg = /permission/i.test(m) ? 'Upload permission denied. Please sign in again and retry.' : /network|unavailable|offline/i.test(m) ? 'Connection interrupted. Please try again.' : /too large|exceeds|size/i.test(m) ? 'File is too large. Please choose a smaller PDF or photo.' : (er?.message || 'Upload failed. Please try again.');
+      const msg = /permission/i.test(m) ? 'The server blocked this upload. Your previous file is safe. Please contact FoodGaon with this error.' : /network|unavailable|offline/i.test(m) ? 'Connection interrupted. Please try again.' : /too large|exceeds|size/i.test(m) ? 'File is too large. Please choose a smaller PDF or photo.' : (er?.message || 'Upload failed. Please try again.');
       setErr(t(msg)); toast(t(msg), 'err');
     }
   };
@@ -300,7 +300,7 @@ function DocUpload({ uid, d, f, setF, save }) {
         ) : (
           <small className="muted du-name">{have ? `✔ ${have.name || ''} · ${fmtDateTime(have.ms)}` : t(d.hint)}</small>
         )}
-        {err && <small className="t-red du-err" data-notr="">{err}</small>}
+        {err && <small className="t-red du-err" data-notr="">{err}{have ? " · " + t("Previously uploaded file is still available") : ""}</small>}
         {have && pct === null && <ViewDocBtn uid={uid} type={d.id} name={d.label} />}
       </div>
       {pct === null && (
@@ -365,7 +365,7 @@ function AgreementStep({ user, config, f, setF, app, save }) {
           <li><span>1</span><div><b>Download</b><small>Save the complete agreement PDF using the button below.</small></div></li>
           <li><span>2</span><div><b>Print</b><small>Print the PDF at a nearby print shop.</small></div></li>
           <li><span>3</span><div><b>Sign every page</b><small>The owner must sign every page and add a stamp if available. Keep a copy.</small></div></li>
-          <li><span>4</span><div><b>Upload the signed copy</b><small>Upload the complete signed PDF, or clear photos of the signed pages.</small></div></li>
+          <li><span>4</span><div><b>Upload the signed copy</b><small>Upload one PDF containing all signed pages.</small></div></li>
         </ol>
         <button className="btn primary block" onClick={() => setPdf(true)}><Icon name="download" size={18} /> Download to print and sign</button>
         <div className="doc-up-list">
@@ -423,7 +423,7 @@ function StatusView({ app, config, onEdit, canOpenPanel, openPanel }) {
       {['submitted', 'returned'].includes(app.status) && (
         <div className="card sign-card">
           <h4>Signed agreement</h4>
-          <p className="tiny muted">Download, print and sign every page. Upload the complete signed PDF or page photos here.</p>
+          <p className="tiny muted">Download, print and sign every page. Upload all signed pages as one PDF here.</p>
           <button className="btn ghost block" onClick={() => setPdf(true)}><Icon name="download" size={18} /> Download agreement</button>
           <div className="doc-up-list">
             {SIGN_DOCS.map((d) => <DocUpload key={d.id} uid={app.uid || app.id} d={d} f={app} setF={() => {}} save={(x) => patch('partnerApps', app.uid || app.id, { ...x, updatedMs: Date.now() })} />)}

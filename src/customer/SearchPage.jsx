@@ -1,3 +1,5 @@
+import { useAddresses } from './Address.jsx';
+import { servesAddress } from '../lib/delivery.js';
 import React, { useState } from 'react';
 import { Icon } from '../ui.jsx';
 import { useApp } from '../App.jsx';
@@ -10,14 +12,16 @@ import DishView from '../components/DishView.jsx';
 
 export default function SearchPage({ nav, cat: cat0, stacked }) {
   const { config } = useApp();
-  const rests = useRestaurants() || [];
+  const addresses = useAddresses();
+  const address = addresses.list.find(a => a.id === addresses.sel) || addresses.list[0];
+  const rests = (useRestaurants() || []).filter(r => servesAddress(r, address, config));
   const items = useItems() || [];
   const [q, setQ] = useState('');
   const [cat, setCat] = useState(cat0 || '');
   const [view, setView] = useState(null);
   const ql = q.trim().toLowerCase();
   const match = (s) => String(s || '').toLowerCase().includes(ql) || tr(String(s || '')).toLowerCase().includes(ql);
-  const res = items.filter((i) => (!cat || i.cat === cat) && (!ql || match(i.name) || match(i.desc)));
+  const res = items.filter((i) => rests.some(r => r.id === i.restaurantId) && (!cat || i.cat === cat) && (!ql || match(i.name) || match(i.desc)));
   const rres = ql ? rests.filter((r) => match(r.name) || match(r.tagline)) : [];
   return (
     <div className="page search-page">

@@ -10,17 +10,18 @@ import { JoinCta, ShareCta } from '../components/Grow.jsx';
 
 export default function Account({ nav, openHisab }) {
   const favs = useFavs();
-  const { user, config, roles, setRole, logout, askLogin } = useApp();
+  const { user, profile, config, roles, setRole, logout, askLogin } = useApp();
   const [credits, setCredits] = useState(false);
   const [more, setMore] = useState({});
   React.useEffect(() => { if (credits) import('../data/paragMenu.js').then((m) => setMore(m.PHOTO_CREDITS || {})).catch(() => {}); }, [credits]);
   const [about, setAbout] = useState(false);
   const [nameOpen, setNameOpen] = useState(false);
   const [name, setName] = useState('');
+  const [gender, setGender] = useState('');
   const toast = useToast();
   const saveName = async () => {
     const n = name.trim(); if (n.length < 2) return;
-    try { await updateProfile(auth.currentUser, { displayName: n }); await put('customers', user.uid, { name: n, phone: phoneOf(user) }); location.reload(); } catch { toast(t('Could not save'), 'err'); }
+    try { await updateProfile(auth.currentUser, { displayName: n }); await put('customers', user.uid, { name: n, phone: phoneOf(user), gender }); location.reload(); } catch { toast(t('Could not save'), 'err'); }
   };
   return (
     <div className="page account">
@@ -30,7 +31,7 @@ export default function Account({ nav, openHisab }) {
           {user ? <><b data-notr="">{user.displayName || 'Hello!'}</b><small>{plain(phoneOf(user)) || user.email}</small></> : <><b>Welcome!</b><small>Log in to order and track food</small></>}
         </div>
         {!user && <button className="btn light small" onClick={askLogin}>Log in</button>}
-        {user && <button className="icon-btn light" onClick={() => { setName(user.displayName || ''); setNameOpen(true); }} aria-label="Edit name"><Icon name="edit" size={20} /></button>}
+        {user && <button className="icon-btn light" onClick={() => { setName(user.displayName || ''); setGender(profile?.gender || ''); setNameOpen(true); }} aria-label="Edit name"><Icon name="edit" size={20} /></button>}
       </div>
       <div className="pad-x">
         <div className="card">
@@ -59,8 +60,10 @@ export default function Account({ nav, openHisab }) {
         <p className="center tiny muted">FoodGaon v1.0 · <span data-notr="">TechGaon AI Services</span></p>
       </div>
 
-      <Sheet open={nameOpen} onClose={() => setNameOpen(false)} title="Your name">
+      <Sheet open={nameOpen} onClose={() => setNameOpen(false)} title="Your profile">
         <input className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} autoFocus />
+        <p className="field-label">How should we address you?</p>
+        <select className="input" value={gender} onChange={e => setGender(e.target.value)}><option value="">Default — भैया जी</option><option value="male">Male — भैया जी</option><option value="female">Female — बहन जी</option></select>
         <button className="btn primary block" onClick={saveName}>Save</button>
       </Sheet>
       <Sheet open={about} onClose={() => setAbout(false)} title="About FoodGaon">

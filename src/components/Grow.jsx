@@ -4,7 +4,7 @@ import { Icon, Sheet, useToast } from '../ui.jsx';
 import { useApp } from '../App.jsx';
 import { feeTerms } from '../lib/partner.js';
 import { isNative } from '../lib/native.js';
-import { t } from '../i18n/index.js';
+import { t, getLang } from '../i18n/index.js';
 
 const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
 
@@ -26,7 +26,7 @@ export function JoinCta({ nav }) {
   const go = () => nav.go({ name: 'join' });
   const line = app && APP_LINE[app.status];
   return (
-    <div className="card join-cta" role="button" tabIndex={0} onClick={go} onKeyDown={(e) => e.key === 'Enter' && go()}>
+    <div className="card join-cta" data-ui-lang={getLang() === "awa" ? "awa" : "hi"} role="button" tabIndex={0} onClick={go} onKeyDown={(e) => e.key === 'Enter' && go()}>
       <span className="jc-ic"><Icon name="store" size={24} /></span>
       <span className="grow">
         <b>{line ? 'My restaurant application' : 'Own a restaurant?'}</b>
@@ -53,7 +53,7 @@ export function GrowStory({ onJoin, joinLabel = 'Join now' }) {
   const mult = (40 + perDay) / 40;
 
   return (
-      <div className="grow-info">
+      <div className="grow-info" data-ui-lang={getLang() === "awa" ? "awa" : "hi"}>
         <h4 className="gi-h first">How can your business grow?</h4>
         <div className="gi-hero">
           <svg viewBox="0 0 320 120" className="gi-town" aria-hidden="true">
@@ -129,6 +129,7 @@ export function GrowStory({ onJoin, joinLabel = 'Join now' }) {
           <p className="tiny muted">No separate platform or packing fees for customers.</p>
         </div>
 
+        <section data-ui-lang="en">
         <h4 className="gi-h">Explore potential growth 🚀</h4>
         <div className="gi-double">
           <svg viewBox="0 0 320 150" role="img" aria-label="Example: 40 counter orders plus 40 app orders makes 80 orders">
@@ -170,11 +171,12 @@ export function GrowStory({ onJoin, joinLabel = 'Join now' }) {
           <div className={'gi-mult' + (mult >= 2 ? ' two' : '')}>Total sales <b>{mult.toFixed(2).replace(/\.?0+$/, '')}×</b>{mult >= 2 ? ' — doubled! 🎉' : ''}</div>
           <div className="gi-result">
             <span>Additional monthly sales</span><b>{inr(extraSale)}</b>
-            <span>After GST and FoodGaon fees</span><b className="ok">{inr(extraKeep)}</b>
+            <span>Estimated receipts after GST and FoodGaon fees</span><b className="ok">{inr(extraKeep)}</b>
           </div>
-          <p className="tiny muted">Illustration only. Actual sales depend on food, prices and service.</p>
+          <p className="tiny muted">Monthly estimate uses 30 days. This is money received before ingredient, staff, packing, rent and delivery costs — it is not profit. Actual sales depend on food, prices and service.</p>
         </div>
 
+        </section>
         <h4 className="gi-h">Join in about 10 minutes</h4>
         <ol className="gi-steps">
           {[
@@ -269,7 +271,7 @@ function PainToCalm() {
 /* ------------------------------------------------------------------ */
 export const appLinkOf = (config) => config?.appLink || 'https://techgaon.in/foodgaon';
 export const shareText = (config) =>
-  `FoodGaon — Your town’s pure vegetarian food app 🍲\nSame restaurant prices, free delivery and no platform fee.\nGet the app: ${appLinkOf(config)}`;
+  `FoodGaon — हमारे अपने कस्बे का शुद्ध शाकाहारी फ़ूड ऐप 🍲\nरेस्टोरेंट जैसे दाम, मुफ़्त डिलीवरी, कोई प्लेटफ़ॉर्म फ़ीस नहीं।\nऐप यहाँ से लें: ${appLinkOf(config)}`;
 
 export async function shareApp(config, toast) {
   const text = shareText(config);
@@ -288,7 +290,7 @@ export function ShareCta() {
   const wa = 'https://wa.me/?text=' + encodeURIComponent(shareText(config));
   return (
     <>
-      <div className="card share-cta">
+      <div className="card share-cta" data-ui-lang={getLang() === "awa" ? "awa" : "hi"}>
         <div className="row gap">
           <span className="sc-ic">🤝</span>
           <div className="grow"><b>Share FoodGaon</b><small>One share can support a local livelihood</small></div>
@@ -307,8 +309,8 @@ export function ShareCta() {
           <button className="btn light" onClick={() => shareApp(config, toast)}><Icon name="swap" size={18} /> Share elsewhere</button>
         </div>
       </div>
-      <Sheet open={info} onClose={() => setInfo(false)} title="A small request 🙏">
-        <div className="share-info">
+      <Sheet open={info} onClose={() => setInfo(false)} title="एक छोटी-सी विनती 🙏">
+        <div className="share-info" data-ui-lang={getLang() === "awa" ? "awa" : "hi"}>
           <svg viewBox="0 0 320 110" className="si-art" aria-hidden="true">
             <rect width="320" height="110" rx="16" fill="#fff6ec" />
             <g className="si-chain">

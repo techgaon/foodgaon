@@ -1503,3 +1503,17 @@ DICT.push(
  ['Offer from', 'ऑफ़र किसकी ओर से', 'ऑफर केकर तरफ से'],
  ['Offer line language', 'ऑफ़र लाइन की भाषा', 'ऑफर लाइन कै भाखा']
 );
+
+DICT.push(
+ ['Your profile', 'आपकी प्रोफ़ाइल', 'आपन प्रोफाइल'],
+ ['How should we address you?', 'आपको कैसे संबोधित करें?', 'आपका कइसे पुकारा जाय?'],
+ ['Choose your exact location on the map', 'नक्शे पर अपनी सही जगह चुनें', 'नक्शा पै आपन सही जगह चुनौ'],
+ ['Sorry, not available at your location.', 'क्षमा करें, आपकी location पर सेवा उपलब्ध नहीं है।', 'माफ करौ, आपकी जगह पै सेवा नाहीं अहै।'],
+ ['Please choose a location in your nearest town or kasba.', 'अपने नज़दीकी town या कस्बे की location चुनें।', 'अपने लगे कै town या कस्बा कै जगह चुनौ।'],
+ ['Choose another location', 'दूसरी location चुनें', 'दूसरी जगह चुनौ'],
+ ['Minimum order for your location: {}', 'आपकी location के लिए न्यूनतम ऑर्डर: {}', 'आपकी जगह खातिर कम से कम ऑर्डर: {}'],
+ ['Minimum order: {}', 'न्यूनतम ऑर्डर: {}', 'कम से कम ऑर्डर: {}'],
+ ['Add distance slab', 'दूरी का नया हिस्सा जोड़ें', 'दूरी कै नया हिस्सा जोड़ौ'],
+ ['Previously uploaded file is still available', 'पहले अपलोड की हुई फ़ाइल सुरक्षित है', 'पहिले अपलोड भई फाइल सुरक्षित अहै'],
+ ['Upload one PDF containing all signed pages.', 'सभी हस्ताक्षरित पन्नों की एक PDF अपलोड करें।', 'सब दस्तखत वाले पन्ना कै एक PDF अपलोड करौ।']
+);
