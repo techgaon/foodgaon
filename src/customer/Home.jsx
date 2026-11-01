@@ -1,4 +1,5 @@
 import Celebrations from './Celebrations.jsx';
+import EverydayScene, { EVERYDAY_BANNERS } from '../components/EverydayScenes.jsx';
 import { useAddresses } from './Address.jsx';
 import { servesAddress } from '../lib/delivery.js';
 import React, { useEffect, useRef, useState } from 'react';
@@ -59,7 +60,7 @@ export default function Home({ nav }) {
       <Celebrations />
       <FreeDelivery km={config.radiusKm || 5} />
       <PromiseStrip />
-      <Banners list={(banners || []).filter((b) => b.active !== false && (!b.code || offers.some((o) => o.code === b.code)))} nav={nav} />
+      <Banners list={[...EVERYDAY_BANNERS, ...(banners || []).filter((b) => b.active !== false && (!['b1', 'b2', 'b3'].includes(b.id) || b.code || b.link) && (!b.code || offers.some((o) => o.code === b.code)))]} nav={nav} />
 
       {offers.length > 0 && (
         <Reveal as="section" className="sec">
@@ -135,25 +136,32 @@ export default function Home({ nav }) {
 function Banners({ list, nav }) {
   const ref = useRef(null);
   const [i, setI] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [reduced, setReduced] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const n = list?.length || 0;
   useEffect(() => {
-    if (n < 2) return;
-    const x = setInterval(() => setI((v) => (v + 1) % n), 3800);
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const change = e => setReduced(e.matches);
+    media.addEventListener('change', change);
+    return () => media.removeEventListener('change', change);
+  }, []);
+  useEffect(() => {
+    if (n < 2 || paused || reduced) return;
+    const x = setInterval(() => setI((v) => (v + 1) % n), 6500);
     return () => clearInterval(x);
-  }, [n]);
-  useEffect(() => { const el = ref.current; if (el) el.scrollTo({ left: i * el.clientWidth, behavior: 'smooth' }); }, [i]);
+  }, [n, paused, reduced]);
+  useEffect(() => { const el = ref.current; if (el) el.scrollTo({ left: i * el.clientWidth, behavior: reduced ? 'instant' : 'smooth' }); }, [i, reduced]);
   if (!n) return <div className="banners"><div className="banner skeleton" /></div>;
   return (
-    <div className="banners">
-      <div className="banner-track" ref={ref} onScroll={(e) => { const w = e.currentTarget.clientWidth; const k = Math.round(e.currentTarget.scrollLeft / w); if (k !== i) setI(k); }}>
+    <div className={'banners everyday-banners' + (paused ? ' scenes-paused' : '')} role="region" aria-label="FoodGaon stories">
+      <div className="banner-track" ref={ref} onPointerDown={() => setPaused(true)} onFocusCapture={() => setPaused(true)} onScroll={(e) => { const w = e.currentTarget.clientWidth; const k = Math.round(e.currentTarget.scrollLeft / w); if (k !== i) setI(k); }}>
         {list.map((b) => (
-          <div key={b.id} className={'banner' + (b.link ? ' clickable' : '')} onClick={() => b.link && nav.openRest(b.link)}>
-            <Img src={b.img} alt="" className="banner-img kenburns" />
-            <div className="banner-txt"><b>{b.title === 'Your town, your taste' ? 'Your village, your town, your taste' : b.title}</b><span>{b.sub}</span>{b.code && <em className="code-pill" data-notr="">{b.code}</em>}</div>
+          <div key={b.id} className={'banner' + (b.scene ? ` everyday-banner everyday-${b.scene}` : '') + (b.link ? ' clickable' : '')} data-notr={b.scene ? '' : undefined} lang={b.scene ? 'hi' : undefined} onClick={() => b.link && nav.openRest(b.link)}>
+            {b.scene ? <><EverydayScene kind={b.scene} /><div className="everyday-copy"><small>FoodGaon के साथ</small><b>{b.title}</b><strong>{b.sub}</strong><span>{b.note}</span><em>शुद्ध शाकाहारी · मुफ़्त डिलीवरी</em></div></> : <><Img src={b.img} alt="" className="banner-img kenburns" /><div className="banner-txt"><b>{b.title === 'Your town, your taste' ? 'Your village, your town, your taste' : b.title}</b><span>{b.sub}</span>{b.code && <em className="code-pill" data-notr="">{b.code}</em>}</div></>}
           </div>
         ))}
       </div>
-      <div className="dots">{list.map((b, k) => <i key={b.id} className={k === i ? 'on' : ''} />)}</div>
+      <div className="scene-controls"><div className="scene-dots">{list.map((b, k) => <button key={b.id} aria-label={`Banner ${k + 1}`} aria-pressed={k === i} className={k === i ? 'on' : ''} onClick={() => { setPaused(true); setI(k); }} />)}</div><button className="scene-pause" aria-label={paused ? 'Play banners' : 'Pause banners'} onClick={() => setPaused(v => !v)}>{paused ? '▶' : 'Ⅱ'}</button></div>
     </div>
   );
 }
