@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app';
 import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, RecaptchaVerifier, signInWithPhoneNumber, signOut, updateProfile, updatePassword,
   PhoneAuthProvider, GoogleAuthProvider, signInWithCredential, signInWithPopup,
-  indexedDBLocalPersistence, browserLocalPersistence, initializeAuth, browserPopupRedirectResolver,
+  indexedDBLocalPersistence, browserLocalPersistence, inMemoryPersistence, initializeAuth, browserPopupRedirectResolver,
 } from 'firebase/auth';
 import {
   initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, setDoc, updateDoc, deleteDoc,
@@ -95,6 +95,19 @@ export const MOCK_OTP = '1234';
 export const MOCK_DOMAIN = 'login.foodgaon.app';
 const mockEmail = (p10) => `91${p10}@${MOCK_DOMAIN}`;
 const mockPass = (p10) => `FG-${p10}-tg2026`;
+let trialLookupAuth;
+/** Trial-only existence check: isolated, memory-only auth; never creates an account or changes the main login session. */
+export async function lookupTrialPhone(phone10) {
+  if (!/^\d{10}$/.test(phone10)) throw Object.assign(new Error('invalid phone'), { code: 'auth/invalid-phone-number' });
+  trialLookupAuth ||= initializeAuth(initializeApp(firebaseConfig, 'trial-phone-lookup'), { persistence: inMemoryPersistence });
+  try {
+    await signInWithEmailAndPassword(trialLookupAuth, mockEmail(phone10), mockPass(phone10));
+    return true;
+  } catch (e) {
+    if (/user-not-found|invalid-credential|invalid-login|wrong-password/.test(e.code || '')) return false;
+    throw e;
+  } finally { await signOut(trialLookupAuth); }
+}
 /* the admin number uses its own secret PIN instead of the public test OTP (the PIN is part of its password) */
 export const ADMIN_P10 = '9129203268';
 const ADMIN_PIN_SHA = '1d44804dea45fe6ddce3ac8ce3bd0952cfb5bfa34d5091aa878c0ea17099a4bd';

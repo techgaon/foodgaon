@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { sendOtp, googleSignIn, updateProfile, auth, put, getOne, getList, serverTimestamp, mockLogin, phoneOf, MOCK_OTP, ADMIN_P10 } from './lib/fb.js';
+import { sendOtp, googleSignIn, updateProfile, auth, put, getOne, getList, serverTimestamp, mockLogin, lookupTrialPhone, phoneOf, MOCK_OTP, ADMIN_P10 } from './lib/fb.js';
 import { useApp } from './App.jsx';
 import { Logo, Wordmark, Icon, useToast } from './ui.jsx';
 import { t } from './i18n/index.js';
@@ -40,6 +40,7 @@ export default function Login({ onClose, startStep = 'phone', startMode = 'login
   const [showCode, setShowCode] = useState(false);
   const [name, setName] = useState('');
   const [gender, setGender] = useState('male');
+  const [newMobile, setNewMobile] = useState(false);
   const [googleProfile, setGoogleProfile] = useState(false);
   const [confirmedPhone, setConfirmedPhone] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -69,13 +70,19 @@ export default function Login({ onClose, startStep = 'phone', startMode = 'login
     e?.preventDefault();
     if (busy) return;
     if (!(mock ? /^\d{10}$/ : /^[6-9]\d{9}$/).test(phone)) { toast(t('Enter a valid 10-digit mobile number'), 'err'); return; }
-    if (name.trim().length < 2) { toast(t('Please enter your name'), 'err'); return; }
+    if (step === 'details' && name.trim().length < 2) { toast(t('Please enter your name'), 'err'); return; }
     setPinOnly(false);
     setBusy(true);
     try {
       if (mock) {
         const restaurants = phone === ADMIN_P10 ? [] : await getList('restaurants');
-        setPinOnly(restaurants.some(r => String(r.ownerPhone || '').replace(/\D/g, '').slice(-10) === phone));
+        const owner = restaurants.some(r => String(r.ownerPhone || '').replace(/\D/g, '').slice(-10) === phone);
+        setPinOnly(owner);
+        if (step !== 'details') {
+          const registered = owner || phone === ADMIN_P10 || await lookupTrialPhone(phone);
+          setNewMobile(!registered);
+          if (!registered) { setName(''); setGender('male'); setStep('details'); return; }
+        }
         setStep('otp'); setOtp(''); setLeft(0); return;
       }
       conf.current = await sendOtp(phone, 'recaptcha-box');
@@ -108,9 +115,11 @@ export default function Login({ onClose, startStep = 'phone', startMode = 'login
       if (st) {
         if (!r.user.displayName && st.name) await updateProfile(r.user, { displayName: st.name });
       } else {
-        const n = name.trim();
-        await put('customers', r.user.uid, { name: n, gender, phone: phoneOf(r.user), lastLogin: serverTimestamp() });
-        await updateProfile(r.user, { displayName: n });
+        const existing = await getOne('customers', r.user.uid);
+        const n = newMobile ? name.trim() : existing?.name || r.user.displayName || '';
+        if (!n) { setStep('name'); setBusy(false); return; }
+        await put('customers', r.user.uid, { ...(newMobile ? { name: n, gender } : {}), phone: phoneOf(r.user), lastLogin: serverTimestamp() });
+        if (r.user.displayName !== n) await updateProfile(r.user, { displayName: n });
       }
       finishLogin();
     } catch (er) { toast(`${t(errText(er))} (${er?.code || ''})`, 'err'); setBusy(false); }
@@ -150,18 +159,21 @@ export default function Login({ onClose, startStep = 'phone', startMode = 'login
             <button type="button" className="btn primary block lg" disabled={busy} onClick={() => setStep('phone')}>Continue with mobile number</button>
         </div>}
 
-        {step === 'phone' && (
+        {(step === 'phone' || step === 'details') && (
           <form onSubmit={send} className="login-form">
-            <button type="button" className="link" onClick={() => setStep('choose')}>Back</button>
+            <button type="button" className="link" disabled={busy} onClick={() => setStep(step === 'details' ? 'phone' : 'choose')}>Back</button>
             <h3>Continue with mobile number</h3>
-            <label>Your name<input className="input" autoComplete="name" maxLength={40} value={name} onChange={e => setName(e.target.value)} /></label>
-            <label>Gender<select className="input" value={gender} onChange={e => setGender(e.target.value)}><option value="male">Male</option><option value="female">Female</option><option value="transgender">Transgender</option></select></label>
             <div className="phone-input">
               <span>+91</span>
-              <input inputMode="numeric" autoComplete="tel-national" maxLength={10} placeholder="10-digit mobile number" value={phone}
+              <input disabled={busy} readOnly={step === 'details'} aria-label="Mobile number" inputMode="numeric" autoComplete="tel-national" maxLength={10} placeholder="10-digit mobile number" value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} />
             </div>
-            <button className="btn primary block lg" disabled={busy || phone.length !== 10 || name.trim().length < 2}>{busy ? 'Sending…' : mock ? 'Continue' : 'Get OTP'}</button>
+            {step === 'details' && <>
+              <p className="small muted">New here? Add your name and gender to continue.</p>
+              <label>Your name<input className="input" autoComplete="name" maxLength={40} value={name} onChange={e => setName(e.target.value)} /></label>
+              <label>Gender<select className="input" value={gender} onChange={e => setGender(e.target.value)}><option value="male">Male</option><option value="female">Female</option><option value="transgender">Transgender</option></select></label>
+            </>}
+            <button className="btn primary block lg" disabled={busy || phone.length !== 10 || (step === 'details' && name.trim().length < 2)}>{busy ? 'Checking…' : mock ? 'Continue' : 'Get OTP'}</button>
             {mock && <p className="tiny muted center">Trial login — no SMS will be sent.</p>}
 
             <p className="tiny muted center">By continuing you agree to our Terms & Privacy Policy</p>

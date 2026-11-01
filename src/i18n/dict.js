@@ -1,6 +1,7 @@
 // [English (source), हिंदी, अवधी]
 // {} = changing part (name, amount, number). Use {0},{1} in a translation to reorder.
 export const DICT = [
+  ['New here? Add your name and gender to continue.', 'पहली बार आए हैं? आगे बढ़ने के लिए अपना नाम और लिंग भरें।', 'पहिली बेर आए हौ? आगे बढ़ै खातिर नाउँ अउर लिंग भरौ।'],
   ["Edit profile & family", "प्रोफ़ाइल और परिवार की जानकारी बदलें", "प्रोफ़ाइल अउर परिवार की जानकारी बदलौ"],
   ["Edit profile", "प्रोफ़ाइल बदलें", "प्रोफ़ाइल बदलौ"],
   ["Birthday", "जन्मदिन", "जनमदिन"],
