@@ -1497,3 +1497,9 @@ DICT.push(
   ['Set the shop location and your delivery GPS pin to calculate the minimum order.', 'न्यूनतम ऑर्डर के लिए दुकान की location और डिलीवरी का GPS pin सेट करें।', 'कम से कम ऑर्डर खातिर दुकान कै location अउर डिलीवरी कै GPS pin सेट करौ।'],
   ['Welcome', 'प्रणाम', 'प्रणाम']
 );
+
+DICT.push(
+ ['Offer applies to', 'ऑफ़र कहाँ लागू है', 'ऑफर कहाँ लागू अहै'],
+ ['Offer from', 'ऑफ़र किसकी ओर से', 'ऑफर केकर तरफ से'],
+ ['Offer line language', 'ऑफ़र लाइन की भाषा', 'ऑफर लाइन कै भाखा']
+);

@@ -57,3 +57,12 @@ console.log('PASS: distance boundaries, fallback/zero settings, English/Hindi/Aw
  }
  console.log('PASS: agreement and growth/share render in all languages; default English contains no Hindi copy.');
 })().catch(error=>{console.error(error);process.exitCode=1;});
+const draft = load('src/lib/offerDraft.js');
+assert.deepEqual(Array.from(draft.offerCodes({fundedBy:'admin',value:10})),['FOODGAON10','GAON10','FGSAVE10']);
+assert.deepEqual(Array.from(draft.offerCodes({fundedBy:'restaurant',value:20,generated:['PARAG20','parag20','bad!','PARAG50']})),['PARAG20','PARAG50']);
+assert(/[\u0900-\u097f]/u.test(draft.offerLine('Shuddh shakahari swad','hi',{type:'percent',value:10})));
+assert.equal(draft.offerLine('गरमा-गरम खाने पर छूट','hi',{type:'flat',value:50}),'गरमा-गरम खाने पर छूट');
+assert.equal(draft.offerTarget({admin:true,restaurantId:'',fundedBy:'restaurant'}).fundedBy,'admin');
+assert.equal(draft.offerTarget({admin:false,restaurantId:'parag',fundedBy:'admin'}).fundedBy,'restaurant');
+assert.equal(draft.offerTarget({admin:true,restaurantId:'parag',fundedBy:'restaurant'}).restaurantId,'parag');
+console.log('PASS: FoodGaon-branded codes, Devanagari fallback, all-restaurant and specific-restaurant funding.');

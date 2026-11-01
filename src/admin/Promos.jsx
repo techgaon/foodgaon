@@ -30,16 +30,12 @@ function Coupons() {
   const rests = useRestaurants() || [];
   const [edit, setEdit] = useState(null);
   const [smart, setSmart] = useState(false);
-  const [offerRest, setOfferRest] = useState('');
   const toast = useToast();
   return (
     <>
       <button className="btn primary block" onClick={() => setEdit({})}><Icon name="plus" size={18} /> New coupon / offer</button>
       <button className="ai-cta offer" onClick={() => setSmart(true)}><em className="new-badge">NEW</em><span className="ai-spark">🎁</span><span className="grow"><b>{t('Make an offer with AI')}</b><small>{t('AI writes the offer, suggests a coupon code and makes a banner for your shop')}</small></span><Icon name="right" size={18} /></button>
-      {smart && !offerRest && <Sheet open onClose={() => setSmart(false)} title="Choose a restaurant">
-        <Field label="Restaurant"><select className="input" value="" onChange={(e) => setOfferRest(e.target.value)}><option value="">{t('Choose a restaurant')}</option>{rests.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select></Field>
-      </Sheet>}
-      {smart && rests.some((r) => r.id === offerRest) && <OfferMaker admin rest={rests.find((r) => r.id === offerRest)} onClose={() => { setSmart(false); setOfferRest(''); }} />}
+      {smart && <OfferMaker admin restaurants={rests} onClose={() => setSmart(false)} />}
       <p className="tiny muted">Coupons show on the home page and restaurant page. Customers apply them in the cart.</p>
       {!offers.length && <Empty icon="star" title="No offers yet" text="Create your first coupon, e.g. PYAAR20 — 20% off up to ₹50." />}
       {offers.map((o) => (
