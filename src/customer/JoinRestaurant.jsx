@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Icon, Field, useToast, Empty } from '../ui.jsx';
 import { useApp } from '../App.jsx';
-import { watchDoc } from '../lib/fb.js';
+import { watchDoc, patch } from '../lib/fb.js';
 import { compressImage, fmtDateTime, plain } from '../lib/utils.js';
 import { saveDataUrl, openDataUrl } from '../lib/pdf.js';
 import { DocSheet } from '../components/Docs.jsx';
 import PartnerAgreement from '../components/PartnerAgreement.jsx';
 import { GrowStory } from '../components/Grow.jsx';
 import {
-  DOC_TYPES, APP_STATUS, AGREEMENT_VERSION, blankApp, missing, saveApp, saveDoc, loadDoc, dropDoc, fileToDoc,
+  DOC_TYPES, FORM_DOCS, SIGN_DOCS, APP_STATUS, AGREEMENT_VERSION, blankApp, missing, saveApp, saveDoc, loadDoc, dropDoc, fileToDoc,
   feeTerms, addHistory, PAN_RE, IFSC_RE, GSTIN_RE, maskAcc,
 } from '../lib/partner.js';
 import { t } from '../i18n/index.js';
@@ -38,13 +38,43 @@ export default function JoinRestaurant({ nav }) {
   if (!user) return <div className="page">{head}<Intro config={config} onStart={askLogin} loggedOut /></div>;
   if (app === undefined) return <div className="page">{head}<div className="skeleton" style={{ height: 220, margin: 16 }} /></div>;
 
-  const locked = app && ['submitted', 'approved', 'rejected'].includes(app.status);
+  const locked = app && ['submitted', 'approved', 'rejected', 'removed'].includes(app.status);
   if (locked || (app?.status === 'returned' && step === 'intro')) {
     return <div className="page">{head}<StatusView app={app} config={config} onEdit={() => setStep('details')} canOpenPanel={roles.includes('restaurant')} openPanel={() => setRole('restaurant')} /></div>;
   }
   if (step === 'intro') return <div className="page">{head}<Intro config={config} app={app} onStart={() => setStep('details')} /></div>;
   return <div className="page">{head}<Wizard user={user} config={config} app={app} step={step} setStep={setStep} /></div>;
 }
+/* ---- small form helpers ---- */
+const TOWNS = ['हैदरगढ़', 'सुबेहा', 'बाराबंकी', 'रामसनेहीघाट', 'त्रिवेदीगंज'];
+const BANKS = ['State Bank of India', 'Punjab National Bank', 'Bank of Baroda', 'Bank of India', 'Union Bank of India', 'Aryavart Bank', 'HDFC Bank', 'ICICI Bank'];
+const ampm = (v) => { const [h, m] = String(v).split(':').map(Number); return `${((h + 11) % 12) + 1}${m ? ':' + String(m).padStart(2, '0') : ''} ${h < 12 ? 'AM' : 'PM'}`; };
+
+/** input whose empty placeholder "types itself" with an example */
+function TypedInput({ ex, area, plain: noTr, className = '', ...props }) {
+  const [n, setN] = useState(0);
+  const empty = !props.value;
+  useEffect(() => {
+    if (!empty) return undefined;
+    const id = setInterval(() => setN((x) => (x + 1) % (ex.length + 14)), 120);
+    return () => clearInterval(id);
+  }, [empty, ex]);
+  const ph = 'जैसे: ' + ex.slice(0, Math.min(n, ex.length)) + (n < ex.length ? '│' : '');
+  const p = { className: 'input ' + className, placeholder: ph, 'data-notr': '', ...props };
+  return area ? <textarea rows={2} {...p} /> : <input {...p} />;
+}
+function Chips({ options, value, onPick, fmt = (v) => v }) {
+  return (
+    <div className="pick-chips" data-notr="">
+      {options.map((o) => <button type="button" key={o} className={String(value) === String(o) ? 'on' : ''} onClick={() => onPick(o)}>{fmt(o)}</button>)}
+    </div>
+  );
+}
+function Ok({ show, ok, bad }) {
+  if (!show) return null;
+  return ok ? <small className="t-green tiny" data-notr="">✔ ठीक है</small> : <small className="t-red tiny">{t(bad)}</small>;
+}
+
 const prevStep = (s) => { const i = STEPS.findIndex((x) => x.id === s); return i <= 0 ? 'intro' : STEPS[i - 1].id; };
 
 function Intro({ config, app, onStart, loggedOut }) {
@@ -94,7 +124,7 @@ function Stepper({ step, setStep, done }) {
 
 function Wizard({ user, config, app, step, setStep }) {
   const toast = useToast();
-  const [f, setF] = useState(() => ({ ...blankApp(user), ...(app || {}) }));
+  const [f, setF] = useState(() => { const x = { ...blankApp(user), ...(app || {}) }; if (x.bankAcc) x.bankAcc2 = x.bankAcc; return x; });
   const [busy, setBusy] = useState(false);
   useEffect(() => { if (app) setF((x) => ({ ...x, docs: app.docs || {}, status: app.status, note: app.note })); }, [app?.docs, app?.status]); // eslint-disable-line
   const set = (k, fn = (v) => v) => (e) => setF({ ...f, [k]: fn(e.target.value) });
@@ -104,6 +134,7 @@ function Wizard({ user, config, app, step, setStep }) {
     const data = { ...f, ...extra, uid: user.uid, ownerPhone: f.ownerPhone, status: extra.status || (f.status === 'returned' ? 'returned' : 'draft'), updatedMs: Date.now() };
     delete data.bankAcc2;
     delete data.id;
+    if (!extra.docs) delete data.docs; // document list is written only by the uploader (no race with uploads)
     await saveApp(user.uid, data);
     return data;
   };
@@ -115,7 +146,7 @@ function Wizard({ user, config, app, step, setStep }) {
   const done = {
     details: !!(f.restName && f.address && f.ownerName && /^\d{14}$/.test(f.fssai) && /^\d{6}$/.test(f.pincode || '')),
     bank: !!(PAN_RE.test(f.pan) && IFSC_RE.test(f.bankIfsc) && /^\d{8,18}$/.test(f.bankAcc) && f.bankHolder),
-    docs: DOC_TYPES.filter((d) => d.need).every((d) => f.docs?.[d.id]),
+    docs: FORM_DOCS.filter((d) => d.need).every((d) => f.docs?.[d.id]),
     agreement: false,
   };
 
@@ -127,32 +158,43 @@ function Wizard({ user, config, app, step, setStep }) {
       {step === 'details' && (
         <div className="card join-form">
           <h4><Icon name="store" size={18} /> Restaurant details</h4>
-          <Field label="Restaurant name *"><input className="input" value={f.restName} onChange={set('restName')} maxLength={60} data-notr="" /></Field>
-          <Field label="One line about your food" hint="e.g. Famous for chole bhature since 1995"><input className="input" value={f.tagline} onChange={set('tagline')} maxLength={80} data-notr="" /></Field>
-          <Field label="Full address *"><textarea className="input" rows={2} value={f.address} onChange={set('address')} maxLength={200} data-notr="" /></Field>
+          <label className={'veg-pledge' + (f.vegOnly ? ' on' : '')} data-notr="">
+            <input type="checkbox" checked={!!f.vegOnly} onChange={(e) => setF({ ...f, vegOnly: e.target.checked })} />
+            <span className="vp-mark"><i /></span>
+            <span className="grow"><b>हम केवल शुद्ध शाकाहारी खाना बनाते और परोसते हैं</b><small>FoodGaon पर सिर्फ़ शुद्ध शाकाहारी रसोई जुड़ती हैं</small></span>
+          </label>
+          {!f.vegOnly && <div className="alert alert-amber small" data-notr="">FoodGaon केवल शुद्ध शाकाहारी रेस्टोरेंट जोड़ता है। अगर आपकी रसोई में नॉन-वेज बनता है, तो आवेदन मंज़ूर नहीं हो पाएगा।</div>}
+          <Field label="Restaurant name *"><TypedInput value={f.restName} onChange={set('restName')} maxLength={60} ex="शर्मा भोजनालय" /></Field>
+          <Field label="One line about your food"><TypedInput value={f.tagline} onChange={set('tagline')} maxLength={80} ex="1995 से मशहूर छोले-भटूरे" /></Field>
+          <Field label="Full address *"><TypedInput area value={f.address} onChange={set('address')} maxLength={200} ex="मेन रोड, बस अड्डे के सामने, हैदरगढ़" /></Field>
+          <Field label="Town"><TypedInput value={f.town} onChange={set('town')} maxLength={40} ex="हैदरगढ़" /></Field>
+          <Chips options={TOWNS} value={f.town} onPick={(v) => setF({ ...f, town: v })} />
           <div className="row gap">
-            <Field label="Town"><input className="input" value={f.town} onChange={set('town')} maxLength={40} data-notr="" /></Field>
-            <Field label="Landmark"><input className="input" value={f.landmark} onChange={set('landmark')} maxLength={60} data-notr="" /></Field>
+            <Field label="Landmark"><TypedInput value={f.landmark} onChange={set('landmark')} maxLength={60} ex="SBI के पास" /></Field>
+            <Field label="PIN code *"><TypedInput inputMode="numeric" maxLength={6} value={f.pincode || ''} onChange={set('pincode', digits)} ex="225124" plain /></Field>
           </div>
-          <Field label="PIN code *"><input className="input" inputMode="numeric" maxLength={6} value={f.pincode || ''} onChange={set('pincode', digits)} /></Field>
+          <Field label="Owner name *"><TypedInput value={f.ownerName} onChange={set('ownerName')} maxLength={50} ex="रमेश कुमार शर्मा" /></Field>
+          <Field label="Owner mobile" hint="Your login number — orders come to this"><input className="input" value={plain(f.ownerPhone)} disabled /></Field>
           <div className="row gap">
-            <Field label="Owner name *"><input className="input" value={f.ownerName} onChange={set('ownerName')} maxLength={50} data-notr="" /></Field>
-            <Field label="Owner mobile" hint="Your login number — orders come to this"><input className="input" value={plain(f.ownerPhone)} disabled /></Field>
+            <Field label="Other mobile"><TypedInput inputMode="numeric" maxLength={10} value={f.altPhone} onChange={set('altPhone', digits)} ex="9876543210" plain /></Field>
+            <Field label="Email"><TypedInput type="email" value={f.email} onChange={set('email', (v) => v.trim())} maxLength={60} ex="shop@gmail.com" plain /></Field>
           </div>
-          <div className="row gap">
-            <Field label="Other mobile"><input className="input" inputMode="numeric" maxLength={10} value={f.altPhone} onChange={set('altPhone', digits)} /></Field>
-            <Field label="Email"><input className="input" type="email" value={f.email} onChange={set('email', (v) => v.trim())} maxLength={60} data-notr="" /></Field>
+          <Field label="FSSAI number * (14 digits)"><TypedInput inputMode="numeric" maxLength={14} value={f.fssai} onChange={set('fssai', digits)} ex="12345678901234" plain /></Field>
+          {f.fssai && <small className={'tiny ' + (/^\d{14}$/.test(f.fssai) ? 't-green' : 'muted')}>{/^\d{14}$/.test(f.fssai) ? '✔ ठीक है' : `${f.fssai.length}/14`}</small>}
+          <p className="field-label">Opens at</p>
+          <div className="row gap"><input className="input" type="time" value={f.openTime} onChange={set('openTime')} /><Chips options={['08:00', '09:00', '10:00', '11:00']} value={f.openTime} onPick={(v) => setF({ ...f, openTime: v })} fmt={ampm} /></div>
+          <p className="field-label">Closes at</p>
+          <div className="row gap"><input className="input" type="time" value={f.closeTime} onChange={set('closeTime')} /><Chips options={['21:00', '22:00', '23:00']} value={f.closeTime} onPick={(v) => setF({ ...f, closeTime: v })} fmt={ampm} /></div>
+          <p className="field-label">Cooking time (min)</p>
+          <Chips options={[10, 15, 20, 30, 45]} value={Number(f.prepMins)} onPick={(v) => setF({ ...f, prepMins: v })} fmt={(v) => `${v} मिनट`} />
+          <p className="field-label">Delivery area (km)</p>
+          <Chips options={[2, 3, 5, 8, 10]} value={Number(f.radiusKm)} onPick={(v) => setF({ ...f, radiusKm: v })} fmt={(v) => `${v} किमी`} />
+          <p className="field-label">Your delivery boys <span className="muted" data-notr="">(कम से कम 1)</span></p>
+          <div className="qty-step">
+            <button type="button" onClick={() => setF({ ...f, ownRiders: Math.max(1, Number(f.ownRiders || 1) - 1) })} aria-label="कम करें">−</button>
+            <b>{Math.max(1, Number(f.ownRiders || 1))}</b>
+            <button type="button" onClick={() => setF({ ...f, ownRiders: Math.min(20, Number(f.ownRiders || 1) + 1) })} aria-label="बढ़ाएँ">+</button>
           </div>
-          <Field label="FSSAI number * (14 digits)"><input className="input" inputMode="numeric" maxLength={14} value={f.fssai} onChange={set('fssai', digits)} data-notr="" /></Field>
-          <div className="row gap">
-            <Field label="Opens at"><input className="input" type="time" value={f.openTime} onChange={set('openTime')} /></Field>
-            <Field label="Closes at"><input className="input" type="time" value={f.closeTime} onChange={set('closeTime')} /></Field>
-          </div>
-          <div className="row gap">
-            <Field label="Cooking time (min)"><input className="input" inputMode="numeric" value={f.prepMins} onChange={set('prepMins', digits)} /></Field>
-            <Field label="Delivery area (km)"><input className="input" inputMode="decimal" value={f.radiusKm} onChange={set('radiusKm', (v) => v.replace(/[^\d.]/g, ''))} /></Field>
-          </div>
-          <Field label="Your delivery boys"><input className="input" inputMode="numeric" value={f.ownRiders} onChange={set('ownRiders', digits)} /></Field>
           <div className="gst-mode">
             <p className="small"><b>{t('Menu prices are…')}</b></p>
             <div className="seg">
@@ -160,7 +202,6 @@ function Wizard({ user, config, app, step, setStep }) {
               <button type="button" className={f.priceInclGst === false ? 'on' : ''} onClick={() => setF({ ...f, priceInclGst: false })}>{t('Without GST')}</button>
             </div>
           </div>
-          <label className="check-row"><input type="checkbox" checked={!!f.vegOnly} onChange={(e) => setF({ ...f, vegOnly: e.target.checked })} /> {t('We serve only vegetarian food')}</label>
           <button className="btn primary block lg" disabled={busy} onClick={() => next('bank')}>Save and next <Icon name="right" size={18} /></button>
         </div>
       )}
@@ -169,76 +210,108 @@ function Wizard({ user, config, app, step, setStep }) {
         <div className="card join-form">
           <h4><Icon name="wallet" size={18} /> Bank & tax</h4>
           <p className="tiny muted"><Icon name="shield" size={13} /> {t('Only the FoodGaon admin can see these details. They are never shown to customers.')}</p>
-          <Field label="Owner PAN *"><input className="input" maxLength={10} value={f.pan} onChange={set('pan', up)} placeholder="ABCDE1234F" data-notr="" /></Field>
-          {f.pan && !PAN_RE.test(f.pan) && <small className="t-red tiny">{t('PAN looks wrong')}</small>}
-          <Field label="GSTIN (if you have GST)"><input className="input" maxLength={15} value={f.gstin} onChange={set('gstin', up)} data-notr="" /></Field>
-          {f.gstin && !GSTIN_RE.test(f.gstin) && <small className="t-red tiny">{t('GSTIN looks wrong')}</small>}
-          <Field label="Account holder name *" hint="Exactly as in the passbook"><input className="input" value={f.bankHolder} onChange={set('bankHolder')} maxLength={60} data-notr="" /></Field>
-          <Field label="Bank name"><input className="input" value={f.bankName} onChange={set('bankName')} maxLength={60} data-notr="" /></Field>
-          <Field label="Account number *"><input className="input" inputMode="numeric" maxLength={18} value={f.bankAcc} onChange={set('bankAcc', digits)} data-notr="" /></Field>
-          <Field label="Type account number again *"><input className="input" inputMode="numeric" maxLength={18} value={f.bankAcc2 ?? f.bankAcc} onChange={(e) => setF({ ...f, bankAcc2: digits(e.target.value) })} data-notr="" /></Field>
-          {f.bankAcc2 !== undefined && f.bankAcc2 !== f.bankAcc && <small className="t-red tiny">{t('Account numbers do not match')}</small>}
-          <Field label="IFSC *"><input className="input" maxLength={11} value={f.bankIfsc} onChange={set('bankIfsc', up)} placeholder="SBIN0001234" data-notr="" /></Field>
-          {f.bankIfsc && !IFSC_RE.test(f.bankIfsc) && <small className="t-red tiny">{t('IFSC looks wrong')}</small>}
-          <Field label="Shop UPI ID" hint="For direct UPI orders"><input className="input" value={f.upiId} onChange={set('upiId', (v) => v.trim())} placeholder="shopname@okaxis" data-notr="" /></Field>
-          <button className="btn primary block lg" disabled={busy || (f.bankAcc2 !== undefined && f.bankAcc2 !== f.bankAcc)} onClick={() => { const x = { ...f }; delete x.bankAcc2; setF(x); next('docs'); }}>Save and next <Icon name="right" size={18} /></button>
+          <Field label="Owner PAN *"><TypedInput maxLength={10} value={f.pan} onChange={set('pan', up)} ex="ABCDE1234F" plain /></Field>
+          <Ok show={!!f.pan} ok={PAN_RE.test(f.pan || '')} bad="PAN looks wrong" />
+          <Field label="GSTIN (if you have GST)"><TypedInput maxLength={15} value={f.gstin} onChange={set('gstin', up)} ex="09ABCDE1234F1Z5" plain /></Field>
+          <Ok show={!!f.gstin} ok={GSTIN_RE.test(f.gstin || '')} bad="GSTIN looks wrong" />
+          <Field label="Account holder name *" hint="Exactly as in the passbook"><TypedInput value={f.bankHolder} onChange={set('bankHolder')} maxLength={60} ex="RAMESH KUMAR SHARMA" plain /></Field>
+          <Field label="Bank name"><TypedInput value={f.bankName} onChange={set('bankName')} maxLength={60} ex="State Bank of India" plain /></Field>
+          <Chips options={BANKS} value={f.bankName} onPick={(v) => setF({ ...f, bankName: v })} />
+          <Field label="Account number *"><TypedInput inputMode="numeric" maxLength={18} value={f.bankAcc} onChange={(e) => setF({ ...f, bankAcc: digits(e.target.value) })} ex="12345678901" plain /></Field>
+          <Field label="Type account number again *">
+            <div className="match-wrap">
+              <input className="input" inputMode="numeric" maxLength={18} value={f.bankAcc2 || ''} onChange={(e) => setF({ ...f, bankAcc2: digits(e.target.value) })} onPaste={(e) => e.preventDefault()} autoComplete="off" placeholder="दोबारा टाइप करें" data-notr="" />
+              {f.bankAcc2 && f.bankAcc2 === f.bankAcc && <span className="match-tick" aria-label="मिलान हो गया">✔</span>}
+            </div>
+          </Field>
+          {f.bankAcc2 && f.bankAcc2 !== f.bankAcc && <small className="t-red tiny">{f.bankAcc.startsWith(f.bankAcc2) ? '…' : t('Account numbers do not match')}</small>}
+          {f.bankAcc2 && f.bankAcc2 === f.bankAcc && <small className="t-green tiny" data-notr="">✔ खाता नंबर मिल गया</small>}
+          <Field label="IFSC *"><TypedInput maxLength={11} value={f.bankIfsc} onChange={set('bankIfsc', up)} ex="SBIN0001234" plain /></Field>
+          <Ok show={!!f.bankIfsc} ok={IFSC_RE.test(f.bankIfsc || '')} bad="IFSC looks wrong" />
+          <Field label="Shop UPI ID" hint="For direct UPI orders"><TypedInput value={f.upiId} onChange={set('upiId', (v) => v.trim())} ex="sharmabhojnalaya@sbi" plain /></Field>
+          <button className="btn primary block lg" disabled={busy || (f.bankAcc2 || '') !== (f.bankAcc || '')} onClick={() => next('docs')}>Save and next <Icon name="right" size={18} /></button>
+          {(f.bankAcc2 || '') !== (f.bankAcc || '') && <p className="tiny muted center" data-notr="">आगे बढ़ने के लिए खाता नंबर दोबारा टाइप करें</p>}
         </div>
       )}
 
       {step === 'docs' && <DocsStep uid={user.uid} f={f} setF={setF} save={save} onNext={() => next('agreement')} busy={busy} />}
 
-      {step === 'agreement' && <AgreementStep user={user} config={config} f={f} app={app} save={save} />}
+      {step === 'agreement' && <AgreementStep user={user} config={config} f={f} setF={setF} app={app} save={save} />}
     </div>
   );
 }
 
 function DocsStep({ uid, f, setF, save, onNext, busy }) {
-  const toast = useToast();
-  const [working, setWorking] = useState('');
-  const pick = (type) => async (e) => {
-    const file = e.target.files?.[0]; e.target.value = '';
-    if (!file) return;
-    setWorking(type);
-    try {
-      const d = await fileToDoc(file, compressImage);
-      await saveDoc(uid, type, d);
-      const docs = { ...(f.docs || {}), [type]: { name: d.name, ms: Date.now(), pdf: d.data.startsWith('data:application/pdf') } };
-      setF({ ...f, docs }); await save({ docs });
-      toast(t('Uploaded'));
-    } catch (er) { toast(t(er.message || 'Could not upload'), 'err'); }
-    setWorking('');
-  };
-  const del = async (type) => {
-    try { await dropDoc(uid, type); const docs = { ...(f.docs || {}) }; delete docs[type]; setF({ ...f, docs }); await save({ docs }); } catch { toast(t('Could not delete'), 'err'); }
-  };
   return (
     <div className="card join-form">
       <h4><Icon name="image" size={18} /> Documents</h4>
       <p className="tiny muted">{t('Take a clear photo in good light. A PDF up to 650 KB also works.')}</p>
       <div className="doc-up-list">
-        {DOC_TYPES.map((d) => {
-          const have = f.docs?.[d.id];
-          return (
-            <div key={d.id} className={'doc-up' + (have ? ' have' : '')}>
-              <span className="du-ic">{have ? <Icon name="check" size={18} stroke={3} /> : <Icon name={d.id === 'shop' ? 'store' : 'receipt'} size={18} />}</span>
-              <div className="grow">
-                <b>{d.label}{d.need ? ' *' : ''}</b>
-                <small className="muted">{have ? `${have.name || ''} · ${fmtDateTime(have.ms)}` : d.hint}</small>
-                {have && <ViewDocBtn uid={uid} type={d.id} name={d.label} />}
-              </div>
-              {working === d.id ? <span className="tiny muted">…</span> : (
-                <div className="du-act">
-                  <label className="btn small ghost"><Icon name="camera" size={15} /><input type="file" accept="image/*" capture="environment" hidden onChange={pick(d.id)} /></label>
-                  <label className="btn small ghost"><Icon name="plus" size={15} /><input type="file" accept="image/*,application/pdf" hidden onChange={pick(d.id)} /></label>
-                  {have && <button className="btn small ghost danger-text" onClick={() => del(d.id)} aria-label="Remove"><Icon name="trash" size={15} /></button>}
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {FORM_DOCS.map((d) => <DocUpload key={d.id} uid={uid} d={d} f={f} setF={setF} save={save} />)}
       </div>
-      <p className="tiny muted">{t('Signed agreement: you can also upload it later, after printing it from the next step.')}</p>
+      <p className="tiny muted" data-notr="">हस्ताक्षर वाला अनुबंध अगले (चौथे) कदम में अपलोड होगा।</p>
       <button className="btn primary block lg" disabled={busy} onClick={onNext}>Save and next <Icon name="right" size={18} /></button>
+    </div>
+  );
+}
+
+/** one document row: camera / gallery / PDF, live percent while uploading, green tick when saved */
+function DocUpload({ uid, d, f, setF, save }) {
+  const toast = useToast();
+  const [pct, setPct] = useState(null);
+  const [err, setErr] = useState('');
+  const have = f.docs?.[d.id];
+  const pick = async (e) => {
+    const file = e.target.files?.[0]; e.target.value = '';
+    if (!file) return;
+    setErr(''); setPct(5);
+    let p = 5; const tick = setInterval(() => { p = Math.min(p + (p < 60 ? 9 : 3), 92); setPct(p); }, 180);
+    try {
+      const doc = await fileToDoc(file, compressImage);
+      p = Math.max(p, 55); setPct(p);
+      await saveDoc(uid, d.id, doc);
+      const meta = { name: String(doc.name || '').slice(0, 60), ms: Date.now(), pdf: doc.data.startsWith('data:application/pdf') };
+      try { await patch('partnerApps', uid, { [`docs.${d.id}`]: meta, updatedMs: Date.now() }); } catch (pe) {
+        if (!/not-found|no document/i.test(String(pe?.code || pe?.message))) throw pe;
+        await save({ docs: { ...(f.docs || {}), [d.id]: meta } });
+      }
+      setF((x) => ({ ...x, docs: { ...(x.docs || {}), [d.id]: meta } }));
+      clearInterval(tick); setPct(100);
+      setTimeout(() => setPct(null), 900);
+    } catch (er) {
+      clearInterval(tick); setPct(null);
+      const m = String(er?.code || er?.message || '');
+      const msg = /permission/i.test(m) ? 'अनुमति नहीं मिली — ऐप बंद करके दोबारा लॉग इन करें' : /network|unavailable|offline/i.test(m) ? 'इंटरनेट धीमा है — दोबारा कोशिश करें' : /too large|exceeds|size/i.test(m) ? 'फ़ाइल बहुत बड़ी है — फ़ोटो से भेजें' : (er?.message || 'अपलोड नहीं हुआ — दोबारा कोशिश करें');
+      setErr(msg); toast(msg, 'err');
+    }
+  };
+  const del = async () => {
+    try {
+      await dropDoc(uid, d.id);
+      await patch('partnerApps', uid, { [`docs.${d.id}`]: null, updatedMs: Date.now() });
+      setF((x) => ({ ...x, docs: { ...(x.docs || {}), [d.id]: null } }));
+    } catch { toast(t('Could not delete'), 'err'); }
+  };
+  return (
+    <div className={'doc-up' + (have ? ' have' : '') + (err ? ' bad' : '')}>
+      <span className="du-ic">{pct !== null ? <span className="du-pct">{pct}%</span> : have ? <Icon name="check" size={18} stroke={3} /> : <Icon name={d.id === 'shop' ? 'store' : 'receipt'} size={18} />}</span>
+      <div className="grow du-body">
+        <b>{t(d.label)}{d.need ? ' *' : ''}</b>
+        {pct !== null ? (
+          <div className="du-bar"><i style={{ width: pct + '%' }} /></div>
+        ) : (
+          <small className="muted du-name">{have ? `✔ ${have.name || ''} · ${fmtDateTime(have.ms)}` : t(d.hint)}</small>
+        )}
+        {err && <small className="t-red du-err" data-notr="">{err}</small>}
+        {have && pct === null && <ViewDocBtn uid={uid} type={d.id} name={d.label} />}
+      </div>
+      {pct === null && (
+        <div className="du-act">
+          <label className="btn small ghost" aria-label="कैमरा"><Icon name="camera" size={15} /><input type="file" accept="image/*" capture="environment" hidden onChange={pick} /></label>
+          <label className="btn small ghost" aria-label="गैलरी या PDF"><Icon name="plus" size={15} /><input type="file" accept="image/*,application/pdf" hidden onChange={pick} /></label>
+          {have && <button className="btn small ghost danger-text" onClick={del} aria-label="Remove"><Icon name="trash" size={15} /></button>}
+        </div>
+      )}
     </div>
   );
 }
@@ -262,7 +335,7 @@ export function ViewDocBtn({ uid, type, name, label = 'View' }) {
   );
 }
 
-function AgreementStep({ user, config, f, app, save }) {
+function AgreementStep({ user, config, f, setF, app, save }) {
   const toast = useToast();
   const [name, setName] = useState(f.accepted?.name || f.ownerName || '');
   const [ok, setOk] = useState(false);
@@ -287,8 +360,20 @@ function AgreementStep({ user, config, f, app, save }) {
       <div className="card">
         <h4><Icon name="shield" size={18} /> Read the agreement</h4>
         <div className="ag-box"><PartnerAgreement a={{ ...f, terms }} config={config} /></div>
-        <button className="btn ghost block" onClick={() => setPdf(true)}><Icon name="download" size={18} /> Download to print and sign (PDF)</button>
-        <p className="tiny muted">{t('Print it, sign every page, and upload the photo under Documents → Signed agreement. You can do this later too.')}</p>
+      </div>
+      <div className="card sign-card" data-notr="">
+        <h4>✍️ अनुबंध पर हस्ताक्षर करके अपलोड करें</h4>
+        <ol className="sign-steps">
+          <li><span>1</span><div><b>डाउनलोड करें</b><small>नीचे के बटन से अनुबंध की PDF फ़ोन में सेव करें।</small></div></li>
+          <li><span>2</span><div><b>प्रिंट निकालें</b><small>नज़दीकी फ़ोटोकॉपी / CSC दुकान से प्रिंट करवाएँ।</small></div></li>
+          <li><span>3</span><div><b>हर पन्ने पर हस्ताक्षर करें</b><small>मालिक हर पन्ने पर साइन करे; मोहर हो तो लगा दें। एक कॉपी अपने पास रखें।</small></div></li>
+          <li><span>4</span><div><b>हर पन्ने की फ़ोटो अपलोड करें</b><small>पूरा पन्ना साफ़ दिखे, रोशनी अच्छी हो।</small></div></li>
+        </ol>
+        <button className="btn primary block" onClick={() => setPdf(true)}><Icon name="download" size={18} /> अनुबंध डाउनलोड करें (प्रिंट और साइन के लिए)</button>
+        <div className="doc-up-list">
+          {SIGN_DOCS.map((d) => <DocUpload key={d.id} uid={user.uid} d={d} f={f} setF={setF} save={save} />)}
+        </div>
+        <p className="tiny muted">अभी प्रिंट नहीं हो पा रहा? नीचे नाम लिखकर अनुबंध स्वीकार करके भेज दें — साइन वाली फ़ोटो बाद में भी "मेरा आवेदन" से अपलोड कर सकते हैं।</p>
       </div>
       <div className="card">
         {miss.length > 0 && <div className="alert alert-amber small"><b>{t('Still needed')}:</b> {miss.map((x) => t(x)).join(' · ')}</div>}
@@ -306,12 +391,14 @@ function StatusView({ app, config, onEdit, canOpenPanel, openPanel }) {
   const [pdf, setPdf] = useState(false);
   return (
     <div className="pad-x">
+      <StatusTrack status={app.status} />
       <div className={'status-hero st-' + app.status}>
         <span className="sh-ic"><Icon name={app.status === 'approved' ? 'check' : app.status === 'submitted' ? 'clock' : 'info'} size={30} stroke={2.5} /></span>
         <b>{t(st.label)}</b>
         <small data-notr="">{app.restName}</small>
         {app.status === 'submitted' && <p>{t('FoodGaon will check your documents and call you within 1–2 days.')}</p>}
-        {app.status === 'approved' && <p>{t('Welcome to FoodGaon! Add your menu and start taking orders.')}</p>}
+        {app.status === 'approved' && <p data-notr="">🎉 बधाई हो! आपकी दुकान FoodGaon पर जुड़ गई है। मेनू जोड़ें और "दुकान खुली" करते ही आप लाइव हैं।</p>}
+        {app.status === 'removed' && <p data-notr="">यह रेस्टोरेंट FoodGaon से हटा दिया गया है। जानकारी के लिए FoodGaon से संपर्क करें।</p>}
         {(app.status === 'returned' || app.status === 'rejected') && app.note && <p className="sh-note" data-notr="">{app.note}</p>}
       </div>
       {app.status === 'approved' && canOpenPanel && <button className="btn primary block lg" onClick={openPanel}><Icon name="store" size={18} /> Open my restaurant panel</button>}
@@ -328,11 +415,24 @@ function StatusView({ app, config, onEdit, canOpenPanel, openPanel }) {
       </div>
       <div className="card">
         <h4>Documents</h4>
-        {DOC_TYPES.filter((d) => app.docs?.[d.id]).map((d) => (
+        {FORM_DOCS.filter((d) => app.docs?.[d.id]).map((d) => (
           <div key={d.id} className="bill small"><span>{t(d.label)}</span><ViewDocBtn uid={app.uid || app.id} type={d.id} name={d.label} /></div>
         ))}
-        {!app.docs?.agreement && app.status !== 'rejected' && <p className="tiny muted">{t('Signed agreement not uploaded yet. FoodGaon will collect the signed copy when they visit.')}</p>}
+        {SIGN_DOCS.filter((d) => app.docs?.[d.id]).map((d) => (
+          <div key={d.id} className="bill small"><span>{t(d.label)}</span><ViewDocBtn uid={app.uid || app.id} type={d.id} name={d.label} /></div>
+        ))}
       </div>
+      {['submitted', 'returned'].includes(app.status) && (
+        <div className="card sign-card" data-notr="">
+          <h4>✍️ हस्ताक्षर वाला अनुबंध</h4>
+          <p className="tiny muted">अनुबंध डाउनलोड करें, प्रिंट करके हर पन्ने पर साइन करें, फिर हर पन्ने की फ़ोटो यहाँ अपलोड करें।</p>
+          <button className="btn ghost block" onClick={() => setPdf(true)}><Icon name="download" size={18} /> अनुबंध डाउनलोड करें</button>
+          <div className="doc-up-list">
+            {SIGN_DOCS.map((d) => <DocUpload key={d.id} uid={app.uid || app.id} d={d} f={app} setF={() => {}} save={(x) => patch('partnerApps', app.uid || app.id, { ...x, updatedMs: Date.now() })} />)}
+          </div>
+        </div>
+      )}
+      {app.status === 'approved' && !SIGN_DOCS.some((d) => app.docs?.[d.id]) && <p className="tiny muted center" data-notr="">साइन वाली अनुबंध की कॉपी FoodGaon टीम आपसे मिलकर ले लेगी।</p>}
       <div className="card">
         <h4>Agreement</h4>
         {app.accepted && <p className="small">{t('Accepted by')} <b data-notr="">{app.accepted.name}</b> · {fmtDateTime(app.accepted.ms)}</p>}
@@ -348,6 +448,25 @@ function StatusView({ app, config, onEdit, canOpenPanel, openPanel }) {
     </div>
   );
 }
-export const HIST = { submitted: 'Sent to FoodGaon', resubmitted: 'Sent again after changes', returned: 'Sent back for changes', approved: 'Approved', rejected: 'Not approved', edited: 'Details changed by admin', note: 'Note' };
+/** sent → under review → live */
+function StatusTrack({ status }) {
+  const stage = status === 'approved' ? 3 : status === 'submitted' ? 2 : 1;
+  const bad = ['rejected', 'removed'].includes(status);
+  const steps = [['📝', 'आवेदन भेजा'], ['🔍', status === 'returned' ? 'सुधार चाहिए' : 'जाँच में'], ['🎉', 'आप लाइव हैं']];
+  return (
+    <div className={'st-track' + (bad ? ' bad' : '')} data-notr="">
+      {steps.map(([e, l], i) => (
+        <React.Fragment key={l}>
+          {i > 0 && <span className={'stt-line' + (stage > i ? ' on' : '')} />}
+          <div className={'stt' + (stage > i ? ' done' : '') + (stage === i + 1 ? ' cur' : '') + (status === 'returned' && i === 1 ? ' warn' : '')}>
+            <span>{stage > i + 1 || (status === 'approved' && i === 2) ? '✔' : e}</span><small>{l}</small>
+          </div>
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
+export const HIST = { removed: 'Removed from FoodGaon', submitted: 'Sent to FoodGaon', resubmitted: 'Sent again after changes', returned: 'Sent back for changes', approved: 'Approved', rejected: 'Not approved', edited: 'Details changed by admin', note: 'Note' };
 
 export function JoinEmpty() { return <Empty icon="store" title="Nothing here" />; }

@@ -300,7 +300,21 @@ function RestEditor({ open, r, onClose }) {
       <button className="btn primary block lg" onClick={save}>Save</button>
       {r?.id && <button className="btn ghost danger-text block" onClick={() => setDel(true)}>Delete restaurant</button>}
       <Confirm open={del} onClose={() => setDel(false)} danger title="Delete restaurant?" text="The restaurant and its menu will be removed." okText="Delete"
-        onOk={async () => { try { const its = await getList('items', [['restaurantId', '==', r.id]]); await bulk([['del', 'restaurants', r.id], ...its.map((i) => ['del', 'items', i.id])]); onClose(); } catch { toast(t('Could not delete'), 'err'); } }} />
+        onOk={async () => {
+          try {
+            const its = await getList('items', [['restaurantId', '==', r.id]]);
+            await bulk([['del', 'restaurants', r.id], ...its.map((i) => ['del', 'items', i.id])]);
+            // take away the owner's (and its delivery boys') panel access too
+            const st = await getList('staff', [['restaurant', '==', r.id]]).catch(() => []);
+            const rd = await getList('staff', [['riderOf', '==', r.id]]).catch(() => []);
+            for (const x of [...st, ...rd]) {
+              if (x.admin) await patch('staff', x.id, { restaurant: '', riderOf: '', rider: false }).catch(() => {});
+              else await remove('staff', x.id).catch(() => {});
+            }
+            if (r.applicationId) await patch('partnerApps', r.applicationId, { status: 'removed', removedMs: Date.now() }).catch(() => {});
+            onClose();
+          } catch { toast(t('Could not delete'), 'err'); }
+        }} />
     </Sheet>
   );
 }

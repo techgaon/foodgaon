@@ -160,7 +160,7 @@ function AppFile({ a, onClose }) {
         <h4>Documents</h4>
         {docs === null && <p className="tiny muted">Loading…</p>}
         <div className="doc-grid-adm">
-          {DOC_TYPES.map((d) => {
+          {DOC_TYPES.filter((d) => d.step !== 'agreement' || d.id === 'agreement' || doc(d.id)).map((d) => {
             const x = doc(d.id);
             return (
               <div key={d.id} className={'dga' + (x ? '' : ' none')}>
@@ -252,7 +252,7 @@ function FullFile({ a, docs, config }) {
       <h4>History</h4>
       <table className="doc-table small ff-table"><tbody>{(a.history || []).map((h, i) => <tr key={i}><td>{fmtDateTime(h.ms)}</td><td>{`${HIST[h.act] || h.act} (${h.by}) ${h.note || ''}`}</td></tr>)}</tbody></table>
       <h4>Documents</h4>
-      {DOC_TYPES.map((d) => {
+      {DOC_TYPES.filter((d) => d.step !== 'agreement' || d.id === 'agreement' || docs.some((y) => y.type === d.id)).map((d) => {
         const x = docs.find((y) => y.type === d.id);
         return (
           <div key={d.id} className="ff-doc">

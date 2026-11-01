@@ -158,6 +158,9 @@ export const watchList = (path, filters, cb, order, lim, onErr) =>
   onSnapshot(build(path, filters, order, lim), (s) => cb(snapList(s)), (e) => { console.warn(path, e); onErr?.(e); });
 export const watchDoc = (path, id, cb) =>
   onSnapshot(doc(db, path, id), (d) => cb(d.exists() ? { id: d.id, ...d.data() } : null), (e) => { console.warn(path, id, e); cb(null); });
+/** like watchDoc, but tells whether the answer came from the server (not the offline cache) */
+export const watchDocLive = (path, id, cb) =>
+  onSnapshot(doc(db, path, id), { includeMetadataChanges: true }, (d) => cb(d.exists() ? { id: d.id, ...d.data() } : null, !d.metadata.fromCache), () => {});
 export const getOne = async (path, id) => { const d = await getDoc(doc(db, path, id)); return d.exists() ? { id: d.id, ...d.data() } : null; };
 export const getList = async (path, filters, order, lim) => snapList(await getDocs(build(path, filters, order, lim)));
 export const put = (path, id, data, merge = true) => setDoc(doc(db, path, id), data, { merge });

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { watchDoc } from '../lib/fb.js';
 import { Icon, Sheet, useToast } from '../ui.jsx';
 import { useApp } from '../App.jsx';
 import { feeTerms } from '../lib/partner.js';
@@ -10,15 +11,27 @@ const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
 /* ------------------------------------------------------------------ */
 /*  "Own a restaurant? हमसे जुड़ें 💓" — tap opens the full join flow     */
 /* ------------------------------------------------------------------ */
+const APP_LINE = {
+  draft: ['📝', 'फ़ॉर्म अधूरा है — पूरा करें'],
+  submitted: ['🔍', 'आवेदन जाँच में है'],
+  returned: ['⚠️', 'सुधार चाहिए — देखें'],
+  approved: ['🎉', 'मंज़ूर — आप लाइव हैं'],
+  rejected: ['❌', 'आवेदन मंज़ूर नहीं हुआ'],
+  removed: ['❌', 'FoodGaon से हटाया गया'],
+};
 export function JoinCta({ nav }) {
+  const { user } = useApp();
+  const [app, setApp] = useState(null);
+  useEffect(() => (user ? watchDoc('partnerApps', user.uid, setApp) : undefined), [user?.uid]); // eslint-disable-line
   const go = () => nav.go({ name: 'join' });
+  const line = app && APP_LINE[app.status];
   return (
     <div className="card join-cta" role="button" tabIndex={0} onClick={go} onKeyDown={(e) => e.key === 'Enter' && go()}>
       <span className="jc-ic"><Icon name="store" size={24} /></span>
       <span className="grow" data-notr="">
-        <b>Own a restaurant?</b>
-        <span className="jc-hi">हमसे जुड़ें <span className="beat" aria-hidden="true">💓</span></span>
-        <small>कम फ़ीस · पैसा सीधे आपके खाते में · जुड़ना मुफ़्त</small>
+        <b>{line ? 'मेरा रेस्टोरेंट आवेदन' : 'Own a restaurant?'}</b>
+        {line ? <span className={'jc-status st-' + app.status}>{line[0]} {line[1]}</span> : <span className="jc-hi">हमसे जुड़ें <span className="beat" aria-hidden="true">💓</span></span>}
+        <small>{line ? 'स्थिति देखने के लिए टैप करें' : 'कम फ़ीस · पैसा सीधे आपके खाते में · जुड़ना मुफ़्त'}</small>
       </span>
       <span className="jc-go"><Icon name="right" size={20} /></span>
     </div>

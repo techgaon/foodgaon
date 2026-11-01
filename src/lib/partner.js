@@ -11,8 +11,14 @@ export const DOC_TYPES = [
   { id: 'pan', label: 'PAN card of the owner', need: true, hint: 'Front side' },
   { id: 'bank', label: 'Bank passbook first page or cancelled cheque', need: true, hint: 'Name, account number and IFSC must be readable' },
   { id: 'gst', label: 'GST certificate', need: false, hint: 'Only if you have GST' },
-  { id: 'agreement', label: 'Signed agreement (printed copy)', need: false, hint: 'Print the agreement, sign it, and upload a photo of every page' },
+  // signed agreement pages are uploaded on the agreement step
+  { id: 'agreement', label: 'Signed agreement — page 1', need: false, step: 'agreement', hint: 'Photo of the signed page' },
+  { id: 'agreement2', label: 'Signed agreement — page 2', need: false, step: 'agreement', hint: 'Photo of the signed page' },
+  { id: 'agreement3', label: 'Signed agreement — page 3', need: false, step: 'agreement', hint: 'Photo of the signed page' },
+  { id: 'agreement4', label: 'Signed agreement — page 4', need: false, step: 'agreement', hint: 'Only if there is a 4th page' },
 ];
+export const FORM_DOCS = DOC_TYPES.filter((d) => d.step !== 'agreement');
+export const SIGN_DOCS = DOC_TYPES.filter((d) => d.step === 'agreement');
 
 export const APP_STATUS = {
   draft: { label: 'Not sent yet', cls: 'amber' },
@@ -20,6 +26,7 @@ export const APP_STATUS = {
   returned: { label: 'Sent back — changes needed', cls: 'red' },
   approved: { label: 'Approved — live on FoodGaon', cls: 'green' },
   rejected: { label: 'Not approved', cls: 'red' },
+  removed: { label: 'Removed from FoodGaon', cls: 'red' },
 };
 
 export const appIdOf = (uid) => uid;
@@ -59,6 +66,7 @@ export function missing(a) {
   if (!a.address?.trim()) m.push('Full address');
   if (!/^\d{6}$/.test(a.pincode || '')) m.push('PIN code');
   if (!a.ownerName?.trim()) m.push('Owner name');
+  if (!(Number(a.ownRiders) >= 1)) m.push('At least 1 delivery boy');
   if (!/^\d{14}$/.test(a.fssai || '')) m.push('FSSAI number (14 digits)');
   if (!PAN_RE.test(a.pan || '')) m.push('PAN number');
   if (a.gstin && !GSTIN_RE.test(a.gstin)) m.push('GSTIN (looks wrong)');

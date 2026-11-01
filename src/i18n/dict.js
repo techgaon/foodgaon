@@ -1273,4 +1273,12 @@ DICT.push(
   ['Online payment', 'ऑनलाइन भुगतान', 'ऑनलाइन भुगतान'],
   ['Could not connect. Is the payment server set up?', 'जुड़ नहीं सका। क्या पेमेंट सर्वर तैयार है?', 'जुड़ि नाहीं सका। का पेमेंट सर्वर तैयार है?'],
   ['Customers pay each restaurant\'s own UPI. FoodGaon never holds customer money.', 'ग्राहक हर रेस्टोरेंट के अपने UPI पर भुगतान करते हैं। FoodGaon ग्राहक का पैसा अपने पास नहीं रखता।', 'ग्राहक हर रेस्टोरेंट के आपन UPI पै भुगतान करत हैं। FoodGaon ग्राहक कै पइसा अपने लगे नाहीं रखत।'],
+  ['Signed agreement — page 1', 'साइन किया अनुबंध — पन्ना 1', 'दस्तखत वाला अनुबंध — पन्ना 1'],
+  ['Signed agreement — page 2', 'साइन किया अनुबंध — पन्ना 2', 'दस्तखत वाला अनुबंध — पन्ना 2'],
+  ['Signed agreement — page 3', 'साइन किया अनुबंध — पन्ना 3', 'दस्तखत वाला अनुबंध — पन्ना 3'],
+  ['Signed agreement — page 4', 'साइन किया अनुबंध — पन्ना 4', 'दस्तखत वाला अनुबंध — पन्ना 4'],
+  ['Photo of the signed page', 'साइन किए पन्ने की फ़ोटो', 'दस्तखत वाले पन्ना कै फोटो'],
+  ['Only if there is a 4th page', 'सिर्फ़ अगर चौथा पन्ना हो', 'बस अगर चौथा पन्ना होय'],
+  ['Removed from FoodGaon', 'FoodGaon से हटाया गया', 'FoodGaon से हटावा गवा'],
+  ['At least 1 delivery boy', 'कम से कम 1 डिलीवरी बॉय', 'कम से कम 1 डिलीवरी बॉय'],
 );

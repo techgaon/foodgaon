@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { auth, onAuthStateChanged, fullSignOut, watchDoc, phoneOf } from './lib/fb.js';
+import { auth, onAuthStateChanged, fullSignOut, watchDoc, watchDocLive, phoneOf } from './lib/fb.js';
 import { LS } from './lib/utils.js';
 import { SUPER_ADMIN } from './firebase-config.js';
 import { DEFAULT_CONFIG } from './data/menu.js';
@@ -41,15 +41,23 @@ export default function App() {
     return watchDoc('staff', phone, (d) => { setStaff(d); setStaffReady(true); });
   }, [phone]);
 
+  // a deleted restaurant must not keep its owner panel
+  const [restGone, setRestGone] = useState(false);
+  useEffect(() => {
+    setRestGone(false);
+    if (!staff?.restaurant) return undefined;
+    return watchDocLive('restaurants', staff.restaurant, (d, live) => setRestGone(!d && live));
+  }, [staff?.restaurant]);
+
   const roles = useMemo(() => {
     // staff numbers get only their work role(s); everyone else is a customer
     const r = [];
     if (phone === SUPER_ADMIN || staff?.admin) r.push('admin');
-    if (staff?.restaurant) r.push('restaurant');
+    if (staff?.restaurant && !restGone) r.push('restaurant');
     if (staff?.rider) r.push('rider');
     if (!r.length || staff?.customer) r.push('customer');
     return r;
-  }, [staff, phone]);
+  }, [staff, phone, restGone]);
 
   const setRole = (r) => { LS.set('pp_role', r); setRoleState(r); window.scrollTo(0, 0); };
   const logout = async () => { LS.del('pp_role'); setRoleState(null); await fullSignOut(); location.reload(); };

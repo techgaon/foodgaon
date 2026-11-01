@@ -54,7 +54,6 @@ export default function Account({ nav, openHisab }) {
         <div className="card">
           <a className="menu-row" href={tel(config.supportPhone)}><Icon name="help" size={20} /><span className="grow">Help & support</span><small className="muted">{config.supportPhone}</small></a>
           <button className="menu-row" onClick={() => setAbout(true)}><Icon name="info" size={20} /><span className="grow">About FoodGaon</span><Icon name="right" size={18} /></button>
-          <button className="menu-row" onClick={() => setCredits(true)}><Icon name="image" size={20} /><span className="grow">Photo credits</span><Icon name="right" size={18} /></button>
           {user && <button className="menu-row danger-text" onClick={logout}><Icon name="logout" size={20} /><span className="grow">Log out</span></button>}
         </div>
         <p className="center tiny muted">FoodGaon v1.0 · <span data-notr="">TechGaon AI Services</span></p>
@@ -69,6 +68,7 @@ export default function Account({ nav, openHisab }) {
         <p>FoodGaon brings hot, fresh, 100% vegetarian food from your town's favourite kitchens to your door — with free delivery.</p>
         <p>Our promise: the same price, portion and quality as at the restaurant counter — with no platform fee, no packing charge and free delivery. We charge restaurants only a very small fee, so local food stays affordable for everyone.</p>
         <p className="muted small">A product of <b data-notr="">TechGaon AI Services</b>.</p>
+        <button className="link tiny" onClick={() => { setAbout(false); setCredits(true); }}>Photo credits</button>
       </Sheet>
       <Sheet open={credits} onClose={() => setCredits(false)} title="Photo credits">
         <p className="small muted">Dish photos are from Wikimedia Commons, used under their free licences. Restaurants may replace them with their own photos.</p>
