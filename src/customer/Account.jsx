@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { PLATFORM_GSTIN } from '../lib/business.js';
 import ProfileEditor from './ProfileEditor.jsx';
 import { Icon, LangSwitch, Sheet, Logo, Wordmark, useToast } from '../ui.jsx';
 import { auth, updateProfile, put, phoneOf } from '../lib/fb.js';
@@ -63,6 +64,7 @@ export default function Account({ nav, openHisab }) {
         <p>FoodGaon brings hot, fresh, 100% vegetarian food from favourite kitchens in your villages and towns to your door — with free delivery.</p>
         <p>Our promise: the same price, portion and quality as at the restaurant counter — with no platform fee, no packing charge and free delivery. We charge restaurants only a very small fee, so local food stays affordable for everyone.</p>
         <p className="muted small">A product of <b data-notr="">TechGaon AI Services</b>.</p>
+        <p className="small" data-notr="">GSTIN: <b>{config.gstin || PLATFORM_GSTIN}</b></p>
         <button className="link tiny" onClick={() => { setAbout(false); setCredits(true); }}>Photo credits</button>
       </Sheet>
       <Sheet open={credits} onClose={() => setCredits(false)} title="Photo credits">
