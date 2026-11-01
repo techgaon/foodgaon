@@ -135,6 +135,7 @@ export default function Home({ nav }) {
 
 function Banners({ list, nav }) {
   const ref = useRef(null);
+  const programScroll = useRef(false);
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
   const [reduced, setReduced] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -150,11 +151,18 @@ function Banners({ list, nav }) {
     const x = setInterval(() => setI((v) => (v + 1) % n), 6500);
     return () => clearInterval(x);
   }, [n, paused, reduced]);
-  useEffect(() => { const el = ref.current; if (el) el.scrollTo({ left: i * el.clientWidth, behavior: reduced ? 'instant' : 'smooth' }); }, [i, reduced]);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    programScroll.current = true;
+    el.scrollTo({ left: i * el.clientWidth, behavior: reduced ? 'instant' : 'smooth' });
+    const timer = setTimeout(() => { programScroll.current = false; }, reduced ? 0 : 650);
+    return () => { clearTimeout(timer); programScroll.current = false; };
+  }, [i, reduced]);
   if (!n) return <div className="banners"><div className="banner skeleton" /></div>;
   return (
     <div className={'banners everyday-banners' + (paused ? ' scenes-paused' : '')} role="region" aria-label="FoodGaon stories">
-      <div className="banner-track" ref={ref} onPointerDown={() => setPaused(true)} onFocusCapture={() => setPaused(true)} onScroll={(e) => { const w = e.currentTarget.clientWidth; const k = Math.round(e.currentTarget.scrollLeft / w); if (k !== i) setI(k); }}>
+      <div className="banner-track" ref={ref} onPointerDown={() => { setPaused(true); programScroll.current = false; }} onFocusCapture={() => setPaused(true)} onScroll={(e) => { if (programScroll.current) return; const w = e.currentTarget.clientWidth; if (!w) return; const k = Math.max(0, Math.min(n - 1, Math.round(e.currentTarget.scrollLeft / w))); if (k !== i) setI(k); }}>
         {list.map((b) => (
           <div key={b.id} className={'banner' + (b.scene ? ` everyday-banner everyday-${b.scene}` : '') + (b.link ? ' clickable' : '')} data-notr={b.scene ? '' : undefined} lang={b.scene ? 'hi' : undefined} onClick={() => b.link && nav.openRest(b.link)}>
             {b.scene ? <><EverydayScene kind={b.scene} /><div className="everyday-copy"><small>FoodGaon के साथ</small><b>{b.title}</b><strong>{b.sub}</strong><span>{b.note}</span><em>शुद्ध शाकाहारी · मुफ़्त डिलीवरी</em></div></> : <><Img src={b.img} alt="" className="banner-img kenburns" /><div className="banner-txt"><b>{b.title === 'Your town, your taste' ? 'Your village, your town, your taste' : b.title}</b><span>{b.sub}</span>{b.code && <em className="code-pill" data-notr="">{b.code}</em>}</div></>}
