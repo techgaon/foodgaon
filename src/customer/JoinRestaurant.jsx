@@ -84,7 +84,7 @@ function Intro({ config, app, onStart, loggedOut }) {
       <div className="join-hero">
         <div className="jh-glow" />
         <span className="jh-chip" data-ui-lang="en">For restaurant, dhaba, cafe & sweet shop owners</span>
-        <h2 data-notr="" lang="hi">आपकी रसोई, कस्बे व गाँव के हर फ़ोन पर</h2>
+        <h2 data-notr="" lang="hi">आपकी दुकान, गाँव-कस्बे के हर फ़ोन में</h2>
         <p>Take orders on FoodGaon. Your food, your delivery boys, your customers — and the money comes to your own account.</p>
       </div>
       {app && <button className="btn primary block" data-ui-lang="en" onClick={onStart}>Continue my form <Icon name="right" size={18} /></button>}
@@ -167,7 +167,7 @@ function Wizard({ user, config, app, step, setStep }) {
           <Field label="Restaurant name *"><TypedInput value={f.restName} onChange={set('restName')} maxLength={60} ex="Sharma Bhojanalaya" /></Field>
           <Field label="One line about your food"><TypedInput value={f.tagline} onChange={set('tagline')} maxLength={80} animate plain ex="1995 से मशहूर छोले-भटूरे" /></Field>
           <Field label="Full address *"><TypedInput area value={f.address} onChange={set('address')} maxLength={200} ex="Main Road, opposite bus stand, Haidergarh" /></Field>
-          <Field label="Town"><TypedInput value={f.town} onChange={set('town')} maxLength={40} ex={t("Haidergarh")} /></Field>
+          <Field label="Village / town"><TypedInput value={f.town} onChange={set('town')} maxLength={40} ex={t("Haidergarh")} /></Field>
           <Chips options={TOWNS} value={f.town} onPick={(v) => setF({ ...f, town: v })} />
           <div className="row gap">
             <Field label="Landmark"><TypedInput value={f.landmark} onChange={set('landmark')} maxLength={60} ex="Near SBI" /></Field>

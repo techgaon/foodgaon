@@ -61,6 +61,7 @@ export function GrowStory({ onJoin, joinLabel = 'Join now' }) {
               <linearGradient id="giSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#fff3e6" /><stop offset="1" stopColor="#ffe2c4" /></linearGradient>
             </defs>
             <rect width="320" height="120" rx="16" fill="url(#giSky)" />
+            <g aria-hidden="true" opacity=".65"><path d="M0 111Q70 84 130 107T320 102V120H0Z" fill="#b6d59a" /><path d="M78 93V74L94 61 110 74V93Z" fill="#fff9e6" stroke="#c68e57" /><path d="M73 75 94 57 115 75" fill="none" stroke="#ce7552" strokeWidth="4" /><path d="M212 95V64H236V95M216 70H222M226 70H232M216 79H222M226 79H232" fill="#fff5df" stroke="#b58d65" strokeWidth="2" /><path d="M10 91V70M307 90V68" stroke="#897644" strokeWidth="3" /><circle cx="10" cy="65" r="13" fill="#74ac67" /><circle cx="307" cy="64" r="12" fill="#74ac67" /></g>
             {/* the shop in the middle */}
             <g transform="translate(130 40)">
               <rect x="0" y="22" width="60" height="44" rx="4" fill="#fff" stroke="#5a3a26" strokeWidth="2" />
@@ -78,7 +79,7 @@ export function GrowStory({ onJoin, joinLabel = 'Join now' }) {
               </g>
             ))}
           </svg>
-          <p>Customers visit your shop today. With FoodGaon, <b>your shop reaches phones across your town.</b></p>
+          <p>Customers visit your shop today. With FoodGaon, <b>your shop reaches every phone across villages and towns.</b></p>
         </div>
 
         <h4 className="gi-h">Do these problems sound familiar?</h4>
@@ -271,7 +272,7 @@ function PainToCalm() {
 /* ------------------------------------------------------------------ */
 export const appLinkOf = (config) => config?.appLink || 'https://techgaon.in/foodgaon';
 export const shareText = (config) =>
-  `FoodGaon — हमारे अपने कस्बे का शुद्ध शाकाहारी फ़ूड ऐप 🍲\nरेस्टोरेंट जैसे दाम, मुफ़्त डिलीवरी, कोई प्लेटफ़ॉर्म फ़ीस नहीं।\nऐप यहाँ से लें: ${appLinkOf(config)}`;
+  `FoodGaon — हमारे अपने गाँव-कस्बे का शुद्ध शाकाहारी फ़ूड ऐप 🍲\nरेस्टोरेंट जैसे दाम, मुफ़्त डिलीवरी, कोई प्लेटफ़ॉर्म फ़ीस नहीं।\nऐप यहाँ से लें: ${appLinkOf(config)}`;
 
 export async function shareApp(config, toast) {
   const text = shareText(config);
@@ -330,7 +331,7 @@ export function ShareCta() {
             <li><span>🍲</span><div>A local restaurant reaches <b>New customers</b> and grows its business.</div></li>
             <li><span>🛵</span><div>Local young people find <b>delivery work</b>.</div></li>
             <li><span>🧑‍🍳</span><div>Kitchen workers gain stronger <b>livelihoods</b>.</div></li>
-            <li><span>🏡</span><div>Money circulates <b>within our own town</b>.</div></li>
+            <li><span>🏡</span><div>Money circulates <b>within our own villages and towns</b>.</div></li>
           </ul>
           <div className="si-note">
             <b>One share is a kind gesture.</b> It can help support a local household.

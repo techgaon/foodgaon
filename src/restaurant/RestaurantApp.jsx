@@ -20,6 +20,7 @@ import { useReviews, QualityCard } from '../components/Reviews.jsx';
 import PhotoPick from '../components/PhotoPick.jsx';
 import { t, tr } from '../i18n/index.js';
 import PartnerAgreement from '../components/PartnerAgreement.jsx';
+import RestaurantPin from '../components/RestaurantPin.jsx';
 import { feeTerms, feeLine } from '../lib/partner.js';
 
 /* rings while there are un-accepted orders */
@@ -378,6 +379,7 @@ function ShopSettings({ rest }) {
   const cover = async (e) => { const file = e.target.files?.[0]; if (!file) return; try { const img = await compressImage(file, 1000, 220000); await save({ cover: img }); } catch (er) { toast(t(er.message), 'err'); } };
   return (
     <div className="pad-x">
+      <div className="card"><RestaurantPin restaurant={rest} /></div>
       <div className="card">
         <div className="cover-edit"><Img src={rest.cover} alt="" /></div>
         <p className="tiny muted">Shop photo</p>

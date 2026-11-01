@@ -18,6 +18,7 @@ import { UpiEditor } from '../components/Pay.jsx';
 import { dueOf } from '../restaurant/RestaurantApp.jsx';
 import { t } from '../i18n/index.js';
 import Applications, { usePartnerApps } from './Applications.jsx';
+import RestaurantPin from '../components/RestaurantPin.jsx';
 import { linkRestaurant, restaurantPayStatus } from '../lib/gateway.js';
 
 export default function AdminApp() {
@@ -232,6 +233,7 @@ function Restaurants() {
             <div className="row gap">
               <button className="link small" onClick={() => setMenu(r)}>Menu</button>
               <button className="link small" onClick={() => setEdit(r)}>Edit</button>
+              {r.ownerPhone && !r.demo && <RestaurantPin restaurant={r} admin />}
               {r.ownerPhone && <a className="link small" href={tel(r.ownerPhone)}>Call</a>}
               {r.applicationId && <OnlinePayLink r={r} />}
               {r.ownerPhone && <a className="link small wa-link" href={wa(r.ownerPhone, `नमस्ते ${r.ownerName || ''} जी, FoodGaon (TechGaon AI Services) से —`)} target="_blank" rel="noreferrer">WhatsApp</a>}
@@ -278,7 +280,7 @@ function RestEditor({ open, r, onClose }) {
   return (
     <Sheet open={open} onClose={onClose} title={r?.id ? 'Edit restaurant' : 'Add restaurant'} full>
       <Field label="Restaurant name"><input className="input" value={f.name} onChange={set('name')} /></Field>
-      <Field label="Short line"><input className="input" value={f.tagline} onChange={set('tagline')} placeholder="e.g. Best chaat in town" /></Field>
+      <Field label="Short line"><input className="input" value={f.tagline} onChange={set('tagline')} placeholder="e.g. Favourite chaat in villages and towns" /></Field>
       <Field label="Address"><input className="input" value={f.address} onChange={set('address')} /></Field>
       <div className="row gap">
         <Field label="Owner mobile" hint="This number logs in to the restaurant panel"><input className="input" inputMode="numeric" maxLength={10} value={f.ownerPhone} onChange={(e) => setF({ ...f, ownerPhone: e.target.value.replace(/\D/g, '') })} /></Field>

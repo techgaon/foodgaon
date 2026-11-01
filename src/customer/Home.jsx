@@ -77,7 +77,7 @@ export default function Home({ nav }) {
         </Reveal>
       )}
 
-      {address?.lat != null && rests && !rests.length && <div className="pad-x"><div className="alert alert-amber"><b>Sorry, not available at your location.</b><p>Please choose a location in your nearest town or kasba.</p><button className="btn ghost block" onClick={() => nav.go({ name: 'address' })}>Choose another location</button></div></div>}
+      {address?.lat != null && rests && !rests.length && <div className="pad-x"><div className="alert alert-amber"><b>Sorry, not available at your location.</b><p>Please choose a nearby village or town where delivery is available.</p><button className="btn ghost block" onClick={() => nav.go({ name: 'address' })}>Choose another location</button></div></div>}
       <Reveal as="section" className="sec">
         <h2 className="sec-title">What's on your mind?</h2>
         <div className="cat-row">
@@ -101,7 +101,7 @@ export default function Home({ nav }) {
 
       {best.length > 0 && (
         <Reveal as="section" className="sec">
-          <h2 className="sec-title"><Icon name="fire" size={20} className="t-orange" /> Bestsellers in town</h2>
+          <h2 className="sec-title"><Icon name="fire" size={20} className="t-orange" /> Bestsellers in villages and towns</h2>
           <div className="best-row">
             {best.map((it) => <BestCard key={it.id} it={it} rest={rests.find((r) => r.id === it.restaurantId)} onView={() => setView(it)} showKcal={config.showCalories} />)}
           </div>
@@ -147,7 +147,7 @@ function Banners({ list, nav }) {
         {list.map((b) => (
           <div key={b.id} className={'banner' + (b.link ? ' clickable' : '')} onClick={() => b.link && nav.openRest(b.link)}>
             <Img src={b.img} alt="" className="banner-img kenburns" />
-            <div className="banner-txt"><b>{b.title}</b><span>{b.sub}</span>{b.code && <em className="code-pill" data-notr="">{b.code}</em>}</div>
+            <div className="banner-txt"><b>{b.title === 'Your town, your taste' ? 'Your village, your town, your taste' : b.title}</b><span>{b.sub}</span>{b.code && <em className="code-pill" data-notr="">{b.code}</em>}</div>
           </div>
         ))}
       </div>

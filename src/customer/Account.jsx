@@ -68,7 +68,7 @@ export default function Account({ nav, openHisab }) {
       </Sheet>
       <Sheet open={about} onClose={() => setAbout(false)} title="About FoodGaon">
         <div className="center"><Logo size={64} /><br /><Wordmark size={30} /></div>
-        <p>FoodGaon brings hot, fresh, 100% vegetarian food from your town's favourite kitchens to your door — with free delivery.</p>
+        <p>FoodGaon brings hot, fresh, 100% vegetarian food from favourite kitchens in your villages and towns to your door — with free delivery.</p>
         <p>Our promise: the same price, portion and quality as at the restaurant counter — with no platform fee, no packing charge and free delivery. We charge restaurants only a very small fee, so local food stays affordable for everyone.</p>
         <p className="muted small">A product of <b data-notr="">TechGaon AI Services</b>.</p>
         <button className="link tiny" onClick={() => { setAbout(false); setCredits(true); }}>Photo credits</button>

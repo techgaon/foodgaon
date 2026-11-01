@@ -57,7 +57,7 @@ export const DICT = [
   ['Log out', 'लॉग आउट', 'लॉग आउट'],
 
   // login
-  ['Hot food from your town\'s best pure-veg kitchens', 'आपके शहर की सबसे अच्छी शुद्ध शाकाहारी रसोई से गरम खाना', 'आपन कस्बा की सबसे बढ़िया सुद्ध सकाहारी रसोई से गरम खाना'],
+  ['Hot food from the best pure-veg kitchens in your villages and towns', 'आपके गाँव-कस्बे की सबसे अच्छी शुद्ध शाकाहारी रसोई से गरम खाना', 'आपन गाँव-कस्बा की सबसे बढ़िया सुद्ध सकाहारी रसोई से गरम खाना'],
   ['Log in or sign up', 'लॉगिन या साइन अप करें', 'लॉगिन या साइन अप करौ'],
   ['10-digit mobile number', '10 अंकों का मोबाइल नंबर', '10 अंक का मोबाइल नंबर'],
   ['Continue', 'आगे बढ़ें', 'आगे बढ़ौ'],
@@ -86,7 +86,7 @@ export const DICT = [
   ['Search "paneer", "lassi", "momos"…', '"पनीर", "लस्सी", "मोमोज़" खोजें…', '"पनीर", "लस्सी", "मोमोज" खोजौ…'],
   ['100% pure vegetarian · FREE delivery', '100% शुद्ध शाकाहारी · मुफ़्त डिलीवरी', '100% सुद्ध सकाहारी · मुफत डिलीवरी'],
   ['What\'s on your mind?', 'आज क्या खाने का मन है?', 'आज का खाय का मन अहै?'],
-  ['Bestsellers in town', 'शहर में सबसे ज़्यादा बिकने वाले', 'कस्बा मा सबसे जादा बिकै वाले'],
+  ['Bestsellers in villages and towns', 'गाँव-कस्बे के पसंदीदा व्यंजन', 'गाँव-कस्बा मा सबसे जादा बिकै वाले'],
   ['{} restaurants to explore', '{} रेस्टोरेंट देखें', '{} रेस्टोरेंट देखौ'],
   ['Restaurants', 'रेस्टोरेंट', 'रेस्टोरेंट'],
   ['Khao, piyo,', 'खाओ, पियो,', 'खाव, पियौ,'],
@@ -270,7 +270,7 @@ export const DICT = [
   ['About FoodGaon', 'FOODगाँव के बारे में', 'FOODगाँव के बारे मा'],
   ['Photo credits', 'फ़ोटो साभार', 'फोटो साभार'],
   ['FoodGaon v1.0 ·', 'FOODगाँव v1.0 ·', 'FOODगाँव v1.0 ·'],
-  ['FoodGaon brings hot, fresh, 100% vegetarian food from your town\'s favourite kitchens to your door — with free delivery.', 'FOODगाँव आपके शहर की पसंदीदा रसोई से गरम, ताज़ा, 100% शाकाहारी खाना आपके दरवाज़े तक लाता है — मुफ़्त डिलीवरी के साथ।', 'FOODगाँव आपके कस्बा की मनपसंद रसोई से गरम, ताजा, 100% सकाहारी खाना आपके दुआरे तक लावत है — मुफत डिलीवरी के साथ।'],
+  ['FoodGaon brings hot, fresh, 100% vegetarian food from favourite kitchens in your villages and towns to your door — with free delivery.', 'FOODगाँव आपके गाँव-कस्बे की पसंदीदा रसोई से गरम, ताज़ा, 100% शाकाहारी खाना आपके दरवाज़े तक लाता है — मुफ़्त डिलीवरी के साथ।', 'FOODगाँव आपके गाँव-कस्बा की मनपसंद रसोई से गरम, ताजा, 100% सकाहारी खाना आपके दुआरे तक लावत है — मुफत डिलीवरी के साथ।'],
   ['We charge restaurants a very small fee so that local food stays affordable for everyone. Calories are shown on every dish so you can eat with care.', 'हम रेस्टोरेंट से बहुत कम शुल्क लेते हैं ताकि स्थानीय खाना सबके लिए सस्ता रहे। हर डिश पर कैलोरी लिखी है ताकि आप सेहत का ध्यान रखकर खा सकें।', 'हम रेस्टोरेंट से बहुत कम पइसा लेइत है जेहसे इहाँ का खाना सब खातिर सस्ता रहै। हर डिस पै कैलोरी लिखी अहै जेहसे आप सेहत देखिके खाव।'],
   ['A product of', 'एक उत्पाद', 'एक उत्पाद'],
   ['Dish photos are from Wikimedia Commons, used under their free licences. Restaurants may replace them with their own photos.', 'डिश की फ़ोटो विकिमीडिया कॉमन्स से उनके मुफ़्त लाइसेंस के तहत ली गई हैं। रेस्टोरेंट अपनी फ़ोटो लगा सकते हैं।', 'डिस की फोटो विकिमीडिया कॉमन्स से उनके मुफत लाइसेंस से ली गई हैं। रेस्टोरेंट आपन फोटो लगाय सकत हैं।'],
@@ -418,7 +418,7 @@ export const DICT = [
   ['Edit restaurant', 'रेस्टोरेंट बदलें', 'रेस्टोरेंट बदलौ'],
   ['Restaurant name', 'रेस्टोरेंट का नाम', 'रेस्टोरेंट का नाम'],
   ['Short line', 'छोटी लाइन', 'छोट लाइन'],
-  ['e.g. Best chaat in town', 'जैसे शहर की सबसे अच्छी चाट', 'जइसे कस्बा कै सबसे बढ़िया चाट'],
+  ['e.g. Favourite chaat in villages and towns', 'जैसे गाँव-कस्बे की पसंदीदा चाट', 'जइसे गाँव-कस्बा कै सबसे बढ़िया चाट'],
   ['Owner mobile', 'मालिक का मोबाइल', 'मालिक का मोबाइल'],
   ['This number logs in to the restaurant panel', 'इस नंबर से रेस्टोरेंट पैनल खुलेगा', 'ई नंबर से रेस्टोरेंट पैनल खुली'],
   ['Owner name', 'मालिक का नाम', 'मालिक का नाम'],
@@ -843,13 +843,13 @@ DICT.push(
 );
 DICT.push(
   // login
-  ['Testing mode: enter OTP', 'टेस्टिंग मोड: OTP डालें', 'टेस्टिंग मोड: OTP डारा'], ["Hot food from your town's best kitchens", 'आपके क़स्बे की सबसे अच्छी रसोइयों से गरमा-गरम खाना', 'आपन कस्बा के सबसे बढ़िया रसोई से गरमागरम खाना'],
+  ['Testing mode: enter OTP', 'टेस्टिंग मोड: OTP डालें', 'टेस्टिंग मोड: OTP डारा'], ["Hot food from the best kitchens in your villages and towns", 'आपके गाँव-कस्बे की सबसे अच्छी रसोइयों से गरमा-गरम खाना', 'आपन गाँव-कस्बा के सबसे बढ़िया रसोई से गरमागरम खाना'],
   ['Test OTP 1234', 'टेस्ट OTP 1234', 'टेस्ट OTP 1234'], ['Real SMS OTP', 'असली SMS OTP', 'असली SMS OTP'],
   ['Customers get a real SMS OTP (needs Firebase billing beyond 10 SMS/day).', 'ग्राहकों को असली SMS OTP जाएगा (रोज़ 10 से ज़्यादा SMS के लिए Firebase बिलिंग चाहिए)।', 'ग्राहकन का असली SMS OTP जाई (रोज 10 से जादा SMS बदे Firebase बिलिंग चाही)।'],
   ['Testing: any number logs in with OTP 1234. Switch to real SMS before public launch.', 'टेस्टिंग: कोई भी नंबर OTP 1234 से लॉग इन होगा। सबके लिए शुरू करने से पहले असली SMS चालू करें।', 'टेस्टिंग: कउनो नंबर OTP 1234 से लॉग इन होई। सबके बदे सुरू करै से पहिले असली SMS चालू करा।'],
   // home / dish
   ['Pure veg · FREE delivery within 5 km', 'शुद्ध शाकाहारी · 5 किमी तक मुफ़्त डिलीवरी', 'सुद्ध सकाहारी · 5 किमी तक मुफ्त डिलीवरी'],
-  ['Your town, your taste', 'आपका क़स्बा, आपका स्वाद', 'आपन कस्बा, आपन स्वाद'], ['Best restaurants of Haidergarh on FoodGaon', 'हैदरगढ़ के सबसे अच्छे रेस्टोरेंट FoodGaon पर', 'हैदरगढ़ के सबसे बढ़िया रेस्टोरेंट FoodGaon पै'],
+  ['Your village, your town, your taste', 'आपका गाँव-कस्बा, आपका स्वाद', 'आपन गाँव-कस्बा, आपन स्वाद'], ['Best restaurants of Haidergarh on FoodGaon', 'हैदरगढ़ के सबसे अच्छे रेस्टोरेंट FoodGaon पर', 'हैदरगढ़ के सबसे बढ़िया रेस्टोरेंट FoodGaon पै'],
   ['FoodGaon setup updated', 'FoodGaon सेटअप अपडेट हो गया', 'FoodGaon सेटअप अपडेट होइ गवा'],
   // cart / bill
   ['Bill details', 'बिल का ब्योरा', 'बिल क ब्योरा'], ['Item total ({} items)', 'आइटम का कुल ({} आइटम)', 'आइटम क कुल ({} आइटम)'], ['GST {}% on food', 'खाने पर GST {}%', 'खाना पै GST {}%'],
@@ -1070,7 +1070,7 @@ DICT.push(
   ['List it on FoodGaon — small fee, money straight to your account', 'FoodGaon पर जोड़ें — छोटी फ़ीस, पैसा सीधे आपके खाते में', 'FoodGaon पै जोड़ौ — छोटी फ़ीस, पइसा सीधे आपके खाते मा'],
   ['List your restaurant', 'अपना रेस्टोरेंट जोड़ें', 'आपन रेस्टोरेंट जोड़ौ'],
   ['For restaurant owners', 'रेस्टोरेंट मालिकों के लिए', 'रेस्टोरेंट मालिकन खातिर'],
-  ['Your kitchen, on every phone in town', 'आपकी रसोई, शहर के हर फ़ोन पर', 'आपकी रसोई, कस्बा के हर फ़ोन पै'],
+  ['Your shop, on every phone in villages and towns', 'आपकी दुकान, गाँव-कस्बे के हर फ़ोन में', 'आपकी दुकान, गाँव-कस्बा के हर फ़ोन मा'],
   ['Take orders on FoodGaon. Your food, your delivery boys, your customers — and the money comes to your own account.', 'FoodGaon पर ऑर्डर लें। आपका खाना, आपके डिलीवरी बॉय, आपके ग्राहक — और पैसा आपके अपने खाते में।', 'FoodGaon पै ऑर्डर लेव। आपन खाना, आपन डिलीवरी बॉय, आपन ग्राहक — अउर पइसा आपके खाते मा।'],
   ['Very small fee', 'बहुत छोटी फ़ीस', 'बहुत छोटी फ़ीस'],
   ['Only ₹{} on every ₹100. Big apps take ₹25–30.', 'हर ₹100 पर सिर्फ़ ₹{}। बड़े ऐप ₹25–30 लेते हैं।', 'हर ₹100 पै बस ₹{}। बड़े ऐप ₹25–30 लेत हैं।'],
@@ -1375,7 +1375,7 @@ DICT.push(
   ["How can your business grow?", "आपका व्यापार कैसे बढ़ेगा?", "आपका व्यापार कैसे बढ़ेगा?"],
   ["Your shop", "आपकी दुकान", "आपकी दुकान"],
   ["Customers visit your shop today. With FoodGaon, ", "आज ग्राहक आपकी दुकान तक आते हैं। FoodGaon पर आते ही ", "आज ग्राहक आपकी दुकान तक आते हैं। FoodGaon पर आते ही "],
-  ["your shop reaches phones across your town.", "आपकी दुकान पूरे कस्बे के हर फ़ोन तक पहुँचती है।", "आपकी दुकान पूरे कस्बे के हर फ़ोन तक पहुँचती है।"],
+  ["your shop reaches every phone across villages and towns.", "आपकी दुकान गाँव-कस्बे के हर फ़ोन में पहुँचती है।", "आपकी दुकान गाँव-कस्बे के हर फ़ोन में पहुँचती है।"],
   ["Do these problems sound familiar?", "क्या आप भी इनसे परेशान हैं?", "क्या आप भी इनसे परेशान हैं?"],
   ["Repeated calls while cooking", "बार-बार फ़ोन — खाना बनाते समय भी", "बार-बार फ़ोन — खाना बनाते समय भी"],
   ["Orders on screen, with an alert", "ऑर्डर सीधे स्क्रीन पर, घंटी के साथ", "ऑर्डर सीधे स्क्रीन पर, घंटी के साथ"],
@@ -1464,15 +1464,15 @@ DICT.push(
   ["Share on WhatsApp", "WhatsApp पर शेयर", "WhatsApp पर शेयर"],
   ["Elsewhere", "और जगह", "और जगह"],
   ["Thank you 🙏 — Team FoodGaon", "धन्यवाद 🙏 — टीम FoodGaon", "धन्यवाद 🙏 — टीम FoodGaon"],
-  ["Sharing has no rewards, coins or coupons. It simply helps local restaurants and delivery partners. 🙏", "शेयर करने पर कोई इनाम, कॉइन या कूपन नहीं मिलता — यह बस एक नेक काम है, जिससे हमारे कस्बे के छोटे रेस्टोरेंट और डिलीवरी भाइयों का काम बढ़ता है। 🙏", "शेयर करने पर कोई इनाम, कॉइन या कूपन नहीं मिलता — यह बस एक नेक काम है, जिससे हमारे कस्बे के छोटे रेस्टोरेंट और डिलीवरी भाइयों का काम बढ़ता है। 🙏"],
-  ["Your town’s pure vegetarian food app", "हमारे अपने कस्बे का शुद्ध शाकाहारी फ़ूड ऐप", "हमारे अपने कस्बे का शुद्ध शाकाहारी फ़ूड ऐप"],
+  ["Sharing has no rewards, coins or coupons. It simply helps local restaurants and delivery partners. 🙏", "शेयर करने पर कोई इनाम, कॉइन या कूपन नहीं मिलता — यह बस एक नेक काम है, जिससे हमारे गाँव-कस्बे के छोटे रेस्टोरेंट और डिलीवरी भाइयों का काम बढ़ता है। 🙏", "शेयर करने पर कोई इनाम, कॉइन या कूपन नहीं मिलता — यह बस एक नेक काम है, जिससे हमारे गाँव-कस्बे के छोटे रेस्टोरेंट और डिलीवरी भाइयों का काम बढ़ता है। 🙏"],
+  ["Your town’s pure vegetarian food app", "हमारे अपने गाँव-कस्बे का शुद्ध शाकाहारी फ़ूड ऐप", "हमारे अपने गाँव-कस्बे का शुद्ध शाकाहारी फ़ूड ऐप"],
   ["Same restaurant prices, free delivery and no platform fee.", "रेस्टोरेंट जैसा ही दाम, मुफ़्त डिलीवरी, कोई प्लेटफ़ॉर्म फ़ीस नहीं।", "रेस्टोरेंट जैसा ही दाम, मुफ़्त डिलीवरी, कोई प्लेटफ़ॉर्म फ़ीस नहीं।"],
   ["Get the app:", "ऐप यहाँ से लें:", "ऐप यहाँ से लें:"],
   ["You", "आप", "आप"],
   ["Family and friends", "परिवार-दोस्त", "परिवार-दोस्त"],
   ["Local restaurant", "छोटा रेस्टोरेंट", "छोटा रेस्टोरेंट"],
   ["Delivery partner", "डिलीवरी भैया", "डिलीवरी भैया"],
-  ["Local restaurants work hard to serve good food. High platform fees can make it difficult for them to compete.", "हमारे कस्बे के छोटे ढाबे और रेस्टोरेंट बहुत मेहनत से अच्छा खाना बनाते हैं, पर बड़े ऐप की भारी फ़ीस के आगे वे पीछे रह जाते हैं।", "हमारे कस्बे के छोटे ढाबे और रेस्टोरेंट बहुत मेहनत से अच्छा खाना बनाते हैं, पर बड़े ऐप की भारी फ़ीस के आगे वे पीछे रह जाते हैं।"],
+  ["Local restaurants work hard to serve good food. High platform fees can make it difficult for them to compete.", "हमारे गाँव-कस्बे के छोटे ढाबे और रेस्टोरेंट बहुत मेहनत से अच्छा खाना बनाते हैं, पर बड़े ऐप की भारी फ़ीस के आगे वे पीछे रह जाते हैं।", "हमारे गाँव-कस्बे के छोटे ढाबे और रेस्टोरेंट बहुत मेहनत से अच्छा खाना बनाते हैं, पर बड़े ऐप की भारी फ़ीस के आगे वे पीछे रह जाते हैं।"],
   ["When you share FoodGaon with family, friends and neighbours:", "जब आप FoodGaon अपने परिवार, दोस्तों और मोहल्ले के ग्रुप में शेयर करते हैं, तो:", "जब आप FoodGaon अपने परिवार, दोस्तों और मोहल्ले के ग्रुप में शेयर करते हैं, तो:"],
   ["A local restaurant reaches ", "किसी छोटे रेस्टोरेंट को ", "किसी छोटे रेस्टोरेंट को "],
   [" and grows its business.", " मिलते हैं — उसका व्यापार बढ़ता है।", " मिलते हैं — उसका व्यापार बढ़ता है।"],
@@ -1483,7 +1483,7 @@ DICT.push(
   ["livelihoods", "रोज़ी-रोटी", "रोज़ी-रोटी"],
   [".", " मज़बूत होती है।", " मज़बूत होती है।"],
   ["Money circulates ", "पैसा ", "पैसा "],
-  ["within our own town", "हमारे अपने कस्बे में", "हमारे अपने कस्बे में"],
+  ["within our own villages and towns", "हमारे अपने गाँव-कस्बे में", "हमारे अपने गाँव-कस्बे में"],
   [".", " ही घूमता है, बाहर नहीं जाता।", " ही घूमता है, बाहर नहीं जाता।"],
   ["One share is a kind gesture.", "आपका एक शेयर, एक नेक काम है।", "आपका एक शेयर, एक नेक काम है।"],
   [" It can help support a local household.", " यह किसी के घर का चूल्हा जलाने में मदद है।", " यह किसी के घर का चूल्हा जलाने में मदद है।"],
@@ -1509,7 +1509,7 @@ DICT.push(
  ['How should we address you?', 'आपको कैसे संबोधित करें?', 'आपका कइसे पुकारा जाय?'],
  ['Choose your exact location on the map', 'नक्शे पर अपनी सही जगह चुनें', 'नक्शा पै आपन सही जगह चुनौ'],
  ['Sorry, not available at your location.', 'क्षमा करें, आपकी location पर सेवा उपलब्ध नहीं है।', 'माफ करौ, आपकी जगह पै सेवा नाहीं अहै।'],
- ['Please choose a location in your nearest town or kasba.', 'अपने नज़दीकी town या कस्बे की location चुनें।', 'अपने लगे कै town या कस्बा कै जगह चुनौ।'],
+ ['Please choose a nearby village or town where delivery is available.', 'पास के ऐसे गाँव या कस्बे की location चुनें जहाँ डिलीवरी उपलब्ध हो।', 'लगे कै अइसन गाँव या कस्बा चुनौ जहाँ डिलीवरी मिलत होय।'],
  ['Choose another location', 'दूसरी location चुनें', 'दूसरी जगह चुनौ'],
  ['Minimum order for your location: {}', 'आपकी location के लिए न्यूनतम ऑर्डर: {}', 'आपकी जगह खातिर कम से कम ऑर्डर: {}'],
  ['Minimum order: {}', 'न्यूनतम ऑर्डर: {}', 'कम से कम ऑर्डर: {}'],
@@ -1527,3 +1527,16 @@ DICT.push(
  ['on all orders', 'सभी ऑर्डर पर', 'सब ऑर्डर पर'],
  ['Added to cart', 'कार्ट में जुड़ गया', 'कार्ट मा जुड़ गवा']
 );
+DICT.push(
+ ['Your town, your taste', 'आपका गाँव-कस्बा, आपका स्वाद', 'आपन गाँव-कस्बा, आपन स्वाद'],
+ ['Restaurant PIN login', 'रेस्टोरेंट PIN से लॉग इन', 'रेस्टोरेंट PIN से लॉग इन'],
+ ['Enter restaurant PIN', 'रेस्टोरेंट PIN डालें', 'रेस्टोरेंट PIN डारौ'],
+ ['Enter OTP or restaurant PIN', 'OTP या रेस्टोरेंट PIN डालें', 'OTP या रेस्टोरेंट PIN डारौ'],
+ ['Default OTP:', 'शुरुआती OTP:', 'शुरुआती OTP:'],
+ ['Restaurant PIN already set? Enter your PIN instead.', 'रेस्टोरेंट का PIN सेट है? अपना PIN डालें।', 'रेस्टोरेंट कै PIN सेट अहै? आपन PIN डारौ।'],
+ ['Forgot your PIN? Ask FoodGaon admin to set a new one.', 'PIN भूल गए? FoodGaon Admin से नया PIN सेट करवाएँ।', 'PIN भूल गए? FoodGaon Admin से नवा PIN सेट करावौ।'],
+ ['Change my login PIN', 'अपना login PIN बदलें', 'आपन login PIN बदलौ'],
+ ['Set / reset login PIN', 'Login PIN सेट / रीसेट करें', 'Login PIN सेट / रीसेट करौ'],
+ ['Wrong OTP or PIN. If your restaurant has a PIN, use that instead of default OTP.', 'OTP या PIN गलत है। रेस्टोरेंट का PIN सेट है तो शुरुआती OTP की जगह अपना PIN डालें।', 'OTP या PIN गलत अहै। रेस्टोरेंट कै PIN सेट अहै तौ शुरुआती OTP कै जगह आपन PIN डारौ।']
+);
+DICT.push(['Village / town', 'गाँव / कस्बा', 'गाँव / कस्बा']);

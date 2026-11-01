@@ -68,7 +68,7 @@ export default function RestaurantPage({ id, nav }) {
             ))}
           </div>
         )}
-        <div className="alert alert-amber">{availableHere ? `${distance != null ? distance.toFixed(1) + ' km · ' : ''}Minimum order: ${rupee(minimum)}` : 'Sorry, not available at your location. Please choose a location in your nearest town or kasba.'}</div>
+        <div className="alert alert-amber">{availableHere ? `${distance != null ? distance.toFixed(1) + ' km · ' : ''}Minimum order: ${rupee(minimum)}` : 'Sorry, not available at your location. Please choose a nearby village or town where delivery is available.'}</div>
         {rest.open === false && <div className="alert alert-red">This restaurant is closed right now. You can see the menu, ordering opens when it is back.</div>}
       </div>
 

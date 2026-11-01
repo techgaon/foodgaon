@@ -45,6 +45,8 @@ async function isAdmin(auth) {
   return s.exists && s.data().admin === true;
 }
 
+exports.setRestaurantLoginPin = onCall({ maxInstances: 2 }, require('./restaurant-pin').makeSetRestaurantPin({ db, auth: admin.auth(), isAdmin, HttpsError }));
+
 async function rzp(method, path, body) {
   const auth = Buffer.from(`${KEY_ID.value()}:${KEY_SECRET.value()}`).toString('base64');
   const res = await fetch('https://api.razorpay.com' + path, {

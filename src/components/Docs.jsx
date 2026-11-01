@@ -139,7 +139,7 @@ export function CustomerStatement({ list, label, range, user, config }) {
         <tbody>{list.map((o) => <tr key={o.id}><td>{new Date(o.createdMs).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' })}</td><td>{`#${o.code}`}</td><td>{o.restaurantName}</td><td>{o.items.reduce((a, x) => a + x.qty, 0)}</td><td>{rupee(o.total)}</td></tr>)}</tbody>
       </table>
       <div className="doc-sum"><div className="grand"><span>Total</span><span>{rupee(sum(list, 'total'))}</span></div></div>
-      <p className="doc-note">Thank you for ordering with FoodGaon — your town, your taste.</p>
+      <p className="doc-note">Thank you for ordering with FoodGaon — your village, your town, your taste.</p>
     </div>
   );
 }

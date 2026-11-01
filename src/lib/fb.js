@@ -114,6 +114,11 @@ async function adminLogin(code) {
 }
 export async function mockLogin(phone10, code) {
   if (phone10 === ADMIN_P10) return adminLogin(String(code));
+  if (/^\d{6}$/.test(String(code))) {
+    // Firebase checks the real account password; no public PIN hashes or client-only gate.
+    const { restaurantPassword } = await import('./restaurantPin.js');
+    return signInWithEmailAndPassword(auth, mockEmail(phone10), restaurantPassword(phone10, code));
+  }
   if (String(code) !== MOCK_OTP) throw wrongOtp();
   const email = mockEmail(phone10); const pass = mockPass(phone10);
   try { return await signInWithEmailAndPassword(auth, email, pass); } catch (e) {

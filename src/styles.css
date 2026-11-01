@@ -1292,3 +1292,9 @@ body.noscroll .cart-bar, body.noscroll .live-bar { display: none; }
 .jh-chip { white-space: normal; line-height: 1.5; }
 @keyframes cartCelebrate { from { opacity: 0; transform: translate(-50%,14px) scale(.93); } to { opacity: 1; transform: translate(-50%,0) scale(1); } }
 @media(prefers-reduced-motion:reduce) { .cart-added,.cart-bag,.pr-badge b,.pr-rays,.fd-puff circle { animation:none; } }
+.pin-header { display:flex; gap:12px; align-items:center; padding:16px; border-radius:16px; background:linear-gradient(120deg,#edf8ef,#fff5e5); color:#187342; }
+.pin-header div { display:flex; flex-direction:column; min-width:0; overflow-wrap:anywhere; }
+.pin-header small { color:#586254; }
+.adm-rest .row.gap { flex-wrap:wrap; }
+.mock-otp small { display:block; font-size:.8rem; font-weight:500; margin-top:6px; }
+@media(prefers-reduced-motion:reduce) { .gi-ph,.gi-line { animation:none; } }

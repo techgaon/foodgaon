@@ -188,7 +188,7 @@ export const ITEMS = [
 ];
 
 export const BANNERS = [
-  { id: 'b1', title: 'Your town, your taste', sub: 'Best restaurants of Haidergarh on FoodGaon', img: photo('ban_thali'), sort: 1 },
+  { id: 'b1', title: 'Your village, your town, your taste', sub: 'Best restaurants of Haidergarh on FoodGaon', img: photo('ban_thali'), sort: 1 },
   { id: 'b2', title: 'FREE delivery', sub: 'No delivery charge on any order', img: photo('chowmein'), sort: 2 },
   { id: 'b3', title: 'Mithai by the box', sub: 'Fresh sweets for every occasion', img: photo('ban_sweets'), sort: 3 },
 ];
