@@ -31,7 +31,7 @@ export default function Account({ nav, openHisab }) {
           {user ? <><b data-notr="">{user.displayName || 'Hello!'}</b><small>{plain(phoneOf(user) || profile?.phone) || user.email}</small></> : <><b>Welcome!</b><small>Log in to order and track food</small></>}
         </div>
         {!user && <button className="btn light small" onClick={askLogin}>Log in</button>}
-        {user && <button className="icon-btn light" onClick={() => { setName(user.displayName || ''); setGender(profile?.gender || ''); setNameOpen(true); }} aria-label="Edit name"><Icon name="edit" size={20} /></button>}
+        {user && <button className="icon-btn light" onClick={() => { setName(user.displayName || ''); setGender(profile?.gender || 'male'); setNameOpen(true); }} aria-label="Edit name"><Icon name="edit" size={20} /></button>}
       </div>
       <div className="pad-x">
         <div className="card">
@@ -63,7 +63,7 @@ export default function Account({ nav, openHisab }) {
       <Sheet open={nameOpen} onClose={() => setNameOpen(false)} title="Your profile">
         <input className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} autoFocus />
         <p className="field-label">How should we address you?</p>
-        <select className="input" value={gender} onChange={e => setGender(e.target.value)}><option value="">Default — भैया जी</option><option value="male">Male — भैया जी</option><option value="female">Female — बहन जी</option></select>
+        <select className="input" value={gender} onChange={e => setGender(e.target.value)}><option value="male">Male — भैया जी</option><option value="female">Female — बहन जी</option><option value="transgender">Transgender — जी</option></select>
         <button className="btn primary block" onClick={saveName}>Save</button>
       </Sheet>
       <Sheet open={about} onClose={() => setAbout(false)} title="About FoodGaon">

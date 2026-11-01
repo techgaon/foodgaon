@@ -1,6 +1,15 @@
 // [English (source), हिंदी, अवधी]
 // {} = changing part (name, amount, number). Use {0},{1} in a translation to reorder.
 export const DICT = [
+  ['Gender', 'लिंग', 'लिंग'],
+  ['Male', 'पुरुष', 'पुरुष'],
+  ['Female', 'महिला', 'महिला'],
+  ['Transgender', 'ट्रांसजेंडर', 'ट्रांसजेंडर'],
+  ['Transgender — जी', 'ट्रांसजेंडर — जी', 'ट्रांसजेंडर — जी'],
+  ['Enter the first 4 digits of your registered mobile number as your PIN.', 'अपने रजिस्टर्ड मोबाइल नंबर के पहले 4 अंक PIN के रूप में डालें।', 'अपने रजिस्टर्ड मोबाइल नंबर के पहिले 4 अंक PIN मा डालौ।'],
+  ['Google sign-in is not available on this address yet. Please use mobile login.', 'इस पते पर Google लॉगिन उपलब्ध नहीं है। मोबाइल से लॉगिन करें।', 'इहाँ Google लॉगिन उपलब्ध नाहीं अहै। मोबाइल से लॉगिन करौ।'],
+  ['Allow the Google sign-in popup, then try again.', 'Google लॉगिन की popup खोलने की अनुमति दें और दोबारा कोशिश करें।', 'Google लॉगिन की popup खोलै की अनुमति दइके फेर कोशिश करौ।'],
+  ['Could not sign in with Google. Please try again or use mobile login.', 'Google से लॉगिन नहीं हुआ। दोबारा कोशिश करें या मोबाइल से लॉगिन करें।', 'Google से लॉगिन नाहीं भवा। फेर कोशिश करौ या मोबाइल से लॉगिन करौ।'],
   ['Welcome to FoodGaon', 'FoodGaon में आपका स्वागत है', 'FoodGaon मा आपक स्वागत अहै'],
   ['Continue with mobile number', 'मोबाइल नंबर से आगे बढ़ें', 'मोबाइल नंबर से आगे बढ़ौ'],
   ['This is my mobile number', 'यह मेरा मोबाइल नंबर है', 'ई हमार मोबाइल नंबर अहै'],
