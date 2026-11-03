@@ -44,7 +44,7 @@ export function FloatingVeggies({ count = 9, seed = 1, className = '' }) {
 }
 
 /* ---- dish photos orbiting around the logo ---- */
-export function FoodOrbit({ photos = [], size = 240, children }) {
+export function FoodOrbit({ photos = [], size = 240, itemSize = 48, children }) {
   const list = photos.slice(0, 7);
   return (
     <div className="orbit" style={{ width: size, height: size }}>
@@ -53,9 +53,9 @@ export function FoodOrbit({ photos = [], size = 240, children }) {
       <div className="orbit-spin">
         {list.map((p, i) => {
           const a = (i / list.length) * Math.PI * 2;
-          const R = size / 2 - 26;
+          const R = size / 2 - itemSize / 2 - 2;
           return (
-            <span key={i} className="orbit-item" style={{ left: size / 2 + Math.cos(a) * R - 24, top: size / 2 + Math.sin(a) * R - 24, animationDelay: i * 90 + 'ms' }}>
+            <span key={i} className="orbit-item" style={{ width: itemSize, height: itemSize, left: size / 2 + Math.cos(a) * R - itemSize / 2, top: size / 2 + Math.sin(a) * R - itemSize / 2, animationDelay: i * 90 + 'ms' }}>
               <img src={p} alt="" />
             </span>
           );
