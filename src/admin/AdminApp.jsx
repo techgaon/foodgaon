@@ -1,6 +1,7 @@
 import { createPortal } from 'react-dom';
 import { useMenuPack } from '../lib/menuPack.js';
 import { ClearTestOrders } from '../components/OrderActions.jsx';
+import MerchantUpiEditor from '../components/MerchantUpiEditor.jsx';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Icon, BottomNav, Toggle, Empty, Sheet, Field, useToast, Img, Logo, Confirm } from '../ui.jsx';
 import { useApp, RoleSwitchButton } from '../App.jsx';
@@ -300,6 +301,7 @@ function RestEditor({ open, r, onClose }) {
       </div>
       <Field label="Cooking time (min)"><input className="input" inputMode="numeric" value={f.prepMins} onChange={set('prepMins')} /></Field>
       <button className="btn primary block lg" onClick={save}>Save</button>
+      {r?.id && <MerchantUpiEditor key={r.id} rest={r} onSave={v => patch('restaurants', r.id, v)} />}
       {r?.id && <button className="btn ghost danger-text block" onClick={() => setDel(true)}>Delete restaurant</button>}
       <Confirm open={del} onClose={() => setDel(false)} danger title="Delete restaurant?" text="The restaurant and its menu will be removed." okText="Delete"
         onOk={async () => {

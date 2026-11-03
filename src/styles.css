@@ -1398,3 +1398,14 @@ body.noscroll .cart-bar, body.noscroll .live-bar { display: none; }
 @keyframes fdRasterWheel { from { transform:translate(-50%,-50%) rotate(0deg); } to { transform:translate(-50%,-50%) rotate(360deg); } }
 @media(max-width:360px) { .fd-rural .fd-scene { height:154px; } .fd-rural .fd-txt b { font-size:1.1rem; } }
 @media(prefers-reduced-motion:reduce) { .fd-countryside-track,.fd-raster-scooter,.fd-raster-wheel { animation:none; } .fd-raster-wheel { transform:translate(-50%,-50%); } }
+
+.upi-new{display:inline-block;background:#168447;color:white;border-radius:5px;padding:2px 6px;font-size:10px;margin-left:5px}
+
+.direct-pay .pw-card{max-height:calc(100dvh - 32px);overflow-y:auto}.direct-pay .pw-card p{overflow-wrap:anywhere}
+/* "View cart" inside the dish sheet (the floating bar is hidden while a sheet is open) */
+.dv-cart { position: static; transform: none; width: 100%; max-width: none; margin-top: 12px; animation: popIn .3s var(--spring, ease) backwards; }
+body.noscroll .dv-cart { display: flex; }
+.pd-alt { margin-top: 12px; padding: 10px; border-radius: 12px; background: #fff7ef; border: 1px dashed #ffc49a; text-align: left; }
+.pd-alt b { display: block; font-size: .86rem; margin-bottom: 6px; }
+.pd-alt .btn { margin-top: 6px; font-size: .86rem; }
+.direct-pay .pw-card { max-height: 92vh; overflow-y: auto; }

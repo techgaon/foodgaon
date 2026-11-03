@@ -1,4 +1,5 @@
 import { editableDeliverySlabs, validSlabs } from '../lib/delivery.js';
+import MerchantUpiEditor from '../components/MerchantUpiEditor.jsx';
 import PayManual from '../customer/PayManual.jsx';
 import { hi } from '../i18n/index.js';
 import { useMenuPack } from '../lib/menuPack.js';
@@ -32,7 +33,7 @@ export function useNewOrderAlert(orders, title = 'New order!') {
     const ids = new Set(pending.map((o) => o.id));
     if (seen.current) {
       const fresh = pending.filter((o) => !seen.current.has(o.id));
-      if (fresh.length) { ding(4); systemNotify(t(title), `${fresh[0].customerName} · ${rupee(fresh[0].total)}`); }
+      if (fresh.length) { ding(4); systemNotify(t(title), `${fresh[0].customerName} · ${rupee(fresh[0].total)}${fresh[0].payment === 'upi_live' ? ` · Direct Merchant UPI — पुष्टि बाकी${fresh[0].upiRef ? ` · UTR ${fresh[0].upiRef}` : ''}` : ''}`); }
     }
     seen.current = ids;
   }, [orders]); // eslint-disable-line
@@ -190,7 +191,7 @@ export function OrderCard({ o, showRest, admin }) {
       {o.discount > 0 && <div className="tiny t-green">{`Coupon ${o.offerCode}: − ${rupee(o.discount)}`}{o.discountBy === 'restaurant' ? '' : ` (${t('paid by FoodGaon')})`}</div>}
       <div className="row between small">
         <span className="row gap" style={{ gap: 6 }}>{o.customerName} · <a href={tel(o.customerPhone)}>{plain(o.customerPhone)}</a><WaBtn small phone={o.customerPhone} text={`नमस्ते ${o.customerName || ''} जी, ${o.restaurantName} से — आपका ऑर्डर #${o.code}`} /></span>
-        <b>{rupee(o.total)} <small className="muted">{o.payment === 'cod' ? 'Cash' : o.payment === 'online' ? 'Paid online' : o.payment === 'upi_now' ? 'UPI (pay now)' : 'UPI on delivery'}</small></b>
+        <b>{rupee(o.total)} <small className="muted">{o.payment === 'upi_live' ? 'Direct Merchant UPI' : o.payment === 'cod' ? 'Cash' : o.payment === 'online' ? 'Paid online' : o.payment === 'upi_now' ? 'UPI (pay now)' : 'UPI on delivery'}</small></b>
       </div>
       {o.payment !== 'cod' && !['rejected', 'cancelled'].includes(o.status) && (
         o.paid ? <div className="pay-line ok"><Icon name="check" size={14} /> Payment received</div>
@@ -199,6 +200,7 @@ export function OrderCard({ o, showRest, admin }) {
             <button className="btn small green" disabled={busy} onClick={() => run(() => patch('orders', o.id, { paid: true, paidMs: Date.now() }))}>Received</button>
           </div>
       )}
+      {o.payment === 'upi_live' && <div className="proof-note" data-notr=""><b>Direct Merchant UPI · {rupee(o.total)} · {o.paid ? 'रकम मिली' : 'पुष्टि बाकी'}</b><p>{o.upiRef ? `UTR / ApprovalRef: ${o.upiRef}` : 'UTR उपलब्ध नहीं'}{o.upiTxn ? ` · Transaction: ${o.upiTxn}` : ''}</p>{!o.paid && <p>अपने साउंडबॉक्स / बैंक / बिजनेस ऐप में रकम मिलाकर Received दबाएँ।</p>}</div>}
       {admin && <div className="tiny muted" data-notr="">{o.address?.line}</div>}
 
       {o.proofCount > 0 && <PayProofs o={o} />}
@@ -421,6 +423,7 @@ function ShopSettings({ rest }) {
         <button className="btn primary block" disabled={busy} onClick={() => save()}>Save</button>
       </div>
       <AgreementCard rest={rest} />
+      <MerchantUpiEditor key={rest.id} rest={rest} onSave={(v) => patch('restaurants', rest.id, v)} />
       <UpiEditor noQr value={rest} title="Your UPI ID — customers pay you directly" hint="Customers' money comes straight into this account. FoodGaon does not hold your money."
         onSave={(v) => patch('restaurants', rest.id, v)} />
       <div className="card">

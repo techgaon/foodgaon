@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon, VegMark, Stepper, Img, useToast } from '../ui.jsx';
-import { useCart, cartStore } from '../lib/data.js';
+import { useCart, cartStore, cartTotals } from '../lib/data.js';
 import { priceText, lineText, rupee } from '../lib/utils.js';
 import { FloatingVeggies, KcalRing, flyToCart } from './Motion.jsx';
 import { t } from '../i18n/index.js';
@@ -123,6 +123,13 @@ export default function DishView({ it, rest, showKcal = true, onClose }) {
                 <button className="btn primary lg grow" onClick={add}>{qty ? `Add one more · ${priceText(it)}` : `Add to cart · ${priceText(it)}`}</button>
               </div>
             )}
+          {cartTotals(cart).count > 0 && (
+            <button className="cart-bar dv-cart" onClick={() => { onClose(); window.dispatchEvent(new Event('fg-open-cart')); }}>
+              <span className="cart-bag" aria-hidden="true"><Icon name="bag" size={22} /><i>✓</i></span>
+              <span className="cb-left"><b>{`${cartTotals(cart).count} item${cartTotals(cart).count > 1 ? 's' : ''} added`}</b><small>{`₹${cartTotals(cart).total} · FREE delivery`}</small></span>
+              <span className="cb-right">View cart <Icon name="right" size={18} stroke={3} /></span>
+            </button>
+          )}
         </div>
       </div>
     </div>,

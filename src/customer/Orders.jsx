@@ -1,3 +1,4 @@
+import PayDirect from './PayDirect.jsx';
 import { HideOrderBtn, visibleFor } from '../components/OrderActions.jsx';
 import React, { useEffect, useRef, useState } from 'react';
 import { Icon, Empty, StatusChip, STATUS, Confirm, useToast, VegMark, Sheet, Field, WaBtn } from '../ui.jsx';
@@ -160,7 +161,7 @@ export function TrackOrder({ id, fresh, nav }) {
   useEffect(() => { if (party) { const x = setTimeout(() => setParty(false), 2600); return () => clearTimeout(x); } }, [party]);
   useEffect(() => {
     if (!o) return;
-    if (last.current && last.current !== o.status) systemNotify('FoodGaon', t(STATUS[o.status]?.label || o.status));
+    if (last.current && last.current !== o.status) systemNotify('FoodGaon', t(o.status === 'awaiting_payment' ? 'भुगतान / पुष्टि बाकी — ऑर्डर अभी भेजा नहीं गया' : STATUS[o.status]?.label || o.status));
     last.current = o.status;
   }, [o?.status]); // eslint-disable-line
 
@@ -184,7 +185,7 @@ export function TrackOrder({ id, fresh, nav }) {
       <div className={'track-hero tone-' + (dead ? 'red' : o.status === 'delivered' ? 'green' : 'orange')}>
         <div className="th-status">
           {live && <span className="pulse-dot" />}
-          <div><b>{t(STATUS[o.status]?.label || o.status)}</b>{eta && live && <small>{eta}</small>}</div>
+          <div><b>{t(o.status === 'awaiting_payment' ? 'भुगतान / पुष्टि बाकी — ऑर्डर अभी भेजा नहीं गया' : STATUS[o.status]?.label || o.status)}</b>{eta && live && <small>{eta}</small>}</div>
         </div>
         {o.status === 'picked' && <div className="road"><span className="scooter"><Icon name="bike" size={30} /></span></div>}
         {(o.status === 'accepted' || o.status === 'preparing') && <div className="cooking"><span /><span /><span /><Icon name="fire" size={34} /></div>}
@@ -193,7 +194,7 @@ export function TrackOrder({ id, fresh, nav }) {
       {(restP || homeP) && live && <MapView height={220} points={[restP, homeP, riderP].filter(Boolean)} className="track-map" />}
 
       <div className="pad-x">
-        {!dead && (
+        {!dead && o.status !== 'awaiting_payment' && (
           <div className="card steps-card">
             {STEPS.map((s, i) => (
               <div key={s.k} className={'tstep' + (i < idx ? ' done' : i === idx ? ' cur' : '')}>
@@ -258,10 +259,12 @@ export function TrackOrder({ id, fresh, nav }) {
 function PayBox({ o }) {
   const toast = useToast();
   const [show, setShow] = useState(false);
+  const [live, setLive] = useState(false);
   if (o.payment === 'cod' || o.payment === 'online' || ['rejected', 'cancelled'].includes(o.status)) return null;
   if (o.paid) return <div className="card pay-box ok"><Icon name="shield" size={22} /><div><b>Payment received</b><small>The restaurant confirmed your UPI payment</small></div></div>;
   const claim = async () => { try { await patch('orders', o.id, { paymentClaim: 'paid', claimMs: Date.now() }); toast(t('Thanks! The restaurant will confirm your payment.')); } catch { toast(t('Could not save'), 'err'); } };
   const ref = o.code;
+  if (o.payment === 'upi_live' && o.status === 'awaiting_payment') return <div className="card" data-notr=""><b>UPI भुगतान पूरा करें</b><p>रकम कट चुकी है तो दोबारा भुगतान न करें; भुगतान की पुष्टि करके यही ऑर्डर भेजें।</p><button className="btn primary block" onClick={() => setLive(true)}>भुगतान / पुष्टि खोलें</button>{live && <PayDirect order={{id:o.id, amount:o.total}} merchant={o.directMerchant} onDone={() => setLive(false)} onClose={() => setLive(false)} />}</div>;
   if (o.paymentClaim) return <div className="card pay-box wait"><Icon name="clock" size={22} /><div><b>Payment done — waiting for restaurant to confirm</b><small>Keep the UPI receipt until the food arrives</small></div></div>;
   if (o.payment === 'upi_now') return (
     <div className="card pay-box">
