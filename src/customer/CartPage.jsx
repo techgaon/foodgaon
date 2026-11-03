@@ -8,6 +8,8 @@ import { Icon, VegMark, Stepper, Empty, useToast } from '../ui.jsx';
 import { useApp } from '../App.jsx';
 import { useCart, cartTotals, cartStore, useRestaurants, placeOrder, billFor, lastOrder, useList } from '../lib/data.js';
 import PayManual from './PayManual.jsx';
+import PayDirect from './PayDirect.jsx';
+import { merchantFor } from '../lib/directUpi.js';
 import { payOnline } from '../lib/gateway.js';
 import NoteBox from './NoteBox.jsx';
 import { rupee, upiLink, km } from '../lib/utils.js';
@@ -25,6 +27,8 @@ export default function CartPage({ nav, onPlaced }) {
   useSyncAddresses();
   const { list: addrs, sel } = useAddresses();
   const addr = addrs.find((a) => a.id === sel) || addrs[0];
+  const merchant = merchantFor(rest);
+  const liveUpi = !!merchant;
   const upiNow = hasUpi(rest) && config.upiNowEnabled !== false;
   const upiDel = hasUpi(rest) && config.upiEnabled !== false;
   const mine = useList('orders', user ? [['customerUid', '==', user.uid]] : null, [user?.uid]);
@@ -34,8 +38,8 @@ export default function CartPage({ nav, onPlaced }) {
   const cod = config.codEnabled !== false && !rest?.codBlocked && !codStopMe;
   const [pay, setPay] = useState(() => LS.get('pp_pay', 'upi_now'));
   const online = !!config.gatewayEnabled && !!rest?.onlinePay;
-  const payOk = (p) => (p === 'online' ? online : p === 'upi_now' ? upiNow : p === 'upi_rider' ? upiDel : p === 'cod' ? cod : false);
-  useEffect(() => { if (rest && !payOk(pay)) setPay(online ? 'online' : upiNow ? 'upi_now' : upiDel ? 'upi_rider' : 'cod'); }, [rest?.id, rest?.upiId, rest?.upiQr, online]); // eslint-disable-line
+  const payOk = (p) => (p === 'upi_live' ? liveUpi : p === 'online' ? online : p === 'upi_now' ? upiNow : p === 'upi_rider' ? upiDel : p === 'cod' ? cod : false);
+  useEffect(() => { if (rest && !payOk(pay)) setPay(online ? 'online' : upiNow ? 'upi_now' : upiDel ? 'upi_rider' : 'cod'); }, [rest?.id, rest?.upiId, rest?.upiQr, liveUpi, online]); // eslint-disable-line
   const [note, setNote] = useState('');
   const [paying, setPaying] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -77,13 +81,15 @@ export default function CartPage({ nav, onPlaced }) {
     if (deliverySlabs(rest).length && dist == null) { toast(t('Set the shop location and your delivery GPS pin to calculate the minimum order.'), 'err'); return; }
     if (minOrder && total < minOrder) { toast(t('Minimum order is {}').replace('{}', rupee(minOrder)), 'err'); return; }
     if (far || !servesAddress(rest, addr, config)) { toast(t('Sorry, this restaurant delivers only within {} km').replace('{}', radius), 'err'); return; }
+    if (!payOk(pay)) { toast('यह भुगतान विकल्प अभी उपलब्ध नहीं है। दूसरा विकल्प चुनें।', 'err'); return; }
     setBusy(true);
     try {
       const payNow = pay === 'upi_now' && hasUpi(rest);
+      const direct = pay === 'upi_live' && liveUpi;
       const viaGateway = pay === 'online' && online;
       const id = await placeOrder({
         user, customerName: user.displayName || addr.name, rest, config, cartData: cart, note, payment: pay,
-        offer: discount ? applied : null, discount, status: payNow || viaGateway ? 'awaiting_payment' : 'placed',
+        offer: discount ? applied : null, discount, status: payNow || direct || viaGateway ? 'awaiting_payment' : 'placed',
         address: { label: addr.label, name: addr.name, phone: addr.phone, line: addrLine(addr), lat: addr.lat || null, lng: addr.lng || null },
       });
       LS.set('pp_pay', pay);
@@ -92,6 +98,7 @@ export default function CartPage({ nav, onPlaced }) {
         if (!ok) { toast(t('Payment not completed. Your order was not sent. Try again or choose another way to pay.'), 'err'); setBusy(false); return; }
         cartStore.clear(); LS.set('pp_coupon', ''); onPlaced(id); setBusy(false); return;
       }
+      if (direct) { setPaying({ id, amount: bill.total, code: lastOrder.code, uid: user.uid, direct: true, merchant }); setBusy(false); return; }
       if (payNow) { setPaying({ id, amount: bill.total, code: lastOrder.code, uid: user.uid }); setBusy(false); return; } // order goes to the restaurant only after payment
       cartStore.clear(); LS.set('pp_coupon', '');
       onPlaced(id);
@@ -102,7 +109,8 @@ export default function CartPage({ nav, onPlaced }) {
   return (
     <div className="page cart-page">
       <TopBar onBack={nav.back} title={rest?.name || 'Cart'} />
-      {paying && <PayManual order={paying} rest={rest} onDone={(id) => { setPaying(null); cartStore.clear(); LS.set('pp_coupon', ''); onPlaced(id); }} onClose={() => setPaying(null)} />}
+      {paying?.direct && <PayDirect autoOpen order={paying} merchant={paying.merchant} onDone={(id) => { setPaying(null); cartStore.clear(); LS.set('pp_coupon', ''); onPlaced(id); }} onClose={() => setPaying(null)} />}
+      {paying && !paying.direct && <PayManual order={paying} rest={rest} onDone={(id) => { setPaying(null); cartStore.clear(); LS.set('pp_coupon', ''); onPlaced(id); }} onClose={() => setPaying(null)} />}
       <div className="pad-x">
         <div className="card">
           {list.map((x) => (
@@ -170,6 +178,7 @@ export default function CartPage({ nav, onPlaced }) {
         <div className="card">
           <h4>Payment</h4>
           {online && <PayOpt id="online" cur={pay} set={setPay} art="now" title="Pay online — UPI, card, net banking" />}
+          <PayOpt id="upi_live" cur={pay} set={setPay} art="now" title={<span data-notr="">Pay via UPI Live <small className="upi-new">NEW</small></span>} off={!liveUpi} />
           <PayOpt id="upi_now" cur={pay} set={setPay} art="now" title="Pay now by UPI" off={!upiNow} />
           <PayOpt id="upi_rider" cur={pay} set={setPay} art="later" title="Pay on delivery by UPI" off={!upiDel} />
           <PayOpt id="cod" cur={pay} set={setPay} art="cash" title="Cash on delivery" off={!cod} offMsg={codStopMe ? 'Cash on delivery is off for your number because earlier cash orders were refused. Please pay by UPI.' : 'Cash on delivery is not available at this restaurant right now. Please pay by UPI.'} />
@@ -179,7 +188,7 @@ export default function CartPage({ nav, onPlaced }) {
 
       <div className="place-bar">
         <div><b>{rupee(bill.total)}</b><small>TOTAL</small></div>
-        <button className="btn primary lg grow" disabled={busy} onClick={place}>{busy ? 'Placing…' : !user ? 'Log in to order' : !addr ? 'Add address' : pay === 'upi_now' || pay === 'online' ? 'Pay & place order' : 'Place order'}</button>
+        <button className="btn primary lg grow" disabled={busy} onClick={place}>{busy ? 'Placing…' : !user ? 'Log in to order' : !addr ? 'Add address' : pay === 'upi_live' || pay === 'upi_now' || pay === 'online' ? 'Pay & place order' : 'Place order'}</button>
       </div>
       <AddressForm open={form} onClose={() => setForm(false)} />
       <Sheet open={couponOpen} onClose={() => setCouponOpen(false)} title="Coupons for you">

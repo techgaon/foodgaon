@@ -1,5 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { watchList, watchDoc, patch, put, newId, serverTimestamp, phoneOf } from './fb.js';
+import { merchantFor } from './directUpi.js';
 import { LS, todayKey, shortId } from './utils.js';
 
 /* ---------- live collections (small, public) ---------- */
@@ -137,6 +138,7 @@ export async function placeOrder({ user, customerName, rest, config, cartData, a
     commissionPct: b.commissionPct, commissionGstExtra: b.commissionGstExtra, commission: b.commission, commissionGst: b.commissionGst, fgCoupon: b.fgCoupon,
     dues: b.dues, restDelivery: 0, payable: b.payable,
     firmName: config.firmName || 'TechGaon AI Services', firmGstin: config.gstin || '',
+    ...(payment === 'upi_live' ? { directMerchant: merchantFor(rest) } : {}),
     payment, paid: false, paymentClaim: '', note: note || '',
     status, riderPhone: '', riderName: '', prepMins: rest.prepMins || 20,
     timeline: status === 'placed' ? { placed: now } : { created: now },

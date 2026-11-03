@@ -41,7 +41,7 @@ export default function CustomerApp() {
   const cart = useCart();
   const { count, total } = cartTotals(cart);
   const myOrders0 = useList('orders', user ? [['customerUid', '==', user.uid]] : null, [user?.uid]);
-  const myOrders = myOrders0 && myOrders0.filter(isRealOrder);
+  const myOrders = myOrders0 && myOrders0.filter(o => isRealOrder(o) || (o.payment === 'upi_live' && o.status === 'awaiting_payment'));
   useEffect(() => { bindFavs(user?.uid || null); }, [user?.uid]);
   const active = (myOrders || []).filter((o) => ACTIVE.includes(o.status)).sort((a, b) => b.createdMs - a.createdMs);
 

@@ -60,7 +60,7 @@ public class UpiPlugin extends Plugin {
     public void pay(PluginCall call) {
         String url = call.getString("url");
         String pkg = call.getString("package");
-        if (url == null) { call.reject("url missing"); return; }
+        if (url == null || !"upi".equalsIgnoreCase(Uri.parse(url).getScheme()) || !"pay".equalsIgnoreCase(Uri.parse(url).getHost())) { call.reject("Invalid UPI URI"); return; }
         try {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             if (pkg != null && !pkg.isEmpty()) {
@@ -84,17 +84,25 @@ public class UpiPlugin extends Plugin {
         Intent data = result.getData();
         if (data != null) {
             raw = data.getStringExtra("response");
-            if (raw == null) raw = data.getStringExtra("Status") != null ? ("Status=" + data.getStringExtra("Status") + "&txnId=" + data.getStringExtra("txnId") + "&txnRef=" + data.getStringExtra("txnRef")) : "";
+            if (raw == null || raw.isEmpty()) {
+                Uri.Builder response = new Uri.Builder();
+                for (String key : new String[]{"Status", "status", "txnId", "txnRef", "ApprovalRefNo", "approvalRefNo", "responseCode"}) {
+                    String value = data.getStringExtra(key);
+                    if (value != null) response.appendQueryParameter(key, value);
+                }
+                raw = response.build().getEncodedQuery();
+            }
         }
-        String status = "UNKNOWN"; String txnId = ""; String txnRef = ""; String code = "";
+        String status = "UNKNOWN"; String txnId = ""; String txnRef = ""; String code = ""; String approvalRef = "";
         if (raw != null && !raw.isEmpty()) {
             for (String part : raw.split("&")) {
                 String[] kv = part.split("=", 2);
                 if (kv.length < 2) continue;
-                String k = kv[0].trim().toLowerCase(); String v = kv[1].trim();
+                String k = kv[0].trim().toLowerCase(); String v = Uri.decode(kv[1]).trim();
                 if (k.equals("status")) status = v.toUpperCase();
                 else if (k.equals("txnid")) txnId = v;
-                else if (k.equals("txnref") || k.equals("approvalrefno")) { if (txnRef.isEmpty()) txnRef = v; }
+                else if (k.equals("txnref")) txnRef = v;
+                else if (k.equals("approvalrefno") || k.equals("utr")) approvalRef = v;
                 else if (k.equals("responsecode")) code = v;
             }
         } else if (result.getResultCode() == android.app.Activity.RESULT_CANCELED) {
@@ -103,6 +111,7 @@ public class UpiPlugin extends Plugin {
         ret.put("status", status);
         ret.put("txnId", txnId);
         ret.put("txnRef", txnRef);
+        ret.put("approvalRef", approvalRef);
         ret.put("responseCode", code);
         ret.put("raw", raw == null ? "" : raw);
         call.resolve(ret);

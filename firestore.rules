@@ -76,7 +76,8 @@ service cloud.firestore {
     }
     match /orders/{id} {
       allow create: if signedIn() && request.resource.data.customerUid == request.auth.uid
-                    && request.resource.data.status in ['placed', 'awaiting_payment'];
+                    && request.resource.data.status in ['placed', 'awaiting_payment']
+                    && (request.resource.data.payment != 'upi_live' || (request.resource.data.paid == false && request.resource.data.status == 'awaiting_payment'));
       allow read: if signedIn() && (
                        resource.data.customerUid == request.auth.uid
                     || isAdmin()
