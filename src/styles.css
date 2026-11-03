@@ -87,6 +87,14 @@ textarea.input { resize: vertical; }
 .vegmark i { width: 50%; height: 50%; border-radius: 50%; background: var(--veg); }
 
 /* splash */
+.splash-delivery { padding: 24px 12px; }
+.splash-original-art { position: relative; z-index: 2; margin-bottom: -8px; }
+.splash-rider-art { position: relative; z-index: 1; display: block; width: min(84%, 300px); height: auto; object-fit: contain; border-radius: 24px; margin: 0 0 6px; animation: splashRiderFloat 3.2s ease-in-out infinite; }
+.splash-brand { position: relative; display: flex; align-items: center; gap: 12px; }
+.splash-delivery .splash-brand .wordmark { font-size: clamp(28px, 8vw, 40px) !important; }
+@keyframes splashRiderFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@media(prefers-reduced-motion:reduce) { .splash-rider-art { animation: none; } }
+@media(max-height:680px) { .splash-original-art { transform:scale(.8); margin-top:-20px; margin-bottom:-28px; } .splash-rider-art { width:min(76%, 240px); } }
 .splash { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; position: relative; overflow: hidden; background: radial-gradient(circle at 50% 35%, #fff 0, var(--bg) 60%); }
 .splash p { color: var(--muted); margin: 0; font-weight: 500; animation: rise .8s .3s var(--ease) backwards; }
 .splash .wordmark { animation: rise .7s .15s var(--ease) backwards; }

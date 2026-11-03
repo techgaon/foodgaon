@@ -3,10 +3,9 @@ import { auth, onAuthStateChanged, fullSignOut, watchDoc, watchDocLive, phoneOf 
 import { LS } from './lib/utils.js';
 import { SUPER_ADMIN } from './firebase-config.js';
 import { DEFAULT_CONFIG } from './data/menu.js';
-import { ToastProvider, Logo, Wordmark, Icon } from './ui.jsx';
+import { ToastProvider, Logo, Icon } from './ui.jsx';
 import Login from './Login.jsx';
-import { FoodOrbit, FloatingVeggies } from './components/Motion.jsx';
-import { photo } from './data/photos.js';
+import Splash from './components/SplashScreen.jsx';
 import CustomerApp from './customer/CustomerApp.jsx';
 import RestaurantApp from './restaurant/RestaurantApp.jsx';
 import RiderApp from './rider/RiderApp.jsx';
@@ -84,19 +83,6 @@ export default function App() {
         {!loginOpen && user && !splash && staffReady && !user.displayName && activeRole === 'customer' && <Login startStep="name" />}
       </ToastProvider>
     </Ctx.Provider>
-  );
-}
-
-function Splash() {
-  return (
-    <div className="splash">
-      <div className="splash-glow" />
-      <FloatingVeggies count={12} seed={5} />
-      <FoodOrbit photos={['jalebi', 'chole_bhature', 'mango_lassi', 'idli', 'chowmein', 'rasmalai', 'pizza'].map(photo)} size={250}><Logo size={92} animate /></FoodOrbit>
-      <Wordmark size={40} />
-      <p>Pure veg · Pure pyaar</p>
-      <div className="splash-dots"><i /><i /><i /></div>
-    </div>
   );
 }
 
