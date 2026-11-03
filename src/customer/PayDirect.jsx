@@ -27,7 +27,7 @@ export default function PayDirect({ order, merchant, onDone, onClose, autoOpen =
   }, []);
   const submit = async (reply) => {
     if (saving.current) return;
-    saving.current = true; setState('saving');
+    saving.current = true; setMessage(''); setState('saving');
     try {
       // This is a customer claim only. The restaurant is the only client allowed to mark paid.
       await patch('orders', order.id, { status: 'placed', 'timeline.placed': Date.now(), claimMs: Date.now(), ...upiClaim(reply) });
