@@ -1383,3 +1383,20 @@ body.noscroll .cart-bar, body.noscroll .live-bar { display: none; }
 @keyframes fdRideRefined { 0%,100% { transform: translateX(-13px); } 50% { transform: translateX(1px); } }
 @media(max-width:360px) { .fd-scooter { width: 132px; height: 88px; } .fd-scene { min-width: 118px; } }
 @media(prefers-reduced-motion:reduce) { .fd-scooter,.fd-wheel,.fd-bounce,.fd-speed { animation:none; } }
+.fd-hero.fd-rural { display:block; padding:12px; }
+.fd-rural .fd-txt { flex-direction:row; align-items:baseline; justify-content:space-between; gap:10px; margin:0 2px 10px; }
+.fd-rural .fd-scene { height:170px; min-width:0; overflow:hidden; border-radius:12px; background:#fff0cb; }
+.fd-countryside-track { position:absolute; inset:0 auto 0 0; width:200%; display:flex; animation:fdCountryside 16s linear infinite; }
+.fd-landscape { flex:0 0 50%; width:50%; height:100%; }
+.fd-rural .fd-road { left:0; right:0; bottom:13px; height:4px; background:transparent; gap:30px; }
+.fd-rural .fd-road i { background:#fff4cf; width:28px; }
+.fd-raster-scooter { position:absolute; width:185px; height:auto; aspect-ratio:1.5; bottom:8px; left:50%; margin-left:-92px; animation:fdRasterRide 2.6s ease-in-out infinite; filter:drop-shadow(0 3px 2px #69401c30); }
+.fd-raster-scooter>img { display:block; width:100%; height:auto; }
+.fd-raster-wheel { position:absolute; width:8.8%; height:auto; aspect-ratio:1; top:86.5%; animation:fdRasterWheel .65s linear infinite; opacity:.65; }
+.fd-rural.compact .fd-scene { height:116px; }
+.fd-rural.compact .fd-raster-scooter { width:130px; margin-left:-65px; bottom:3px; }
+@keyframes fdCountryside { to { transform:translateX(-50%); } }
+@keyframes fdRasterRide { 0%,100% { transform:translate(-7px,0) rotate(-.3deg); } 50% { transform:translate(7px,-2px) rotate(.3deg); } }
+@keyframes fdRasterWheel { from { transform:translate(-50%,-50%) rotate(0deg); } to { transform:translate(-50%,-50%) rotate(360deg); } }
+@media(max-width:360px) { .fd-rural .fd-scene { height:154px; } .fd-rural .fd-txt b { font-size:1.1rem; } }
+@media(prefers-reduced-motion:reduce) { .fd-countryside-track,.fd-raster-scooter,.fd-raster-wheel { animation:none; } .fd-raster-wheel { transform:translate(-50%,-50%); } }
