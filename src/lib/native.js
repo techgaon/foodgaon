@@ -77,7 +77,7 @@ export async function upiApps() { if (!isNative) return []; try { return (await 
  *  { ok, status: 'SUCCESS'|'SUBMITTED'|'FAILURE'|'CANCELLED'|'UNKNOWN'|'WEB', txnId, txnRef } */
 export async function upiPay(url, pkg) {
   if (!isNative) { location.href = url; return { ok: true, status: 'WEB' }; }
-  const run = async (p) => { const r = await UpiPay.pay({ url, package: p || '' }); return { ok: true, status: String(r?.status || 'UNKNOWN').toUpperCase(), txnId: r?.txnId || '', txnRef: r?.txnRef || '', raw: r?.raw || '' }; };
+  const run = async (p) => { const r = await UpiPay.pay({ url, package: p || '' }); return { ok: true, status: String(r?.status || 'UNKNOWN').toUpperCase(), txnId: r?.txnId || '', txnRef: r?.txnRef || '', approvalRef: r?.approvalRef || '', raw: r?.raw || '' }; };
   try { return await run(pkg); } catch {
     if (pkg) { try { return await run(''); } catch { /* no UPI app */ } }
     return { ok: false, status: 'NOAPP' };

@@ -1398,3 +1398,5 @@ body.noscroll .cart-bar, body.noscroll .live-bar { display: none; }
 @keyframes fdRasterWheel { from { transform:translate(-50%,-50%) rotate(0deg); } to { transform:translate(-50%,-50%) rotate(360deg); } }
 @media(max-width:360px) { .fd-rural .fd-scene { height:154px; } .fd-rural .fd-txt b { font-size:1.1rem; } }
 @media(prefers-reduced-motion:reduce) { .fd-countryside-track,.fd-raster-scooter,.fd-raster-wheel { animation:none; } .fd-raster-wheel { transform:translate(-50%,-50%); } }
+
+.upi-new{display:inline-block;background:#168447;color:white;border-radius:5px;padding:2px 6px;font-size:10px;margin-left:5px}

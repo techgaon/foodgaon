@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   pull_request:
     branches: [main]
-    paths: ['.github/workflows/trial-apk.yml']
+    paths: ['.github/workflows/trial-apk.yml', 'src/**', 'android/**', 'tests/**', 'firestore.rules']
 
 permissions:
   contents: read
@@ -32,6 +32,7 @@ jobs:
       - name: Verify app behavior
         run: |
           node tests/foodgaon.cjs
+          node tests/direct-upi.cjs
           node tests/trial-login.cjs
           node tests/login-flow.cjs
           node tests/celebrations.cjs
@@ -44,21 +45,21 @@ jobs:
       - name: Build installable trial APK
         working-directory: android
         env:
-          VERSION_CODE: '12'
-          VERSION_NAME: 1.0.12-trial
+          VERSION_CODE: '16'
+          VERSION_NAME: 1.0.16-upi-trial
         run: |
           chmod +x gradlew
           ./gradlew --no-daemon assembleDebug
       - name: Verify APK signature and collect
         run: |
           mkdir -p out
-          cp android/app/build/outputs/apk/debug/app-debug.apk out/FoodGaon-v1.0.12-trial.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk out/FoodGaon-v1.0.16-upi-trial.apk
           TOOLS=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)
-          "$TOOLS/apksigner" verify --verbose --print-certs out/FoodGaon-v1.0.12-trial.apk
-          "$TOOLS/aapt" dump badging out/FoodGaon-v1.0.12-trial.apk | head -5
-          sha256sum out/FoodGaon-v1.0.12-trial.apk > out/SHA256SUMS.txt
+          "$TOOLS/apksigner" verify --verbose --print-certs out/FoodGaon-v1.0.16-upi-trial.apk
+          "$TOOLS/aapt" dump badging out/FoodGaon-v1.0.16-upi-trial.apk | head -5
+          sha256sum out/FoodGaon-v1.0.16-upi-trial.apk > out/SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: FoodGaon-v1.0.12-trial
+          name: FoodGaon-v1.0.16-upi-trial
           path: out/
           retention-days: 14

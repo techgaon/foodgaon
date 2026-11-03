@@ -4,7 +4,7 @@ import { Icon, Field, useToast } from '../ui.jsx';
 import { compressImage, upiLink, rupee, parseUpiQr } from '../lib/utils.js';
 
 /* decode a QR code from a photo (jsQR, loaded only when needed) */
-async function readQr(file) {
+export async function readQr(file) {
   const { default: jsQR } = await import('jsqr');
   const url = URL.createObjectURL(file);
   try {
