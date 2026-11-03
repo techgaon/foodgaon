@@ -1,6 +1,5 @@
 import Celebrations from './Celebrations.jsx';
 import EverydayScene, { EVERYDAY_BANNERS } from '../components/EverydayScenes.jsx';
-import villageDeliveryRider from '../assets/village-delivery-rider.png';
 import { useAddresses } from './Address.jsx';
 import { servesAddress } from '../lib/delivery.js';
 import React, { useEffect, useRef, useState } from 'react';
@@ -61,7 +60,7 @@ export default function Home({ nav }) {
       <Celebrations />
       <FreeDelivery km={config.radiusKm || 5} />
       <PromiseStrip />
-      <Banners list={[{ id: 'fg-village-rider', artwork: villageDeliveryRider }, ...EVERYDAY_BANNERS, ...(banners || []).filter((b) => b.active !== false && (!['b1', 'b2', 'b3'].includes(b.id) || b.code || b.link) && (!b.code || offers.some((o) => o.code === b.code)))]} nav={nav} />
+      <Banners list={[...EVERYDAY_BANNERS, ...(banners || []).filter((b) => b.active !== false && (!['b1', 'b2', 'b3'].includes(b.id) || b.code || b.link) && (!b.code || offers.some((o) => o.code === b.code)))]} nav={nav} />
 
       {offers.length > 0 && (
         <Reveal as="section" className="sec">
@@ -165,8 +164,8 @@ function Banners({ list, nav }) {
     <div className={'banners everyday-banners' + (paused ? ' scenes-paused' : '')} role="region" aria-label="FoodGaon stories">
       <div className="banner-track" ref={ref} onPointerDown={() => { setPaused(true); programScroll.current = false; }} onFocusCapture={() => setPaused(true)} onScroll={(e) => { if (programScroll.current) return; const w = e.currentTarget.clientWidth; if (!w) return; const k = Math.max(0, Math.min(n - 1, Math.round(e.currentTarget.scrollLeft / w))); if (k !== i) setI(k); }}>
         {list.map((b) => (
-          <div key={b.id} className={'banner' + (b.artwork ? ' village-rider-banner' : '') + (b.scene ? ` everyday-banner everyday-${b.scene}` : '') + (b.link ? ' clickable' : '')} data-notr={b.scene ? '' : undefined} lang={b.scene ? 'hi' : undefined} onClick={() => b.link && nav.openRest(b.link)}>
-            {b.artwork ? <img src={b.artwork} className="village-rider-art" alt="Food delivery rider on a scooter in a village" /> : b.scene ? <><EverydayScene kind={b.scene} /><div className="everyday-copy"><small>FoodGaon के साथ</small><b>{b.title}</b><strong>{b.sub}</strong><span>{b.note}</span></div></> : <><Img src={b.img} alt="" className="banner-img kenburns" /><div className="banner-txt"><b>{b.title === 'Your town, your taste' ? 'Your village, your town, your taste' : b.title}</b><span>{b.sub}</span>{b.code && <em className="code-pill" data-notr="">{b.code}</em>}</div></>}
+          <div key={b.id} className={'banner' + (b.scene ? ` everyday-banner everyday-${b.scene}` : '') + (b.link ? ' clickable' : '')} data-notr={b.scene ? '' : undefined} lang={b.scene ? 'hi' : undefined} onClick={() => b.link && nav.openRest(b.link)}>
+            {b.scene ? <><EverydayScene kind={b.scene} /><div className="everyday-copy"><small>FoodGaon के साथ</small><b>{b.title}</b><strong>{b.sub}</strong><span>{b.note}</span></div></> : <><Img src={b.img} alt="" className="banner-img kenburns" /><div className="banner-txt"><b>{b.title === 'Your town, your taste' ? 'Your village, your town, your taste' : b.title}</b><span>{b.sub}</span>{b.code && <em className="code-pill" data-notr="">{b.code}</em>}</div></>}
           </div>
         ))}
       </div>
