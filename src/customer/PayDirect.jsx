@@ -8,11 +8,12 @@ import { rupee } from '../lib/utils.js';
 export default function PayDirect({ order, merchant, onDone, onClose, autoOpen = false }) {
   const [state, setState] = useState('ready');
   const [message, setMessage] = useState('');
+  useEffect(() => { if (state !== 'sent') return; const timer = setTimeout(() => onDone(order.id), 1200); return () => clearTimeout(timer); }, [state]);
   const saving = useRef(false);
   const launched = useRef(false);
   const hidden = useRef(false);
   const autoStarted = useRef(false);
-  useEffect(() => { if (autoOpen && isNative && !autoStarted.current) { autoStarted.current = true; pay(); } }, []);
+  useEffect(() => { if (autoOpen && !autoStarted.current) { autoStarted.current = true; pay(); } }, []);
   const result = useRef({ status: 'CUSTOMER_CONFIRMED' });
   const [utr, setUtr] = useState('');
   const link = directUpiLink(merchant, order.amount, order.id);

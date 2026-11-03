@@ -161,7 +161,7 @@ export function TrackOrder({ id, fresh, nav }) {
   useEffect(() => { if (party) { const x = setTimeout(() => setParty(false), 2600); return () => clearTimeout(x); } }, [party]);
   useEffect(() => {
     if (!o) return;
-    if (last.current && last.current !== o.status) systemNotify('FoodGaon', t(STATUS[o.status]?.label || o.status));
+    if (last.current && last.current !== o.status) systemNotify('FoodGaon', t(o.status === 'awaiting_payment' ? 'भुगतान / पुष्टि बाकी — ऑर्डर अभी भेजा नहीं गया' : STATUS[o.status]?.label || o.status));
     last.current = o.status;
   }, [o?.status]); // eslint-disable-line
 
@@ -185,7 +185,7 @@ export function TrackOrder({ id, fresh, nav }) {
       <div className={'track-hero tone-' + (dead ? 'red' : o.status === 'delivered' ? 'green' : 'orange')}>
         <div className="th-status">
           {live && <span className="pulse-dot" />}
-          <div><b>{t(STATUS[o.status]?.label || o.status)}</b>{eta && live && <small>{eta}</small>}</div>
+          <div><b>{t(o.status === 'awaiting_payment' ? 'भुगतान / पुष्टि बाकी — ऑर्डर अभी भेजा नहीं गया' : STATUS[o.status]?.label || o.status)}</b>{eta && live && <small>{eta}</small>}</div>
         </div>
         {o.status === 'picked' && <div className="road"><span className="scooter"><Icon name="bike" size={30} /></span></div>}
         {(o.status === 'accepted' || o.status === 'preparing') && <div className="cooking"><span /><span /><span /><Icon name="fire" size={34} /></div>}
@@ -194,7 +194,7 @@ export function TrackOrder({ id, fresh, nav }) {
       {(restP || homeP) && live && <MapView height={220} points={[restP, homeP, riderP].filter(Boolean)} className="track-map" />}
 
       <div className="pad-x">
-        {!dead && (
+        {!dead && o.status !== 'awaiting_payment' && (
           <div className="card steps-card">
             {STEPS.map((s, i) => (
               <div key={s.k} className={'tstep' + (i < idx ? ' done' : i === idx ? ' cur' : '')}>
