@@ -1400,3 +1400,5 @@ body.noscroll .cart-bar, body.noscroll .live-bar { display: none; }
 @media(prefers-reduced-motion:reduce) { .fd-countryside-track,.fd-raster-scooter,.fd-raster-wheel { animation:none; } .fd-raster-wheel { transform:translate(-50%,-50%); } }
 
 .upi-new{display:inline-block;background:#168447;color:white;border-radius:5px;padding:2px 6px;font-size:10px;margin-left:5px}
+
+.direct-pay .pw-card{max-height:calc(100dvh - 32px);overflow-y:auto}.direct-pay .pw-card p{overflow-wrap:anywhere}

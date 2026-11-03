@@ -43,7 +43,7 @@ export default function PayDirect({ order, merchant, onDone, onClose, autoOpen =
     setMessage(reply.status === 'NOAPP' ? 'UPI ऐप नहीं खुला। फ़ोन में UPI ऐप उपलब्ध होना चाहिए।' : `UPI स्थिति: ${reply.status}। पहले अपने UPI ऐप में रकम कटने की स्थिति जाँचें।`);
   };
   const cancel = async () => { if (saving.current) return; try { await patch('orders', order.id, { status: 'payment_failed' }); onClose(); } catch { setMessage('इंटरनेट जाँचें। ऑर्डर बंद नहीं हुआ।'); } };
-  return createPortal(<div className="paywait" data-notr=""><div className="pw-card" role="dialog" aria-label="Direct Merchant UPI">
+  return createPortal(<div className="paywait direct-pay" data-notr=""><div className="pw-card" role="dialog" aria-label="Direct Merchant UPI">
     <h3>Pay via UPI Live</h3><p className="pw-amt">{rupee(order.amount)}</p>
     <p>{merchant.name}</p><p className="tiny muted">{merchant.vpa}</p>
     {['waiting', 'saving'].includes(state) && <><div className="pw-spin"><span className="pw-ring" /><span className="pw-ring r2" /><b>₹</b></div><h4>{state === 'saving' ? 'Processing…' : 'UPI ऐप में भुगतान पूरा करें'}</h4></>}

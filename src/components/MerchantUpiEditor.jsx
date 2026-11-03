@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { merchantFor, readMerchantUri } from '../lib/directUpi.js';
-import { readQr } from './Pay.jsx';
+import { readQr } from '../lib/qr.js';
 import { useToast } from '../ui.jsx';
 
 export default function MerchantUpiEditor({ rest, onSave }) {
