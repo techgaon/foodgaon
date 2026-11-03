@@ -6,7 +6,7 @@ Parag (`restaurant.id === 'parag'`) defaults to the exact payee decoded from the
 
 `upi://pay?pa=8081824545@upi&pn=PARAG%20MILK%20PARLOUR%20AND%20RESTAURANT`
 
-The QR contains no MCC. No MCC or bank verification is invented. This default is shipped in app code; it is not a live Firestore migration. Saving the restaurant/admin Merchant UPI editor persists an explicit `restaurants/{id}.directUpi` configuration and overrides the default (including disabling it). Other restaurants have no default payee. The existing manual-payment QR is unchanged.
+The original QR contains no MCC. At the user's explicit request, the Parag app default adds MCC 5812 for testing, with mccSource=user-provided. This is not bank-verified MCC and does not alter the recorded original QR URI. Other merchants do not inherit this code. This default is shipped in app code; it is not a live Firestore migration. An explicitly saved directUpi configuration still takes precedence; the merchant/admin editor can set MCC 5812 there. Saving the restaurant/admin Merchant UPI editor persists an explicit `restaurants/{id}.directUpi` configuration and overrides the default (including disabling it). Other restaurants have no default payee. The existing manual-payment QR is unchanged.
 
 Settings support a QR photo, URI paste, VPA, payee name, optional four-digit bank-provided MCC, and enable/disable. A source QR is a source of payee details, not proof of merchant onboarding. Adding MCC cannot change a personal VPA into a merchant account. This QR cannot guarantee acceptance by every UPI app.
 

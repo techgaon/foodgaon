@@ -45,21 +45,21 @@ jobs:
       - name: Build installable trial APK
         working-directory: android
         env:
-          VERSION_CODE: '16'
-          VERSION_NAME: 1.0.16-upi-trial
+          VERSION_CODE: '17'
+          VERSION_NAME: 1.0.17-upi-mcc-trial
         run: |
           chmod +x gradlew
           ./gradlew --no-daemon assembleDebug
       - name: Verify APK signature and collect
         run: |
           mkdir -p out
-          cp android/app/build/outputs/apk/debug/app-debug.apk out/FoodGaon-v1.0.16-upi-trial.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk out/FoodGaon-v1.0.17-upi-mcc-trial.apk
           TOOLS=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)
-          "$TOOLS/apksigner" verify --verbose --print-certs out/FoodGaon-v1.0.16-upi-trial.apk
-          "$TOOLS/aapt" dump badging out/FoodGaon-v1.0.16-upi-trial.apk | head -5
-          sha256sum out/FoodGaon-v1.0.16-upi-trial.apk > out/SHA256SUMS.txt
+          "$TOOLS/apksigner" verify --verbose --print-certs out/FoodGaon-v1.0.17-upi-mcc-trial.apk
+          "$TOOLS/aapt" dump badging out/FoodGaon-v1.0.17-upi-mcc-trial.apk | head -5
+          sha256sum out/FoodGaon-v1.0.17-upi-mcc-trial.apk > out/SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: FoodGaon-v1.0.16-upi-trial
+          name: FoodGaon-v1.0.17-upi-mcc-trial
           path: out/
           retention-days: 14

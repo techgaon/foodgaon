@@ -14,7 +14,7 @@ export function readMerchantUri(text) {
 }
 export function merchantFor(rest) {
   if (!rest) return null;
-  const m = rest.directUpi || (rest.id === 'parag' ? readMerchantUri(PARAG_UPI_URI) : null);
+  const m = rest.directUpi || (rest.id === 'parag' ? { ...readMerchantUri(PARAG_UPI_URI), mcc: '5812', mccSource: 'user-provided' } : null);
   return m?.enabled && VPA_RE.test(m.vpa || '') && m.name?.trim() && (!m.mcc || /^\d{4}$/.test(m.mcc)) ? m : null;
 }
 export function directUpiLink(merchant, amount, reference) {
