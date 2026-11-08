@@ -124,6 +124,8 @@ function promptFor(library) {
   return `This image is ONE PAGE of the MENU CARD of an Indian vegetarian restaurant (Hindi and/or English, 1-3 columns, decorative fonts, maybe handwritten or a photo taken at an angle). The page may also be a cover page or notes page with no dishes — then return {"dishes":[]}.
 TASK: List EVERY dish on this page exactly as printed with its correct price. Do not stop early — long pages can have 60+ dishes; include all of them, in every column.
 RULES:
+- A plain typed or handwritten list of dish names WITHOUT prices is also a valid menu. Include every dish even when no price is printed. Set price: 0 and onMrp: false for missing or unreadable prices; the owner will enter the price later. NEVER invent a price or mark a missing price as MRP.
+- Read sparse lists anywhere on the page, including screenshots of a document with large blank margins. Romanized Hindi food names are valid dishes; normalize obvious spelling mistakes without replacing an unfamiliar regional dish with another dish.
 - Read carefully row by row and column by column. The price belongs to the dish on the SAME row / nearest on the right. Never shift prices between rows.
 - Read the full number (e.g. 120 not 12, 1,250 = 1250). Ignore "Rs", "₹", "/-".
 - If the price is written as "On MRP", "MRP", "As per MRP" or "एमआरपी" (packaged items like water bottle, cold drink, curd cup) set onMrp: true and price: 0 — unless an exact number is printed, then put that number and onMrp: true.
