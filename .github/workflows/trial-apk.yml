@@ -4,7 +4,14 @@ on:
   workflow_dispatch:
   pull_request:
     branches: [main]
-    paths: ['.github/workflows/trial-apk.yml']
+    paths:
+      - '.github/workflows/trial-apk.yml'
+      - 'src/lib/aiClient.js'
+      - 'src/lib/menuAi.js'
+      - 'src/restaurant/RestOffers.jsx'
+      - 'tests/ai-client.cjs'
+      - 'package.json'
+      - 'package-lock.json'
 
 permissions:
   contents: read
@@ -32,6 +39,7 @@ jobs:
       - name: Verify app behavior
         run: |
           node tests/foodgaon.cjs
+          node tests/ai-client.cjs
           node tests/trial-login.cjs
           node tests/login-flow.cjs
           node tests/celebrations.cjs

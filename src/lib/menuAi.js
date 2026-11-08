@@ -3,8 +3,9 @@
 import { getAI, getGenerativeModel, GoogleAIBackend, Schema } from 'firebase/ai';
 import { app } from './fb.js';
 import { compressImage } from './utils.js';
+import { AI_MODELS, prepareAI } from './aiClient.js';
 
-const MODELS = ['gemini-3.5-flash', 'gemini-3-flash-preview', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'];
+const MODELS = AI_MODELS;
 export const CATS = ['sweets', 'lassi', 'chinese', 'fastfood', 'northindian', 'chaat', 'thali', 'southindian', 'icecream'];
 
 const SCHEMA = Schema.object({
@@ -92,6 +93,7 @@ const withTimeout = (p, ms) => Promise.race([p, new Promise((_, bad) => setTimeo
 /* Short human reason for the user (also helps support) */
 export function aiReason(e) {
   const m = String(e?.message || e || '');
+  if (/App.?Check|appCheck|recaptcha/i.test(m)) return 'App verification failed — reopen FoodGaon and try again';
   if (/timeout/i.test(m)) return 'AI took too long (slow internet?)';
   if (/\[429|quota|exhaust|RESOURCE_EXHAUSTED/i.test(m)) return 'AI daily free limit reached — try after some time';
   if (/\[40[13]|PERMISSION_DENIED|API key|referer|blocked/i.test(m)) return 'AI access blocked for this app (API key)';
@@ -181,6 +183,8 @@ async function readUnitChecked(ai, prompt, unit) {
 }
 
 export async function readMenuWithAI(files, library, onStatus) {
+  try { await prepareAI(); }
+  catch (error) { throw new Error(aiReason(error)); }
   const list = Array.isArray(files) ? files : [files];
   const units = await unitsOf(list, onStatus);
   const ai = getAI(app, { backend: new GoogleAIBackend() });
