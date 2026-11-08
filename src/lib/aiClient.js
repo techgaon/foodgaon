@@ -5,7 +5,7 @@ import { app } from './fb.js';
 
 // Public site key of the provider already registered for petpyaar-web.
 const SITE_KEY = '6LdwUg8uAAAAAKJYBbw2EI2_PFd8yd4akEDaLICC';
-export const AI_MODELS = ['gemini-3.8-flash', 'gemini-3.5-flash-lite'];
+export const AI_MODELS = ['gemini-3.5-flash-lite', 'gemini-3.8-flash'];
 let initialization;
 async function initializeCheck() {
   let provider;
