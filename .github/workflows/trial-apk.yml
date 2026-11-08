@@ -35,7 +35,9 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - run: npm ci
+      # The build uses committed image assets; sharp's legacy libvips download is not needed.
+      - run: npm ci --ignore-scripts
+      - run: npm rebuild esbuild
       - name: Verify app behavior
         run: |
           node tests/foodgaon.cjs
