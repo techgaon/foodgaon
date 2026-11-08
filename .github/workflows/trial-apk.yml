@@ -10,6 +10,7 @@ on:
       - 'src/lib/menuAi.js'
       - 'src/restaurant/RestOffers.jsx'
       - 'tests/ai-client.cjs'
+      - 'android/gradle/wrapper/gradle-wrapper.properties'
       - 'package.json'
       - 'package-lock.json'
 
