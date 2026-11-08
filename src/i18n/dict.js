@@ -1594,3 +1594,11 @@ DICT.push(
  ['Wrong OTP or PIN. If your restaurant has a PIN, use that instead of default OTP.', 'OTP या PIN गलत है। रेस्टोरेंट का PIN सेट है तो शुरुआती OTP की जगह अपना PIN डालें।', 'OTP या PIN गलत अहै। रेस्टोरेंट कै PIN सेट अहै तौ शुरुआती OTP कै जगह आपन PIN डारौ।']
 );
 DICT.push(['Village / town', 'गाँव / कस्बा', 'गाँव / कस्बा']);
+DICT.push(
+ ['App verification failed — reopen FoodGaon and try again', 'ऐप का सत्यापन नहीं हो पाया — FoodGaon दोबारा खोलकर कोशिश करें', 'ऐप कै सत्यापन नाहीं होइ पावा — FoodGaon फेर खोलि के कोसिस करौ'],
+ ['AI daily free limit reached — try after some time', 'AI की दैनिक मुफ़्त सीमा पूरी हो गई — कुछ समय बाद कोशिश करें', 'AI कै रोज कै मुफ़्त सीमा पूरी होइ गई — कुछ देर बाद कोसिस करौ'],
+ ['AI model not available', 'AI का यह model उपलब्ध नहीं है', 'AI कै ई model उपलब्ध नाहीं अहै'],
+ ['AI access blocked for this app (API key)', 'इस ऐप के लिए AI की अनुमति उपलब्ध नहीं है', 'ई ऐप खातिर AI कै अनुमति उपलब्ध नाहीं अहै'],
+ ['AI server busy — try again', 'AI सर्वर व्यस्त है — फिर कोशिश करें', 'AI सर्वर व्यस्त अहै — फेर कोसिस करौ'],
+ ['No internet / network blocked', 'इंटरनेट कनेक्शन उपलब्ध नहीं है', 'इंटरनेट कनेक्शन उपलब्ध नाहीं अहै']
+);

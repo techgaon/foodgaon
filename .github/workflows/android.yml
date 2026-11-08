@@ -32,7 +32,9 @@ jobs:
           distribution: temurin
           java-version: 21
       - name: Install
-        run: npm ci
+        run: |
+          npm ci --ignore-scripts
+          npm rebuild esbuild
       - name: Build web app
         run: npx vite build
       - name: Sync Capacitor
@@ -67,7 +69,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
+      - run: npm rebuild esbuild
       - run: npx vite build
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -7,13 +7,16 @@ import { useItems } from '../lib/data.js';
 import { useOffers, offerLabel, offerTerms, OFFER_COLORS, isLive } from '../lib/offers.js';
 import { rupee } from '../lib/utils.js';
 import { t } from '../i18n/index.js';
+import { AI_MODELS, prepareAI, isAIAccessError } from '../lib/aiClient.js';
+import { aiReason } from '../lib/menuAi.js';
 
-const MODELS = ['gemini-3.5-flash', 'gemini-3-flash-preview', 'gemini-3.5-flash-lite'];
+const MODELS = AI_MODELS;
 const OUT = Schema.object({ properties: {
   title: Schema.string(), sub: Schema.string(), codes: Schema.array({ items: Schema.string() }), color: Schema.enumString({ enum: OFFER_COLORS }),
 } });
 
 async function aiOffer({ rest, kind, value, minOrder, dish, idea, language, fundedBy }) {
+  await prepareAI();
   const ai = getAI(app, { backend: new GoogleAIBackend() });
   const contentLanguage = language === "en" ? "English" : language === "awa" ? "Awadhi in Devanagari script" : "Hindi in Devanagari script";
   const prompt = `You write short, catchy food-delivery offers for an Indian vegetarian restaurant serving villages and towns on the FoodGaon app. When mentioning its community, include both villages and towns.
@@ -28,7 +31,7 @@ codes: 3 coupon code suggestions (4-12 CAPITAL letters/digits, ${fundedBy === "a
       const r = await model.generateContent(prompt);
       const j = JSON.parse(r.response.text());
       return { ...j, hindi: offerLine(j.sub, language, { type: kind, value }), codes: offerCodes({ fundedBy, value, generated: j.codes || [] }) };
-    } catch (e) { last = e; console.warn('ai offer', m, e); }
+    } catch (e) { last = e; console.warn('ai offer', m, e); if (isAIAccessError(e)) throw e; }
   }
   throw last;
 }
@@ -92,7 +95,7 @@ export function OfferMaker({ rest, onClose, admin = false, restaurants = [] }) {
     if (!(Number(f.value) > 0) || (f.type === 'percent' && Number(f.value) > 100) || Number(f.minOrder) < 0 || Number(f.maxOff) < 0) { toast(t('Enter the discount'), 'err'); return; }
     setBusy(true);
     try { const r = await aiOffer({ rest: targetRest, kind: f.type, value: f.value, minOrder: Number(f.minOrder) || 0, dish: dish?.name, idea: f.idea, language: f.language, fundedBy: target.fundedBy }); setO(r); setCode(r.codes[0] || ''); }
-    catch (e) { toast(t('AI could not make the offer — check internet and try again'), 'err'); }
+    catch (e) { console.warn('offer generation failed', e); toast(t(aiReason(e)), 'err'); }
     setBusy(false);
   };
   const data = o && { title: o.title, sub: o.sub, hindi: o.hindi, color: o.color || OFFER_COLORS[0], code: code.toUpperCase().replace(/[^A-Z0-9]/g, ''), type: f.type, value: Number(f.value), minOrder: Number(f.minOrder) || 0, maxOff: f.type === 'flat' ? 0 : Number(f.maxOff) || 0 };
