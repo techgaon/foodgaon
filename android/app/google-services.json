@@ -8,16 +8,81 @@
     {
       "client_info": {
         "mobilesdk_app_id": "1:938080790202:android:d27e4e7b8c1930e3bf0483",
-        "android_client_info": { "package_name": "in.pandeytechno.petpyaar" }
+        "android_client_info": {
+          "package_name": "in.pandeytechno.petpyaar"
+        }
       },
       "oauth_client": [
-        { "client_id": "938080790202-r68u5640jo2qc6m9h67nonrtqri9luff.apps.googleusercontent.com", "client_type": 3 }
+        {
+          "client_id": "938080790202-gc1ck56r00fn00j762vmr22blc0rpg04.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "in.pandeytechno.petpyaar",
+            "certificate_hash": "1fdc960800d2f4a7d233429d7a2ba1ff9d594457"
+          }
+        },
+        {
+          "client_id": "938080790202-r68u5640jo2qc6m9h67nonrtqri9luff.apps.googleusercontent.com",
+          "client_type": 3
+        }
       ],
-      "api_key": [ { "current_key": "AIzaSyCTemhSPOGUWqESTBu3ebzfQZGJv2XyMWg" } ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAyr5fbSY7UGGw07--XuVq88VlfHK7OvMA"
+        }
+      ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
-            { "client_id": "938080790202-r68u5640jo2qc6m9h67nonrtqri9luff.apps.googleusercontent.com", "client_type": 3 }
+            {
+              "client_id": "938080790202-r68u5640jo2qc6m9h67nonrtqri9luff.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:938080790202:android:9e0c1b5f4515b764bf0483",
+        "android_client_info": {
+          "package_name": "in.techgaon.foodgaon"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "938080790202-qj286kv3qro88rippmlib244isig1qf7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "in.techgaon.foodgaon",
+            "certificate_hash": "ba44a0386777287ff05f05ac8ee1ee691d4299d3"
+          }
+        },
+        {
+          "client_id": "938080790202-vunhr3s26drmk0e22g1ff9f7p2f97s6l.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "in.techgaon.foodgaon",
+            "certificate_hash": "1fdc960800d2f4a7d233429d7a2ba1ff9d594457"
+          }
+        },
+        {
+          "client_id": "938080790202-r68u5640jo2qc6m9h67nonrtqri9luff.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAyr5fbSY7UGGw07--XuVq88VlfHK7OvMA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "938080790202-r68u5640jo2qc6m9h67nonrtqri9luff.apps.googleusercontent.com",
+              "client_type": 3
+            }
           ]
         }
       }
