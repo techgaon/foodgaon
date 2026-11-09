@@ -1,0 +1,29 @@
+name = "foodgaon-otp"
+account_id = "fc14ce3ea45e9966cc8933371cecc0ad"
+main = "worker.js"
+compatibility_date = "2026-11-09"
+keep_vars = true
+preview_urls = false
+
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+
+[[kv_namespaces]]
+binding = "OTPKV"
+id = "4452ae069cbd4715bdb725f3ff95a01a"
+
+[vars]
+ALLOWED_ORIGINS = "https://techgaon.in,https://localhost,capacitor://localhost,http://localhost"
+FB_PROJECT_ID = "petpyaar-a3ea6"
+DAILY_SMS_LIMIT = "50"
+
+[[durable_objects.bindings]]
+name = "OTP_STATE"
+class_name = "OtpState"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["OtpState"]

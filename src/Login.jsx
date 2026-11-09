@@ -21,7 +21,7 @@ const errText = (e, method = 'phone') => {
     if (c.includes('operation-not-allowed')) return 'Google sign-in is not enabled yet. Please use mobile login.';
     return 'Could not sign in with Google. Please try again or use mobile login.';
   }
-  if (c.includes('operation-not-allowed')) return 'SMS login is not enabled yet. Please try again later.';
+  if (c.includes('operation-not-allowed') || c.includes('otp-server')) return 'SMS login is not enabled yet. Please try again later.';
   if (c.includes('invalid-phone')) return 'Enter a valid 10-digit mobile number';
   if (c.includes('network')) return 'Network problem. Please try again.';
   if (c.includes('popup-closed') || c.includes('cancel')) return 'Sign-in was cancelled';
@@ -85,8 +85,8 @@ export default function Login({ onClose, startStep = 'phone', startMode = 'login
         }
         setStep('otp'); setOtp(''); setLeft(0); return;
       }
-      conf.current = await sendOtp(phone, 'recaptcha-box');
-      setStep('otp'); setLeft(30);
+      conf.current = await sendOtp(phone, 'recaptcha-box', config?.otpApi);
+      setStep('otp'); setOtp(''); setLeft(60);
       toast(t('OTP sent to +91 {}').replace('{}', phone));
     } catch (er) { console.warn(er); toast(`${t(errText(er))} (${er?.code || er?.message || ''}${er?.nativeCode ? ' / ' + er.nativeCode : ''})`, 'err'); }
     finally { setBusy(false); }
