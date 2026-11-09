@@ -1593,7 +1593,15 @@ DICT.push(
  ['Set / reset login PIN', 'Login PIN सेट / रीसेट करें', 'Login PIN सेट / रीसेट करौ'],
  ['Wrong OTP or PIN. If your restaurant has a PIN, use that instead of default OTP.', 'OTP या PIN गलत है। रेस्टोरेंट का PIN सेट है तो शुरुआती OTP की जगह अपना PIN डालें।', 'OTP या PIN गलत अहै। रेस्टोरेंट कै PIN सेट अहै तौ शुरुआती OTP कै जगह आपन PIN डारौ।']
 );
-DICT.push(['Village / town', 'गाँव / कस्बा', 'गाँव / कस्बा']);
+DICT.push(
+ ['Village / town', 'गाँव / कस्बा', 'गाँव / कस्बा'],
+ ['Choose your location', 'अपनी location चुनें', 'आपन location चुनौ'],
+ ['Your village / town', 'आपका गाँव / कस्बा', 'आपन गाँव / कस्बा'],
+ ['Street, landmark, village or town', 'गली, पहचान, गाँव या कस्बा', 'गली, पहचान, गाँव या कस्बा'],
+ ['for villages and towns', 'गाँवों और कस्बों के लिए', 'गाँव अउर कस्बन खातिर'],
+ ['Tehsil towns, kasbas and nearby villages', 'तहसील स्तर के कस्बे और आसपास के गाँव', 'तहसील कै कस्बे अउर लगे-पास कै गाँव'],
+ ['Local kitchens for your villages and towns', 'आपके गाँवों और कस्बों की अपनी रसोई', 'आपके गाँव अउर कस्बन कै आपन रसोई']
+);
 DICT.push(
  ['App verification failed — reopen FoodGaon and try again', 'ऐप का सत्यापन नहीं हो पाया — FoodGaon दोबारा खोलकर कोशिश करें', 'ऐप कै सत्यापन नाहीं होइ पावा — FoodGaon फेर खोलि के कोसिस करौ'],
  ['AI daily free limit reached — try after some time', 'AI की दैनिक मुफ़्त सीमा पूरी हो गई — कुछ समय बाद कोशिश करें', 'AI कै रोज कै मुफ़्त सीमा पूरी होइ गई — कुछ देर बाद कोसिस करौ'],
