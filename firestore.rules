@@ -1,12 +1,29 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() { return request.auth != null; }
-    // phone of the user: real SMS login, or test login (91XXXXXXXXXX@login.foodgaon.app, OTP 1234 phase)
+    function realOtp() {
+      return exists(/databases/$(database)/documents/config/app)
+        && get(/databases/$(database)/documents/config/app).data.get('otpMode', 'mock') == 'real';
+    }
+    function serverPhone() {
+      return request.auth != null
+        && request.auth.token.get('firebase', {}).get('sign_in_provider', '') == 'custom'
+        && request.auth.token.get('fg_phone', '').matches('^[+]91[6-9][0-9]{9}$');
+    }
+    function trialEmail() {
+      return request.auth != null && request.auth.token.get('email', '').matches('^91[0-9]{10}@login[.]foodgaon[.]app$');
+    }
+    // Real mode rejects old trial-password sessions, including customer access.
+    function signedIn() {
+      return request.auth != null && (!trialEmail() || !realOtp()
+        || serverPhone() || request.auth.token.get('phone_number', null) != null);
+    }
+    // Only the OTP server can issue fg_phone. Trial email fallback stops in real mode.
     function ph() {
       return !signedIn() ? 'none'
         : request.auth.token.get('phone_number', null) != null ? request.auth.token.phone_number
-        : request.auth.token.get('email', '').matches('^91[0-9]{10}@login[.]foodgaon[.]app$')
+        : serverPhone() ? request.auth.token.fg_phone
+        : !realOtp() && trialEmail()
           ? '+' + request.auth.token.email.split('@')[0] : 'none';
     }
     function staff() { return get(/databases/$(database)/documents/staff/$(ph())).data; }

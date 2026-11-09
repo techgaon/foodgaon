@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, RecaptchaVerifier, signInWithPhoneNumber, signOut, updateProfile, updatePassword,
-  PhoneAuthProvider, GoogleAuthProvider, signInWithCredential, signInWithPopup,
+  PhoneAuthProvider, GoogleAuthProvider, signInWithCredential, signInWithPopup, signInWithCustomToken,
   indexedDBLocalPersistence, browserLocalPersistence, inMemoryPersistence, initializeAuth, browserPopupRedirectResolver,
 } from 'firebase/auth';
 import {
@@ -69,7 +69,39 @@ async function webOtp(phone, containerId) {
   }
 }
 
-export async function sendOtp(phone10, containerId) {
+/* ---------- Real OTP via our own server (Cloudflare Worker + Message Central VerifyNow) ----------
+   The server sends a 6-digit SMS, checks it, and returns a Firebase custom token for
+   the same account the app already uses for this number (91XXXXXXXXXX@login.foodgaon.app). */
+export const DEFAULT_OTP_API = 'https://foodgaon-otp.surajbhanpandey853.workers.dev';
+const otpErr = (code, msg) => Object.assign(new Error(msg || code), { code: 'auth/' + code });
+async function otpPost(api, path, data) {
+  let r;
+  const base = new URL(api);
+  if (base.protocol !== 'https:' || base.username || base.password || base.search || base.hash) throw otpErr('otp-server');
+  try { r = await fetch(api.replace(/\/$/, '') + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), signal: AbortSignal.timeout(45000) }); }
+  catch { throw otpErr('network-request-failed'); }
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok || !d.ok) {
+    const map = { 'too-soon': 'too-many-requests', 'too-many': 'too-many-requests', 'wrong-otp': 'invalid-verification-code', 'expired': 'code-expired', 'invalid-phone': 'invalid-phone-number' };
+    throw otpErr(map[d.error] || 'otp-server');
+  }
+  return d;
+}
+async function serverOtp(api, phone10) {
+  const { vid } = await otpPost(api, '/send', { phone: phone10 });
+  if (!vid) throw otpErr('otp-server');
+  return {
+    server: true,
+    confirm: async (code) => {
+      const { token } = await otpPost(api, '/verify', { phone: phone10, vid, code: String(code) });
+      if (!token) throw otpErr('otp-server');
+      return signInWithCustomToken(auth, token);
+    },
+  };
+}
+
+export async function sendOtp(phone10, containerId, otpApi) {
+  if (otpApi !== 'firebase') return serverOtp(otpApi || DEFAULT_OTP_API, phone10);
   const phone = '+91' + phone10;
   if (NATIVE) {
     let F = null;

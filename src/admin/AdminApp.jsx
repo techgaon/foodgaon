@@ -349,7 +349,7 @@ function Settings() {
     try {
       await put('config', 'app', {
         commissionPct: Number(f.commissionPct) || 0, commissionGstExtra: !!f.commissionGstExtra, codDueLimit: Number(f.codDueLimit) || 0, codRefuseLimit: Number(f.codRefuseLimit) || 0, qualityAlertAt: Number(f.qualityAlertAt) || 3, customerDeliveryFee: Number(f.customerDeliveryFee) || 0, restaurantDeliveryCharge: Number(f.restaurantDeliveryCharge) || 0,
-        gstPct: Number(f.gstPct) || 0, radiusKm: Number(f.radiusKm) || 0, otpMode: f.otpMode === 'real' ? 'real' : 'mock',
+        gstPct: Number(f.gstPct) || 0, radiusKm: Number(f.radiusKm) || 0, otpMode: f.otpMode === 'real' ? 'real' : 'mock', otpApi: (f.otpApi || '').trim(),
         firmName: (f.firmName || '').trim(), firmAddress: (f.firmAddress || '').trim(), gstin: (f.gstin || '').trim().toUpperCase(), supportEmail: (f.supportEmail || '').trim(),
         minOrder: Number(f.minOrder) || 0, supportPhone: (f.supportPhone || '').trim(), upiNowEnabled: f.upiNowEnabled !== false,
         serviceArea: f.serviceArea || '', gatewayEnabled: !!f.gatewayEnabled, codEnabled: !!f.codEnabled, upiEnabled: !!f.upiEnabled, showCalories: !!f.showCalories,
@@ -401,7 +401,8 @@ function Settings() {
       <div className="card">
         <h4>App</h4>
         <div className="seg"><button className={f.otpMode !== 'real' ? 'on' : ''} onClick={() => setF({ ...f, otpMode: 'mock' })}>Test OTP 1234</button><button className={f.otpMode === 'real' ? 'on' : ''} onClick={() => setF({ ...f, otpMode: 'real' })}>Real SMS OTP</button></div>
-        <p className="tiny muted">{f.otpMode === 'real' ? 'Customers get a real SMS OTP (needs Firebase billing beyond 10 SMS/day).' : 'Testing: any number logs in with OTP 1234. Switch to real SMS before public launch.'}</p>
+        <p className="tiny muted">{f.otpMode === 'real' ? 'Everyone (customers, riders, restaurants, admin) gets a real 6-digit SMS OTP from the FoodGaon OTP server. Google login also stays.' : 'Testing: any number logs in with OTP 1234. Switch to real SMS before public launch.'}</p>
+        {f.otpMode === 'real' && <label className="small">OTP server URL<input className="input" data-notr="" placeholder="https://foodgaon-otp.surajbhanpandey853.workers.dev" value={f.otpApi || ''} onChange={set('otpApi')} /></label>}
         <Field label="Support phone"><input className="input" inputMode="numeric" value={f.supportPhone} onChange={set('supportPhone')} /></Field>
         <Field label="Service area"><input className="input" value={f.serviceArea} onChange={set('serviceArea')} /></Field>
         <label className="check-row"><input type="checkbox" checked={!!f.showCalories} onChange={(e) => setF({ ...f, showCalories: e.target.checked })} /> Show calories on dishes</label>
