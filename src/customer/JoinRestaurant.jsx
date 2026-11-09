@@ -46,7 +46,6 @@ export default function JoinRestaurant({ nav }) {
   return <div className="page">{head}<Wizard user={user} config={config} app={app} step={step} setStep={setStep} /></div>;
 }
 /* ---- small form helpers ---- */
-const TOWNS = ['Haidergarh', 'Subeha', 'Barabanki', 'Ramsanehighat', 'Trivediganj'];
 const BANKS = ['State Bank of India', 'Punjab National Bank', 'Bank of Baroda', 'Bank of India', 'Union Bank of India', 'Aryavart Bank', 'HDFC Bank', 'ICICI Bank'];
 
 /** input whose empty placeholder "types itself" with an example */
@@ -166,9 +165,8 @@ function Wizard({ user, config, app, step, setStep }) {
           {!f.vegOnly && <div className="alert alert-amber small">FoodGaon accepts only pure vegetarian restaurants. Kitchens serving non-vegetarian food cannot be approved.</div>}
           <Field label="Restaurant name *"><TypedInput value={f.restName} onChange={set('restName')} maxLength={60} ex="Sharma Bhojanalaya" /></Field>
           <Field label="One line about your food"><TypedInput value={f.tagline} onChange={set('tagline')} maxLength={80} animate plain ex="1995 से मशहूर छोले-भटूरे" /></Field>
-          <Field label="Full address *"><TypedInput area value={f.address} onChange={set('address')} maxLength={200} ex="Main Road, opposite bus stand, Haidergarh" /></Field>
-          <Field label="Village / town"><TypedInput value={f.town} onChange={set('town')} maxLength={40} ex={t("Haidergarh")} /></Field>
-          <Chips options={TOWNS} value={f.town} onPick={(v) => setF({ ...f, town: v })} />
+          <Field label="Full address *"><TypedInput area value={f.address} onChange={set('address')} maxLength={200} ex="Street, landmark, village or town" /></Field>
+          <Field label="Village / town"><TypedInput value={f.town} onChange={set('town')} maxLength={40} ex={t('Your village / town')} /></Field>
           <div className="row gap">
             <Field label="Landmark"><TypedInput value={f.landmark} onChange={set('landmark')} maxLength={60} ex="Near SBI" /></Field>
             <Field label="PIN code *"><TypedInput inputMode="numeric" maxLength={6} value={f.pincode || ''} onChange={set('pincode', digits)} ex="225124" plain /></Field>

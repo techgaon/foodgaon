@@ -22,7 +22,10 @@ const handler = {
     };
     if(origin && !allowed.includes(origin)) return new Response('Forbidden',{status:403});
     if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
-    const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { ...cors, 'Content-Type': 'application/json' } });
+    const json = (o, s = 200) => {
+      if(o.ok===false)console.info('OTP rejected: '+o.error);
+      return new Response(JSON.stringify(o), { status: s, headers: { ...cors, 'Content-Type': 'application/json' } });
+    };
     if (req.method !== 'POST') return json({ ok: false, error: 'method' }, 405);
     const url = new URL(req.url);
     let body = {};
@@ -50,9 +53,10 @@ const handler = {
         if (!(await bump(env, 'ph:' + phone, 5))) return json({ ok: false, error: 'too-many' }, 429);
         if(!(await bump(env,'daily:'+new Date().toISOString().slice(0,10),Number(env.DAILY_SMS_LIMIT)||50,86400)))return json({ok:false,error:'too-many'},429);
         const token = await mcToken(env);
-        const r = await fetch(`${MC}/verification/v3/send?countryCode=91&flowType=SMS&otpLength=6&mobileNumber=${phone}`, { method: 'POST', headers: { authToken: token }, signal:AbortSignal.timeout(15000) });
+        const r = await fetch(`${MC}/verification/v3/send?countryCode=91&flowType=SMS&otpLength=6&mobileNumber=${phone}`, { method: 'POST', headers: { authToken: token }, signal:AbortSignal.timeout(30000) });
         const d = await r.json().catch(() => ({}));
         const vid = d?.data?.verificationId;
+        console.info('OTP provider send response',JSON.stringify({http:r.status,code:Number(d?.responseCode)||0,idType:typeof vid,idLength:String(vid||'').length,numericId:/^\d+$/.test(String(vid||''))}));
         if (!r.ok || !vid) return json({ ok: false, error: 'send-failed' }, 502);
         await env.OTPKV.put('cool:' + phone, '1', { expirationTtl: 60 });
         await env.OTPKV.put('vid:' + vid, phone, { expirationTtl: 600 });
@@ -73,7 +77,12 @@ const handler = {
         const token = await mcToken(env);
         const r = await fetch(`${MC}/verification/v3/validateOtp?verificationId=${vid}&code=${code}`, { headers: { authToken: token },signal:AbortSignal.timeout(15000) });
         const d = await r.json().catch(() => ({}));
-        if (!r.ok || d?.data?.verificationStatus !== 'VERIFICATION_COMPLETED') return json({ ok: false, error: 'wrong-otp' }, 400);
+        if (!r.ok || d?.data?.verificationStatus !== 'VERIFICATION_COMPLETED') {
+          // Diagnostic categories only: never log the phone, code, session id or tokens.
+          console.info('OTP provider validation rejected',JSON.stringify({http:r.status,code:Number(d?.responseCode||d?.data?.responseCode)||0,status:String(d?.data?.verificationStatus||'').slice(0,64),fields:Object.keys(d),dataFields:Object.keys(d?.data||{})}));
+          const expired=Number(d?.responseCode||d?.data?.responseCode)===705;
+          return json({ok:false,error:expired?'expired':'wrong-otp'},400);
+        }
         const fbToken = await firebaseTokenFor(env, phone);
         await env.OTPKV.delete('vid:' + vid);
         return json({ ok: true, token: fbToken });
@@ -101,7 +110,9 @@ async function mcToken(env) {
   const r = await fetch(`${MC}/auth/v1/authentication/token?customerId=${encodeURIComponent(env.MC_CUSTOMER_ID)}&key=${encodeURIComponent(key)}&scope=NEW&country=91`,{signal:AbortSignal.timeout(15000)});
   const d = await r.json().catch(() => ({}));
   if (!r.ok || !d?.token) throw new Error('message-central token failed');
-  await env.OTPKV.put('mc-token', d.token, { expirationTtl: 3600 * 6 });
+  let ttl=1800;
+  try{const payload=JSON.parse(atob(d.token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));if(payload.exp)ttl=Math.max(60,Math.min(ttl,payload.exp-Math.floor(Date.now()/1000)-60));}catch{}
+  await env.OTPKV.put('mc-token', d.token, { expirationTtl: ttl });
   return d.token;
 }
 

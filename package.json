@@ -1,7 +1,7 @@
 {
-  "name": "petpyaar-app",
+  "name": "foodgaon-app",
   "version": "1.0.0",
-  "description": "PetPyaar food delivery - Pandey Techno",
+  "description": "FoodGaon - local vegetarian kitchens for tehsil towns, kasbas and villages",
   "main": "index.js",
   "scripts": {
     "test": "node tests/foodgaon.cjs"

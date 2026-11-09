@@ -68,7 +68,7 @@ export function AddressForm({ open, onClose, initial }) {
         {['Home', 'Work', 'Other'].map((l) => <button key={l} className={a.label === l ? 'on' : ''} onClick={() => setA((x) => ({ ...x, label: l }))}>{l}</button>)}
       </div>
       <Field label="House no. / street / mohalla"><input className="input" value={a.house} onChange={set('house')} placeholder="e.g. H.No. 12, Gandhi Nagar" /></Field>
-      <Field label="Area / village"><input className="input" value={a.area} onChange={set('area')} placeholder="e.g. Haidergarh" /></Field>
+      <Field label="Area / village"><input className="input" value={a.area} onChange={set('area')} placeholder="Your village / town" /></Field>
       <Field label="Landmark (optional)"><input className="input" value={a.landmark} onChange={set('landmark')} placeholder="e.g. near SBI bank" /></Field>
       <div className="row gap">
         <Field label="Receiver name"><input className="input" value={a.name} onChange={set('name')} /></Field>

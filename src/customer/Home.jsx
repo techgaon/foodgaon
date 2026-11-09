@@ -42,7 +42,7 @@ export default function Home({ nav }) {
         <div className="hero-top">
           <button className="addr-btn" onClick={() => nav.go({ name: 'address' })} aria-label="Delivery address">
             <Icon name="pin" size={20} />
-            <span><b>{addr || 'Haidergarh'}</b><small data-notr="">{config.serviceArea}</small></span>
+            <span><b>{addr || t('Choose your location')}</b><small>{t(config.serviceArea)}</small></span>
           </button>
           <Logo size={38} />
         </div>
@@ -124,7 +124,7 @@ export default function Home({ nav }) {
 
       <footer className="home-foot">
         <b>Apna gaon,<br />apna swaad!</b>
-        <span>Crafted with <Icon name="heart" size={14} fill="#e8461a" stroke={0} /> in Haidergarh</span>
+        <span>Crafted with <Icon name="heart" size={14} fill="#e8461a" stroke={0} /> for villages and towns</span>
         <small data-notr="">TechGaon AI Services</small>
       </footer>
       {view && <DishView it={view} rest={(rests || []).find((r) => r.id === view.restaurantId)} showKcal={config.showCalories} onClose={() => setView(null)} />}
