@@ -22,6 +22,7 @@ import PhotoPick from '../components/PhotoPick.jsx';
 import { t, tr } from '../i18n/index.js';
 import PartnerAgreement from '../components/PartnerAgreement.jsx';
 import RestaurantPin from '../components/RestaurantPin.jsx';
+import AccountDeletion from '../components/AccountDeletion.jsx';
 import { feeTerms, feeLine } from '../lib/partner.js';
 
 /* rings while there are un-accepted orders */
@@ -368,6 +369,7 @@ export function Earnings({ orders, title }) {
 }
 
 function ShopSettings({ rest }) {
+  const { user } = useApp();
   const toast = useToast();
   const [f, setF] = useState({ tagline: rest.tagline || '', address: rest.address || '', prepMins: rest.prepMins || 20, ownerPhone: rest.ownerPhone || '', fssai: rest.fssai || '', gstin: rest.gstin || '', radiusKm: rest.radiusKm ?? 5, minOrder: rest.minOrder ?? 50, deliverySlabs: editableDeliverySlabs(rest), openTime: rest.openTime || '', closeTime: rest.closeTime || '', priceInclGst: rest.priceInclGst !== false });
   const [busy, setBusy] = useState(false);
@@ -423,6 +425,7 @@ function ShopSettings({ rest }) {
         <button className="btn primary block" disabled={busy} onClick={() => save()}>Save</button>
       </div>
       <AgreementCard rest={rest} />
+      <div className="card"><AccountDeletion user={user} /></div>
       <MerchantUpiEditor key={rest.id} rest={rest} onSave={(v) => patch('restaurants', rest.id, v)} />
       <UpiEditor noQr value={rest} title="Your UPI ID — customers pay you directly" hint="Customers' money comes straight into this account. FoodGaon does not hold your money."
         onSave={(v) => patch('restaurants', rest.id, v)} />
