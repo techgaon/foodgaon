@@ -5,6 +5,7 @@ import { useApp, RoleSwitchButton } from '../App.jsx';
 import { useList, setStatus, useRestaurants, useDoc , isRealOrder } from '../lib/data.js';
 import { UpiQr, UpiEditor } from '../components/Pay.jsx';
 import PhotoPick from '../components/PhotoPick.jsx';
+import AccountDeletion from '../components/AccountDeletion.jsx';
 import { Field, Sheet } from '../ui.jsx';
 import { compressImage, fmtDateTime } from '../lib/utils.js';
 import { put, patch } from '../lib/fb.js';
@@ -194,6 +195,7 @@ function RiderMoney({ phone, mine, shop, today }) {
 
 /* rider's own details: photo, vehicle, address and UPI (so the restaurant can pay) */
 function RiderProfile({ phone, name, shop }) {
+  const { user } = useApp();
   const toast = useToast();
   const prof = useDoc('riders', phone);
   const [f, setF] = useState(null);
@@ -219,6 +221,7 @@ function RiderProfile({ phone, name, shop }) {
         <PhotoPick maxSide={700} maxLen={120000} onPick={(vehiclePhoto) => setF({ ...f, vehiclePhoto })} />
         <Field label="Address"><input className="input" value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} data-notr="" /></Field>
         <button className="btn primary block" onClick={save}>Save profile</button>
+        <AccountDeletion user={user} />
       </div>
       <UpiEditor value={prof || {}} title="Your UPI — get your delivery pay here" hint="The restaurant pays your delivery money to this UPI." onSave={(v) => put('riders', phone, { ...v, phone, name: f.name, riderOf: shop?.id || '' })} />
     </div>

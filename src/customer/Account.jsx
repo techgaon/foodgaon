@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PLATFORM_GSTIN } from '../lib/business.js';
 import ProfileEditor from './ProfileEditor.jsx';
+import AccountDeletion from '../components/AccountDeletion.jsx';
 import { Icon, LangSwitch, Sheet, Logo, Wordmark, useToast } from '../ui.jsx';
 import { auth, updateProfile, put, phoneOf } from '../lib/fb.js';
 import { t } from '../i18n/index.js';
@@ -51,6 +52,7 @@ export default function Account({ nav, openHisab }) {
         <div className="card">
           <a className="menu-row" href={tel(config.supportPhone)}><Icon name="help" size={20} /><span className="grow">Help & support</span><small className="muted">{config.supportPhone}</small></a>
           <button className="menu-row" onClick={() => setAbout(true)}><Icon name="info" size={20} /><span className="grow">About FoodGaon</span><Icon name="right" size={18} /></button>
+          <AccountDeletion user={user} />
           {user && <button className="menu-row danger-text" onClick={logout}><Icon name="logout" size={20} /><span className="grow">Log out</span></button>}
         </div>
         <p className="center tiny muted">FoodGaon v1.0 · <span data-notr="">TechGaon AI Services</span></p>

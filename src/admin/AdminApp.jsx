@@ -1,6 +1,7 @@
 import { createPortal } from 'react-dom';
 import { useMenuPack } from '../lib/menuPack.js';
 import { ClearTestOrders } from '../components/OrderActions.jsx';
+import AccountDeletion from '../components/AccountDeletion.jsx';
 import MerchantUpiEditor from '../components/MerchantUpiEditor.jsx';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Icon, BottomNav, Toggle, Empty, Sheet, Field, useToast, Img, Logo, Confirm } from '../ui.jsx';
@@ -340,7 +341,7 @@ function Riders() {
 }
 
 function Settings() {
-  const { config } = useApp();
+  const { config, user } = useApp();
   const toast = useToast();
   const [f, setF] = useState(config);
   useEffect(() => setF(config), [config]);
@@ -408,6 +409,7 @@ function Settings() {
         <label className="check-row"><input type="checkbox" checked={!!f.showCalories} onChange={(e) => setF({ ...f, showCalories: e.target.checked })} /> Show calories on dishes</label>
       </div>
       <button className="btn primary block lg" onClick={save}>Save settings</button>
+      <div className="card"><AccountDeletion user={user} /></div>
       <UpiEditor value={config} title="FoodGaon UPI — restaurants send commission here" hint="Restaurants see this UPI ID and QR in their Earnings tab when paying FoodGaon dues."
         onSave={(v) => put('config', 'app', v)} />
       <Settlements />
