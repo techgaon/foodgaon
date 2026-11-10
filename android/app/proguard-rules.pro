@@ -1,4 +1,7 @@
 # Add project specific ProGuard rules here.
+# Preserve source locations for release crash reports. Capacitor and Firebase
+# supply their own consumer rules for reflection and JavaScript bridge methods.
+-keepattributes SourceFile,LineNumberTable
 # You can control the set of applied configuration files using the
 # proguardFiles setting in build.gradle.
 #

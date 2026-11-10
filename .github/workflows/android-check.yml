@@ -1,0 +1,49 @@
+name: Validate Android release
+
+on:
+  pull_request:
+    paths:
+      - 'android/**'
+      - 'src/lib/native.js'
+      - 'capacitor.config.json'
+      - 'package*.json'
+      - '.github/workflows/android*.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Install and build web
+        run: |
+          npm ci --ignore-scripts
+          npm rebuild esbuild
+          node tests/foodgaon.cjs
+          node tests/login-flow.cjs
+          node tests/account-deletion.cjs
+          npx vite build
+          npx cap sync android
+      - name: Compile and shrink release without publishing
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleRelease bundleRelease
+          test -s app/build/outputs/mapping/release/mapping.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-release-validation
+          path: |
+            android/app/build/outputs/apk/release/*.apk
+            android/app/build/outputs/bundle/release/*.aab
+            android/app/build/outputs/mapping/release/*
