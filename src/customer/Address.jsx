@@ -58,7 +58,7 @@ export function AddressForm({ open, onClose, initial }) {
   return (
     <Sheet open={open} onClose={onClose} title={initial ? 'Edit address' : 'Add delivery address'} full>
       <div className="addr-map">
-        <MapView height={320} follow line={false} points={a.lat ? [{ id: 'me', kind: 'home', lat: a.lat, lng: a.lng }] : []} draggable="me" onDrag={(p) => setA((x) => ({ ...x, ...p, pinConfirmed: true, accuracy: null }))} />
+        <MapView height={320} search follow line={false} points={a.lat ? [{ id: 'me', kind: 'home', lat: a.lat, lng: a.lng }] : []} draggable="me" onDrag={(p) => setA((x) => ({ ...x, ...p, pinConfirmed: true, accuracy: null }))} />
         <button className="btn small gps-btn" onClick={locate} disabled={locating}><Icon name="gps" size={16} /> {locating ? 'Finding…' : 'Use current location'}</button>
       </div>
       <p className="tiny muted">Nearby roads and places appear on the map. Zoom in, then tap or drag the pin to your exact entrance.</p>

@@ -1409,3 +1409,6 @@ body.noscroll .dv-cart { display: flex; }
 .pd-alt b { display: block; font-size: .86rem; margin-bottom: 6px; }
 .pd-alt .btn { margin-top: 6px; font-size: .86rem; }
 .direct-pay .pw-card { max-height: 92vh; overflow-y: auto; }
+.gmap { position: relative; }
+.map-search { position: absolute; top: 8px; left: 8px; right: 8px; z-index: 5; }
+.map-search gmp-place-autocomplete { width: 100%; color-scheme: light; }

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { GMAPS_KEY, loadGoogleMaps } from '../lib/gmaps.js';
 
 const pinHtml = (kind) => `<div class="mpin mpin-${kind}"><span>${
   kind === 'rest' ? '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l2-5h14l2 5M3 9h18v2a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0zM5 13v8h14v-8"/></svg>'
@@ -13,7 +14,13 @@ const icon = (kind) => L.divIcon({ className: 'mpin-wrap', html: pinHtml(kind), 
  * points: [{ id, kind: 'rest'|'home'|'rider', lat, lng }]
  * draggable: id of a point the user can drag (onDrag gets {lat,lng})
  */
-export default function MapView({ points = [], height = 220, draggable, onDrag, line = true, follow = false, className = '' }) {
+export default function MapView(props) {
+  const [g, setG] = React.useState(() => (GMAPS_KEY ? 'try' : 'no'));
+  useEffect(() => { const f = () => setG('no'); window.addEventListener('fg-gmaps-fail', f); return () => window.removeEventListener('fg-gmaps-fail', f); }, []);
+  return g === 'no' ? <LeafletMap {...props} /> : <GoogleMap {...props} onFail={() => setG('no')} />;
+}
+
+function LeafletMap({ points = [], height = 220, draggable, onDrag, line = true, follow = false, className = '' }) {
   const el = useRef(null);
   const map = useRef(null);
   const markers = useRef({});
@@ -97,4 +104,76 @@ function animateTo(mk, p) {
     if (k < 1) requestAnimationFrame(step);
   };
   requestAnimationFrame(step);
+}
+
+/* ---------- Google Maps version (same props) ---------- */
+const PIN_COLOR = { rest: '#e8461a', home: '#1e9e55', rider: '#1b74e4' };
+function pinEl(kind) { const d = document.createElement('div'); d.innerHTML = pinHtml(kind); d.firstChild.style.setProperty('--c', PIN_COLOR[kind] || '#e8461a'); return d.firstChild; }
+function GoogleMap({ points = [], height = 220, draggable, onDrag, line = true, follow = false, className = '', search = false, onFail }) {
+  const el = useRef(null); const box = useRef(null);
+  const map = useRef(null); const lib = useRef(null);
+  const markers = useRef({}); const poly = useRef(null); const fitted = useRef('');
+  const dragRef = useRef(null); dragRef.current = draggable && onDrag ? onDrag : null;
+  const [ready, setReady] = React.useState(false);
+  const [sat, setSat] = React.useState(() => { try { return localStorage.getItem('pp_map_sat') === '1'; } catch { return false; } });
+
+  useEffect(() => {
+    let dead = false;
+    (async () => {
+      try {
+        const maps = await loadGoogleMaps(); if (dead) return;
+        const [{ Map }, { AdvancedMarkerElement }] = await Promise.all([maps.importLibrary('maps'), maps.importLibrary('marker')]);
+        lib.current = { maps, AdvancedMarkerElement };
+        map.current = new Map(el.current, { center: { lat: 26.6178, lng: 81.3657 }, zoom: 15, mapId: 'DEMO_MAP_ID', disableDefaultUI: true, zoomControl: true, gestureHandling: 'greedy', clickableIcons: false, mapTypeId: sat ? 'hybrid' : 'roadmap' });
+        map.current.addListener('click', (e) => { if (dragRef.current) dragRef.current({ lat: e.latLng.lat(), lng: e.latLng.lng() }); });
+        if (search && box.current) {
+          try {
+            const { PlaceAutocompleteElement } = await maps.importLibrary('places');
+            const pac = new PlaceAutocompleteElement({ includedRegionCodes: ['in'], locationBias: { center: { lat: 26.6178, lng: 81.3657 }, radius: 30000 } });
+            pac.setAttribute('placeholder', 'गाँव / मोहल्ला / जगह खोजें');
+            const pick = async (place) => { if (!place) return; await place.fetchFields({ fields: ['location'] }); const ll = place.location; if (ll && dragRef.current) dragRef.current({ lat: ll.lat(), lng: ll.lng() }); };
+            pac.addEventListener('gmp-select', (e) => pick(e.placePrediction?.toPlace()));
+            pac.addEventListener('gmp-placeselect', (e) => pick(e.place));
+            box.current.appendChild(pac);
+          } catch { /* search is optional */ }
+        }
+        setReady(true);
+      } catch { if (!dead) onFail?.(); }
+    })();
+    return () => { dead = true; Object.values(markers.current).forEach((m) => { m.map = null; }); markers.current = {}; poly.current?.setMap(null); };
+  }, []); // eslint-disable-line
+  useEffect(() => { if (map.current) map.current.setMapTypeId(sat ? 'hybrid' : 'roadmap'); try { localStorage.setItem('pp_map_sat', sat ? '1' : '0'); } catch { /* ignore */ } }, [sat]);
+
+  useEffect(() => {
+    const m = map.current; if (!ready || !m) return;
+    const { maps, AdvancedMarkerElement } = lib.current;
+    const valid = points.filter((p) => p && p.lat != null && p.lng != null && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)));
+    const seen = new Set();
+    valid.forEach((p) => {
+      seen.add(p.id); const pos = { lat: Number(p.lat), lng: Number(p.lng) };
+      let mk = markers.current[p.id];
+      if (!mk) {
+        mk = new AdvancedMarkerElement({ map: m, position: pos, content: pinEl(p.kind), gmpDraggable: draggable === p.id });
+        if (draggable === p.id) mk.addListener('dragend', () => { const ll = mk.position; dragRef.current?.({ lat: typeof ll.lat === 'function' ? ll.lat() : ll.lat, lng: typeof ll.lng === 'function' ? ll.lng() : ll.lng }); });
+        markers.current[p.id] = mk;
+      } else mk.position = pos;
+    });
+    Object.keys(markers.current).forEach((id) => { if (!seen.has(id)) { markers.current[id].map = null; delete markers.current[id]; } });
+    poly.current?.setMap(null); poly.current = null;
+    if (line && valid.length > 1) poly.current = new maps.Polyline({ map: m, path: valid.map((p) => ({ lat: Number(p.lat), lng: Number(p.lng) })), strokeOpacity: 0, icons: [{ icon: { path: 'M 0,-1 0,1', strokeOpacity: 0.8, strokeColor: '#e8461a', scale: 3 }, offset: '0', repeat: '14px' }] });
+    const key = valid.map((p) => follow ? `${p.id}:${p.lat}:${p.lng}` : p.id).join(',');
+    if (key && fitted.current !== key) {
+      fitted.current = key;
+      if (valid.length === 1) { m.setCenter({ lat: Number(valid[0].lat), lng: Number(valid[0].lng) }); m.setZoom(18); }
+      else { const b = new maps.LatLngBounds(); valid.forEach((p) => b.extend({ lat: Number(p.lat), lng: Number(p.lng) })); m.fitBounds(b, 40); }
+    }
+  }, [points, draggable, line, follow, ready]); // eslint-disable-line
+
+  return (
+    <div className={'mapwrap gmap ' + className} style={{ height }}>
+      {search && <div ref={box} className="map-search" />}
+      <div ref={el} className="mapview" style={{ height: '100%' }} />
+      <button type="button" className="map-toggle" onClick={() => setSat(!sat)}>{sat ? '🗺️ Map' : '🛰️ Satellite'}</button>
+    </div>
+  );
 }
