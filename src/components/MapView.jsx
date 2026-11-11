@@ -130,7 +130,7 @@ function GoogleMap({ points = [], height = 220, draggable, onDrag, line = true, 
           try {
             const { PlaceAutocompleteElement } = await maps.importLibrary('places');
             const pac = new PlaceAutocompleteElement({ includedRegionCodes: ['in'], locationBias: { center: { lat: 26.6178, lng: 81.3657 }, radius: 30000 } });
-            pac.setAttribute('placeholder', 'गाँव / मोहल्ला / जगह खोजें');
+            pac.setAttribute('placeholder', 'Search village / mohalla / place');
             const pick = async (place) => { if (!place) return; await place.fetchFields({ fields: ['location'] }); const ll = place.location; if (ll && dragRef.current) dragRef.current({ lat: ll.lat(), lng: ll.lng() }); };
             pac.addEventListener('gmp-select', (e) => pick(e.placePrediction?.toPlace()));
             pac.addEventListener('gmp-placeselect', (e) => pick(e.place));
@@ -173,7 +173,7 @@ function GoogleMap({ points = [], height = 220, draggable, onDrag, line = true, 
     <div className={'mapwrap gmap ' + className} style={{ height }}>
       {search && <div ref={box} className="map-search" />}
       <div ref={el} className="mapview" style={{ height: '100%' }} />
-      <button type="button" className="map-toggle" onClick={() => setSat(!sat)}>{sat ? '🗺️ Map' : '🛰️ Satellite'}</button>
+      <button type="button" className={'map-toggle' + (search ? ' below-search' : '')} onClick={() => setSat(!sat)}>{sat ? '🗺️ Map' : '🛰️ Satellite'}</button>
     </div>
   );
 }

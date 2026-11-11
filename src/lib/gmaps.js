@@ -10,7 +10,7 @@ export function loadGoogleMaps() {
     window.__fgMapsReady = () => res(window.google.maps);
     window.gm_authFailure = () => { loading = null; rej(new Error('maps auth')); window.dispatchEvent(new Event('fg-gmaps-fail')); };
     const s = document.createElement('script');
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${GMAPS_KEY}&v=weekly&loading=async&language=hi&region=IN&libraries=places,geocoding&callback=__fgMapsReady`;
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${GMAPS_KEY}&v=weekly&loading=async&language=en&region=IN&libraries=places,geocoding&callback=__fgMapsReady`;
     s.async = true; s.onerror = () => { loading = null; rej(new Error('maps load')); };
     document.head.appendChild(s);
   });

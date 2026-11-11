@@ -55,7 +55,7 @@ export default function Account({ nav, openHisab }) {
           <AccountDeletion user={user} />
           {user && <button className="menu-row danger-text" onClick={logout}><Icon name="logout" size={20} /><span className="grow">Log out</span></button>}
         </div>
-        <p className="center tiny muted">FoodGaon v1.0 · <span data-notr="">TechGaon AI Services</span></p>
+        <p className="center tiny muted" data-notr="">{`FoodGaon v${typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : ''} · TechGaon AI Services`}</p>
       </div>
 
       <Sheet open={nameOpen} onClose={() => setNameOpen(false)} title="Your profile" full>

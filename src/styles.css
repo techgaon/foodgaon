@@ -1412,3 +1412,5 @@ body.noscroll .dv-cart { display: flex; }
 .gmap { position: relative; }
 .map-search { position: absolute; top: 8px; left: 8px; right: 8px; z-index: 5; }
 .map-search gmp-place-autocomplete { width: 100%; color-scheme: light; }
+.map-toggle.below-search { top: 70px; right: auto; left: 10px; }
+.map-search { right: 8px; }

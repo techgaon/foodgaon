@@ -28,18 +28,19 @@ export default function CartPage({ nav, onPlaced }) {
   const { list: addrs, sel } = useAddresses();
   const addr = addrs.find((a) => a.id === sel) || addrs[0];
   const merchant = merchantFor(rest);
-  const liveUpi = !!merchant;
-  const upiNow = hasUpi(rest) && config.upiNowEnabled !== false;
-  const upiDel = hasUpi(rest) && config.upiEnabled !== false;
+  const off = rest?.payOff || {};   // admin can switch a payment way off for one restaurant
+  const liveUpi = !!merchant && config.upiLiveEnabled !== false && !off.upi_live;
+  const upiNow = hasUpi(rest) && config.upiNowEnabled !== false && !off.upi_now;
+  const upiDel = hasUpi(rest) && config.upiEnabled !== false && !off.upi_rider;
   const mine = useList('orders', user ? [['customerUid', '==', user.uid]] : null, [user?.uid]);
   const refused = (mine || []).filter((o) => o.refusedCod).length;
   const refuseLimit = Number(config.codRefuseLimit ?? 2);
   const codStopMe = refuseLimit > 0 && refused >= refuseLimit;
-  const cod = config.codEnabled !== false && !rest?.codBlocked && !codStopMe;
+  const cod = config.codEnabled !== false && !rest?.codBlocked && !codStopMe && !off.cod;
   const [pay, setPay] = useState(() => LS.get('pp_pay', 'upi_now'));
-  const online = !!config.gatewayEnabled && !!rest?.onlinePay;
+  const online = !!config.gatewayEnabled && !!rest?.onlinePay && !off.online;
   const payOk = (p) => (p === 'upi_live' ? liveUpi : p === 'online' ? online : p === 'upi_now' ? upiNow : p === 'upi_rider' ? upiDel : p === 'cod' ? cod : false);
-  useEffect(() => { if (rest && !payOk(pay)) setPay(online ? 'online' : upiNow ? 'upi_now' : upiDel ? 'upi_rider' : 'cod'); }, [rest?.id, rest?.upiId, rest?.upiQr, liveUpi, online]); // eslint-disable-line
+  useEffect(() => { if (rest && !payOk(pay)) setPay(online ? 'online' : liveUpi ? 'upi_live' : upiNow ? 'upi_now' : upiDel ? 'upi_rider' : 'cod'); }, [rest?.id, rest?.upiId, rest?.upiQr, liveUpi, online, upiNow, upiDel, cod]); // eslint-disable-line
   const [note, setNote] = useState('');
   const [paying, setPaying] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -153,13 +154,13 @@ export default function CartPage({ nav, onPlaced }) {
           <div className="bill"><span>{`Item total (${list.reduce((a, x) => a + x.qty, 0)} items)`}</span><span>{rupee(total)}</span></div>
           {discount > 0 && <div className="bill t-green"><span>{`Coupon (${applied.code})`}</span><span>− {rupee(discount)}</span></div>}
           {!bill.gstIncluded && <div className="bill"><span>{`GST ${bill.gstPct}%`}</span><span>+ {rupee(bill.gst)}</span></div>}
-          <div className="bill"><span>Delivery fee</span><span><del className="muted">₹20</del> <b className="t-green">₹00</b></span></div>
-          <div className="bill"><span>Platform fee</span><span><del className="muted">₹7</del> <b className="t-green">₹00</b></span></div>
+          <div className="bill"><span>Delivery fee</span><span>{bill.deliveryFee > 0 ? rupee(bill.deliveryFee) : <><del className="muted">₹20</del> <b className="t-green">₹00</b></>}</span></div>
+          <div className="bill"><span>Platform fee</span><span>{bill.platformFee > 0 ? rupee(bill.platformFee) : <><del className="muted">₹7</del> <b className="t-green">₹00</b></>}</span></div>
           <div className="bill"><span>Packing charge</span><span><b className="t-green">₹0</b></span></div>
           <div className="bill total"><span>To pay</span><span>{rupee(bill.total)}</span></div>
           {list.some((x) => x.onMrp && !(Number(x.price) > 0)) && <p className="tiny mrp-note">{t('“On MRP” items are not in this total — pay the printed MRP to the restaurant at delivery.')}</p>}
           <div className="gst-split">
-            <span>{`Food value ${rupee(bill.taxable)}`}</span><span>+</span><span>{`GST ${bill.gstPct}% ${rupee(bill.gst)}`}</span><span>=</span><b>{rupee(bill.total - fee)}</b>
+            <span>{`Food value ${rupee(bill.taxable)}`}</span><span>+</span><span>{`GST ${bill.gstPct}% ${rupee(bill.gst)}`}</span><span>=</span><b>{rupee(bill.total - bill.deliveryFee - bill.platformFee)}</b>
           </div>
           <p className="tiny muted">{bill.gstIncluded ? t('Menu prices already include GST — nothing extra is added.') : t('Menu prices are without GST — GST is added in the bill.')}</p>
           <div className="promise-mini"><Icon name="shield" size={16} /> <span>{t('Same price as the restaurant counter. No hidden charges.')}</span></div>
@@ -178,7 +179,7 @@ export default function CartPage({ nav, onPlaced }) {
         <div className="card">
           <h4>Payment</h4>
           {online && <PayOpt id="online" cur={pay} set={setPay} art="now" title="Pay online — UPI, card, net banking" />}
-          <PayOpt id="upi_live" cur={pay} set={setPay} art="now" title={<span data-notr="">Pay via UPI Live <small className="upi-new">NEW</small></span>} off={!liveUpi} />
+          {liveUpi && <PayOpt id="upi_live" cur={pay} set={setPay} art="now" title={<span data-notr="">Pay via UPI Live <small className="upi-new">NEW</small></span>} />}
           <PayOpt id="upi_now" cur={pay} set={setPay} art="now" title="Pay now by UPI" off={!upiNow} />
           <PayOpt id="upi_rider" cur={pay} set={setPay} art="later" title="Pay on delivery by UPI" off={!upiDel} />
           <PayOpt id="cod" cur={pay} set={setPay} art="cash" title="Cash on delivery" off={!cod} offMsg={codStopMe ? 'Cash on delivery is off for your number because earlier cash orders were refused. Please pay by UPI.' : 'Cash on delivery is not available at this restaurant right now. Please pay by UPI.'} />

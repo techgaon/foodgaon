@@ -20,6 +20,32 @@ import { UpiEditor } from '../components/Pay.jsx';
 import { dueOf } from '../restaurant/RestaurantApp.jsx';
 import { t } from '../i18n/index.js';
 import Applications, { usePartnerApps } from './Applications.jsx';
+import RestTools from './RestTools.jsx';
+
+/* one-time: add the Haidergarh restaurants pack (closed, estimated menus) when the admin opens the app */
+function useHgPack() {
+  const { config } = useApp();
+  const rests = useRestaurants();
+  useEffect(() => {
+    if (!rests || !config || window.__hgPack) return;
+    import('../data/haidergarhPack.js').then(async ({ PACK_V, RESTS, ITEMS }) => {
+      if (config.hgPack === PACK_V) return;
+      window.__hgPack = true;
+      try {
+        const have = new Set(rests.map((r) => r.id));
+        const items = await getList('items', [['restaurantId', 'in', RESTS.map((r) => r.id)]]).catch(() => []);
+        const haveI = new Set(items.map((i) => i.id));
+        const ops = [
+          ...RESTS.filter((r) => !have.has(r.id)).map((r) => ['set', 'restaurants', r.id, r]),
+          ...ITEMS.filter((i) => !haveI.has(i.id)).map((i) => ['set', 'items', i.id, i]),
+          ...RESTS.filter((r) => r.ownerPhone && !have.has(r.id)).map((r) => ['set', 'staff', '+91' + r.ownerPhone, { restaurant: r.id, name: r.ownerName || r.name }]),
+          ['set', 'config', 'app', { hgPack: PACK_V }],
+        ];
+        await bulk(ops);
+      } catch (e) { console.warn('hg pack', e); window.__hgPack = false; }
+    });
+  }, [rests, config?.hgPack]); // eslint-disable-line
+}
 import RestaurantPin from '../components/RestaurantPin.jsx';
 import { linkRestaurant, restaurantPayStatus } from '../lib/gateway.js';
 
@@ -35,6 +61,7 @@ export default function AdminApp() {
   useMenuPack(useRestaurants(), () => true);
   useCleanup();
   useCodGuard();
+  useHgPack();
   const apps = usePartnerApps();
   const newApps = (apps || []).filter((a) => a.status === 'submitted').length;
   useEffect(() => { window.__ppBack = () => { if (tab !== 'dash') { setTab('dash'); return true; } return false; }; return () => { window.__ppBack = null; }; });
@@ -212,10 +239,12 @@ function Restaurants() {
   const seg = (
     <div className="seg">
       <button className={view === 'list' ? 'on' : ''} onClick={() => { setView('list'); sessionStorage.setItem('pp_restview', 'list'); }}>Restaurants</button>
+      <button className={view === 'tools' ? 'on' : ''} onClick={() => { setView('tools'); sessionStorage.setItem('pp_restview', 'tools'); }}>Tools</button>
       <button className={view === 'apps' ? 'on' : ''} onClick={() => { setView('apps'); sessionStorage.setItem('pp_restview', 'apps'); }}>{pend ? `Join requests (${pend})` : 'Join requests'}</button>
     </div>
   );
   if (view === 'apps' && !menu) return <div className="pad-x">{seg}<Applications /></div>;
+  if (view === 'tools' && !menu) return <div className="pad-x">{seg}<RestTools /></div>;
   if (menu) return (
     <div>
       <div className="pad-x row gap"><button className="btn ghost small" onClick={() => setMenu(null)}><Icon name="back" size={16} /> Back</button><b data-notr="">{menu.name}</b></div>
@@ -231,7 +260,7 @@ function Restaurants() {
           <Img src={r.cover} alt="" className="ar-img" />
           <div className="grow">
             <b data-notr="">{r.name}</b>
-            <small className="muted">{`${items.filter((i) => i.restaurantId === r.id).length} dishes · owner ${r.ownerPhone || '—'}`}{r.demo ? ' · DEMO' : ''}{r.verified ? ' · ✓ verified' : ''}{r.codBlocked ? ' · COD paused' : ''}</small>
+            <small className="muted">{`${items.filter((i) => i.restaurantId === r.id).length} dishes · owner ${r.ownerPhone || '—'}`}{r.demo ? ' · DEMO' : ''}{r.verified ? ' · ✓ verified' : ''}{r.codBlocked ? ' · COD paused' : ''}{r.menuEstimated ? ' · menu estimated' : ''}</small>
             <div className="row gap">
               <button className="link small" onClick={() => setMenu(r)}>Menu</button>
               <button className="link small" onClick={() => setEdit(r)}>Edit</button>
@@ -352,7 +381,7 @@ function Settings() {
         commissionPct: Number(f.commissionPct) || 0, commissionGstExtra: !!f.commissionGstExtra, codDueLimit: Number(f.codDueLimit) || 0, codRefuseLimit: Number(f.codRefuseLimit) || 0, qualityAlertAt: Number(f.qualityAlertAt) || 3, customerDeliveryFee: Number(f.customerDeliveryFee) || 0, restaurantDeliveryCharge: Number(f.restaurantDeliveryCharge) || 0,
         gstPct: Number(f.gstPct) || 0, radiusKm: Number(f.radiusKm) || 0, otpMode: f.otpMode === 'real' ? 'real' : 'mock', otpApi: (f.otpApi || '').trim(),
         firmName: (f.firmName || '').trim(), firmAddress: (f.firmAddress || '').trim(), gstin: (f.gstin || '').trim().toUpperCase(), supportEmail: (f.supportEmail || '').trim(),
-        minOrder: Number(f.minOrder) || 0, supportPhone: (f.supportPhone || '').trim(), upiNowEnabled: f.upiNowEnabled !== false,
+        minOrder: Number(f.minOrder) || 0, supportPhone: (f.supportPhone || '').trim(), upiNowEnabled: f.upiNowEnabled !== false, upiLiveEnabled: f.upiLiveEnabled !== false, platformFee: Number(f.platformFee) || 0,
         serviceArea: f.serviceArea || '', gatewayEnabled: !!f.gatewayEnabled, codEnabled: !!f.codEnabled, upiEnabled: !!f.upiEnabled, showCalories: !!f.showCalories,
       });
       toast(t('Saved'));
@@ -385,12 +414,15 @@ function Settings() {
           <Field label="Customer delivery fee ₹" hint="0 = FREE delivery"><input className="input" inputMode="decimal" value={f.customerDeliveryFee} onChange={set('customerDeliveryFee')} /></Field>
           <Field label="Minimum order ₹"><input className="input" inputMode="decimal" value={f.minOrder} onChange={set('minOrder')} /></Field>
         </div>
+        <Field label="Customer platform fee ₹ (incl. GST)" hint="Default for all restaurants · 0 = no platform fee · set per restaurant in Restaurants → Tools"><input className="input" inputMode="decimal" value={f.platformFee ?? 0} onChange={set('platformFee')} /></Field>
       </div>
       <div className="card">
         <h4>Payments</h4>
         <p className="tiny muted">Customers pay each restaurant's own UPI. FoodGaon never holds customer money.</p>
         <label className="check-row"><input type="checkbox" checked={!!f.gatewayEnabled} onChange={(e) => setF({ ...f, gatewayEnabled: e.target.checked })} /> {t('Online payment gateway (Razorpay split) — turn on only after the server is set up')}</label>
+        <label className="check-row"><input type="checkbox" checked={f.upiLiveEnabled !== false} onChange={(e) => setF({ ...f, upiLiveEnabled: e.target.checked })} /> Pay via UPI Live (direct merchant UPI)</label>
         <label className="check-row"><input type="checkbox" checked={f.upiNowEnabled !== false} onChange={(e) => setF({ ...f, upiNowEnabled: e.target.checked })} /> Pay now by UPI</label>
+        <p className="tiny muted">These switch a payment way off for every restaurant. To switch it off for one or a few restaurants, use Restaurants → Tools.</p>
         <label className="check-row"><input type="checkbox" checked={!!f.upiEnabled} onChange={(e) => setF({ ...f, upiEnabled: e.target.checked })} /> Pay on delivery by UPI</label>
         <label className="check-row"><input type="checkbox" checked={!!f.codEnabled} onChange={(e) => setF({ ...f, codEnabled: e.target.checked })} /> Cash on delivery</label>
         <div className="row gap">

@@ -43,7 +43,7 @@ service cloud.firestore {
       allow read: if true;
       allow create, delete: if isAdmin();
       allow update: if isAdmin() || (ownsRest(rid)
-                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['commissionPct', 'commissionGstExtra', 'deliveryCharge', 'rating', 'sort', 'demo', 'codBlocked', 'codDue', 'verified', 'applicationId', 'onlinePay', 'rzpLinked', 'samePrice']));
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['commissionPct', 'commissionGstExtra', 'deliveryCharge', 'rating', 'sort', 'demo', 'codBlocked', 'codDue', 'verified', 'applicationId', 'onlinePay', 'rzpLinked', 'samePrice', 'payOff', 'custDeliveryFee', 'platformFee']));
     }
     match /items/{id} {
       allow read: if true;
@@ -207,6 +207,19 @@ service cloud.firestore {
                     && request.resource.data.img is string && request.resource.data.img.size() < 600000;
       allow read: if signedIn() && (resource.data.customerUid == request.auth.uid || isAdmin() || ownsRest(resource.data.restaurantId));
       allow delete: if isAdmin();
+    }
+    // admin → restaurant messages and written notices (one doc per restaurant; owner may only mark read / reply)
+    match /restMsgs/{id} {
+      allow read: if isAdmin() || ownsRest(resource.data.restaurantId);
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (ownsRest(resource.data.restaurantId)
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readMs', 'reply', 'replyMs'])
+                    && (!('reply' in request.resource.data) || (request.resource.data.reply is string && request.resource.data.reply.size() <= 500)));
+    }
+    // photo / PDF attached to a message or notice (shared by the chosen restaurants)
+    match /restMsgFiles/{id} {
+      allow read: if isAdmin() || (isStaff() && resource.data.restaurantIds.hasAny([staff().get('restaurant', '')]));
+      allow create, update, delete: if isAdmin();
     }
     // payment-gateway account ids of restaurants (server + admin only)
     match /restPrivate/{restId} {

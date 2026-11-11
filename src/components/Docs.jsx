@@ -58,6 +58,7 @@ export function Invoice({ o, config }) {
         <div><span>{`CGST ${(o.gstPct || 5) / 2}%`}</span><span>{rupee(r2((o.gst || 0) / 2))}</span></div>
         <div><span>{`SGST ${(o.gstPct || 5) / 2}%`}</span><span>{rupee(r2((o.gst || 0) - r2((o.gst || 0) / 2)))}</span></div>
         <div><span>Delivery</span><span>{o.deliveryFee ? rupee(o.deliveryFee) : 'FREE'}</span></div>
+        {o.platformFee > 0 && <div><span>Platform fee (incl. GST)</span><span>{rupee(o.platformFee)}</span></div>}
         <div className="grand"><span>Total</span><span>{rupee(o.total)}</span></div>
       </div>
       <p className="doc-note">Payment made directly to the restaurant. GST on this bill is deposited with the Government by FoodGaon (TechGaon AI Services) as the e-commerce operator. Thank you for ordering!</p>

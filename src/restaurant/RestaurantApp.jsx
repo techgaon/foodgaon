@@ -24,6 +24,7 @@ import PartnerAgreement from '../components/PartnerAgreement.jsx';
 import RestaurantPin from '../components/RestaurantPin.jsx';
 import AccountDeletion from '../components/AccountDeletion.jsx';
 import { feeTerms, feeLine } from '../lib/partner.js';
+import RestInbox from './RestInbox.jsx';
 
 /* rings while there are un-accepted orders */
 export function useNewOrderAlert(orders, title = 'New order!') {
@@ -80,6 +81,8 @@ export default function RestaurantApp() {
           <Toggle on={rest.open !== false} onChange={toggleOpen} label="Open / closed" />
         </div>
       </header>
+      <RestInbox rest={rest} />
+      {rest.menuEstimated && <div className="pad-x"><div className="alert alert-amber">{t('Your menu was added by FoodGaon with estimated prices. Please check every dish and price in the Menu tab.')} <button className="link small" onClick={() => patch('restaurants', rest.id, { menuEstimated: false }).then(() => toast(t('Thank you'))).catch(() => toast(t('Could not save'), 'err'))}>{t('Prices checked ✓')}</button></div></div>}
       <div className="page-anim" key={tab}>
         {tab === 'orders' && <RestOrders orders={orders} />}
         {tab === 'menu' && <MenuManager restId={rest.id} rest={rest} />}
