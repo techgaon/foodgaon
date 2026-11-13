@@ -63,6 +63,7 @@ jobs:
           cp android/app/build/outputs/apk/debug/app-debug.apk out/FoodGaon.apk
           cp android/app/build/outputs/apk/release/app-release.apk out/FoodGaon-v1.0.${{ github.run_number }}-release.apk
           cp android/app/build/outputs/bundle/release/app-release.aab out/FoodGaon-v1.0.${{ github.run_number }}-release.aab
+          cp android/app/build/outputs/mapping/release/mapping.txt out/FoodGaon-v1.0.${{ github.run_number }}-mapping.txt
           ls -la out
       - name: Publish release
         uses: softprops/action-gh-release@v2
