@@ -124,7 +124,9 @@ export function flyToCart(fromEl) {
     const clone = fromEl.cloneNode(true);
     Object.assign(clone.style, { position: 'fixed', left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px', zIndex: 200, borderRadius: '18px', objectFit: 'cover', transition: 'all .75s cubic-bezier(.5,-0.3,.7,1)', pointerEvents: 'none', boxShadow: '0 10px 30px rgba(0,0,0,.3)' });
     document.body.appendChild(clone);
-    const tx = window.innerWidth / 2 - 30; const ty = window.innerHeight - 90;
+    const fab = document.querySelector('.cart-fab');
+    let tx = window.innerWidth / 2 - 30; let ty = window.innerHeight - 90;
+    if (fab) { const fr = fab.getBoundingClientRect(); tx = fr.left + fr.width / 2 - 30; ty = fr.top + fr.height / 2 - 30; }
     requestAnimationFrame(() => Object.assign(clone.style, { left: tx + 'px', top: ty + 'px', width: '60px', height: '60px', opacity: '0.4', borderRadius: '50%', transform: 'rotate(25deg)' }));
     setTimeout(() => clone.remove(), 800);
   } catch { /* ignore */ }

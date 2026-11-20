@@ -70,13 +70,20 @@ export default function CustomerApp() {
 
   useEffect(() => { const f = () => go({ name: 'cart' }); window.addEventListener('fg-open-cart', f); return () => window.removeEventListener('fg-open-cart', f); }); // eslint-disable-line
   const showCartBar = count > 0 && top?.name !== 'cart' && top?.name !== 'track';
+  const sideCart = showCartBar && top?.name === 'rest';
   const showLive = !showCartBar && active.length > 0 && top?.name !== 'track';
 
   return (
     <div className={'cust' + (stack.length ? ' has-stack' : '')}>
       <div className="page-anim" key={(top?.name || tab) + (top?.id || '')}>{page}</div>
       {added && <div className="cart-added" key={added.key} role="status"><span className="cart-added-art" aria-hidden="true"><Icon name="bag" size={29} /><i><Icon name="check" size={12} stroke={3} /></i></span><span><b>Added to cart</b><small data-notr="">{added.name}</small></span></div>}
-      {showCartBar && (
+      {showCartBar && sideCart && (
+        <button className="cart-fab" onClick={nav.openCart} aria-label="View cart">
+          <span className="cart-bag" key={'bag-' + count} aria-hidden="true"><Icon name="bag" size={22} /><i>{count}</i></span>
+          <small>{rupee(total)}</small>
+        </button>
+      )}
+      {showCartBar && !sideCart && (
         <button className="cart-bar" onClick={nav.openCart}>
           <span className="cart-bag" key={'bag-' + count} aria-hidden="true"><Icon name="bag" size={24} /><i>✓</i></span><span className="cb-left"><b key={count} className="bump">{`${count} item${count > 1 ? 's' : ''} added`}</b><small>{rupee(total)} · FREE delivery</small></span>
           <span className="cb-right">View cart <Icon name="right" size={18} stroke={3} /></span>

@@ -24,12 +24,8 @@ export async function nativeNotify(title, body) {
 
 export async function initNative() {
   if (!isNative) return;
-  try {
-    const { StatusBar, Style } = await import('@capacitor/status-bar');
-    await StatusBar.setOverlaysWebView({ overlay: false });
-    await StatusBar.setBackgroundColor({ color: '#e8461a' });
-    await StatusBar.setStyle({ style: Style.Dark });
-  } catch (e) { console.warn('statusbar', e); }
+  // MainActivity handles system bars and keyboard insets without the legacy
+  // StatusBar plugin's deprecated window-color/overlay APIs.
   try {
     const { App } = await import('@capacitor/app');
     App.addListener('backButton', () => {

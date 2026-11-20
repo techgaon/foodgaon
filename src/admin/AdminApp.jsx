@@ -310,15 +310,16 @@ function RestEditor({ open, r, onClose }) {
   };
   return (
     <Sheet open={open} onClose={onClose} title={r?.id ? 'Edit restaurant' : 'Add restaurant'} full>
-      <Field label="Restaurant name"><input className="input" value={f.name} onChange={set('name')} /></Field>
-      <Field label="Short line"><input className="input" value={f.tagline} onChange={set('tagline')} placeholder="e.g. Favourite chaat in villages and towns" /></Field>
+      <p className="tiny muted">{t('Only the name is required. Fill the rest later from Edit — the owner can also complete FSSAI, bank and documents from their panel.')}</p>
+      <Field label="Restaurant name *"><input className="input" value={f.name} onChange={set('name')} /></Field>
       <Field label="Address"><input className="input" value={f.address} onChange={set('address')} /></Field>
+      <Field label="Short line"><input className="input" value={f.tagline} onChange={set('tagline')} placeholder="e.g. Favourite chaat in villages and towns" /></Field>
       <div className="row gap">
         <Field label="Owner mobile" hint="This number logs in to the restaurant panel"><input className="input" inputMode="numeric" maxLength={10} value={f.ownerPhone} onChange={(e) => setF({ ...f, ownerPhone: e.target.value.replace(/\D/g, '') })} /></Field>
         <Field label="Owner name"><input className="input" value={f.ownerName} onChange={set('ownerName')} /></Field>
       </div>
       <div className="row gap">
-        <Field label="FSSAI no. (required)"><input className="input" inputMode="numeric" maxLength={14} value={f.fssai} onChange={(e) => setF({ ...f, fssai: e.target.value.replace(/\D/g, '') })} /></Field>
+        <Field label="FSSAI no. (fill when known)"><input className="input" inputMode="numeric" maxLength={14} value={f.fssai} onChange={(e) => setF({ ...f, fssai: e.target.value.replace(/\D/g, '') })} /></Field>
         <Field label="GSTIN"><input className="input" maxLength={15} value={f.gstin} onChange={(e) => setF({ ...f, gstin: e.target.value.toUpperCase() })} /></Field>
       </div>
       <div className="row gap">

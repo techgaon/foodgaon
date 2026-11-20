@@ -6,6 +6,10 @@
     "backgroundColor": "#fff7ef"
   },
   "plugins": {
+    "SystemBars": {
+      "insetsHandling": "disable",
+      "style": "LIGHT"
+    },
     "LocalNotifications": {
       "smallIcon": "ic_stat_notify",
       "iconColor": "#f2541b"

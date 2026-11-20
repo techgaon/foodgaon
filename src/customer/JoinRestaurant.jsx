@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Icon, Field, useToast, Empty } from '../ui.jsx';
+import { Icon, Field, useToast, Empty, Confirm } from '../ui.jsx';
 import { useApp } from '../App.jsx';
-import { watchDoc, patch, getOne } from '../lib/fb.js';
+import { watchDoc, patch, getOne, bulk } from '../lib/fb.js';
 import { compressImage, fmtDateTime, plain } from '../lib/utils.js';
 import { saveDataUrl, openDataUrl } from '../lib/pdf.js';
 import { DocSheet } from '../components/Docs.jsx';
 import PartnerAgreement from '../components/PartnerAgreement.jsx';
 import { GrowStory } from '../components/Grow.jsx';
 import {
-  DOC_TYPES, FORM_DOCS, SIGN_DOCS, APP_STATUS, AGREEMENT_VERSION, blankApp, missing, saveApp, saveDoc, loadDoc, dropDoc, fileToDoc,
+  DOC_TYPES, FORM_DOCS, SIGN_DOCS, APP_STATUS, AGREEMENT_VERSION, blankApp, missing, saveApp, saveDoc, loadDoc, loadDocs, dropDoc, fileToDoc,
   feeTerms, addHistory, PAN_RE, IFSC_RE, GSTIN_RE, maskAcc,
 } from '../lib/partner.js';
 import { t, getLang } from '../i18n/index.js';
@@ -24,8 +24,11 @@ const STEPS = [
  *  The admin sees the full file and approves it. */
 export default function JoinRestaurant({ nav }) {
   const { user, config, askLogin, roles, setRole } = useApp();
+  const toast = useToast();
   const [app, setApp] = useState(undefined);
   const [step, setStep] = useState('intro');
+  const [delOpen, setDelOpen] = useState(false);
+  const [delBusy, setDelBusy] = useState(false);
   useEffect(() => { if (!user) { setApp(null); return undefined; } return watchDoc('partnerApps', user.uid, setApp); }, [user?.uid]); // eslint-disable-line
 
   const head = (
@@ -35,6 +38,21 @@ export default function JoinRestaurant({ nav }) {
     </div>
   );
 
+  const canDelete = !!(user && app && !app.restaurantId && ['draft', 'returned'].includes(app.status || 'draft'));
+  const deleteMyForm = async () => {
+    setDelBusy(true);
+    try {
+      const attached = await loadDocs(user.uid);
+      await bulk([...attached.map((d) => ['del', 'partnerDocs', d.id]), ['del', 'partnerApps', user.uid]]);
+      setDelOpen(false); setStep('intro'); setApp(null);
+      toast(t('Your form has been deleted'));
+    } catch { toast(t('Could not delete. Please try again.'), 'err'); }
+    setDelBusy(false);
+  };
+  const delSheet = (
+    <Confirm open={delOpen} onClose={() => !delBusy && setDelOpen(false)} danger title="Delete my form?" text="This permanently deletes your restaurant form and uploaded documents. This cannot be undone — you can fill a fresh form later." okText={delBusy ? 'Deleting…' : 'Delete permanently'} onOk={deleteMyForm} />
+  );
+
   if (!user) return <div className="page">{head}<Intro config={config} onStart={askLogin} loggedOut /></div>;
   if (app === undefined) return <div className="page">{head}<div className="skeleton" style={{ height: 220, margin: 16 }} /></div>;
 
@@ -42,8 +60,8 @@ export default function JoinRestaurant({ nav }) {
   if (locked || (app?.status === 'returned' && step === 'intro')) {
     return <div className="page">{head}<StatusView app={app} config={config} onEdit={() => setStep('details')} canOpenPanel={roles.includes('restaurant')} openPanel={() => setRole('restaurant')} /></div>;
   }
-  if (step === 'intro') return <div className="page">{head}<Intro config={config} app={app} onStart={() => setStep('details')} /></div>;
-  return <div className="page">{head}<Wizard user={user} config={config} app={app} step={step} setStep={setStep} /></div>;
+  if (step === 'intro') return <div className="page">{head}<Intro config={config} app={app} onStart={() => setStep('details')} onDelete={canDelete ? () => setDelOpen(true) : null} />{delSheet}</div>;
+  return <div className="page">{head}<Wizard user={user} config={config} app={app} step={step} setStep={setStep} onDelete={canDelete ? () => setDelOpen(true) : null} />{delSheet}</div>;
 }
 /* ---- small form helpers ---- */
 const BANKS = ['State Bank of India', 'Punjab National Bank', 'Bank of Baroda', 'Bank of India', 'Union Bank of India', 'Aryavart Bank', 'HDFC Bank', 'ICICI Bank'];
@@ -76,7 +94,7 @@ function Ok({ show, ok, bad }) {
 
 const prevStep = (s) => { const i = STEPS.findIndex((x) => x.id === s); return i <= 0 ? 'intro' : STEPS[i - 1].id; };
 
-function Intro({ config, app, onStart, loggedOut }) {
+function Intro({ config, app, onStart, loggedOut, onDelete }) {
   const f = feeTerms(config);
   return (
     <div className="pad-x join-intro" data-ui-lang={getLang() === "awa" ? "awa" : "hi"}>
@@ -104,6 +122,7 @@ function Intro({ config, app, onStart, loggedOut }) {
         <p className="tiny muted">Takes about 10 minutes. You can stop and continue later — your form is saved.</p>
       </div>
       <button className="btn primary block lg" data-ui-lang="en" onClick={onStart}>{loggedOut ? 'Log in to start' : app ? 'Continue my form' : 'Start — it is free'} <Icon name="right" size={18} /></button>
+      {onDelete && <button className="btn ghost danger-text block" data-ui-lang="en" onClick={onDelete}><Icon name="trash" size={16} /> Delete my form permanently</button>}
     </div>
   );
 }
@@ -121,7 +140,7 @@ function Stepper({ step, setStep, done }) {
   );
 }
 
-function Wizard({ user, config, app, step, setStep }) {
+function Wizard({ user, config, app, step, setStep, onDelete }) {
   const toast = useToast();
   const [f, setF] = useState(() => { const x = { ...blankApp(user), ...(app || {}) }; x.bankAcc2 = ''; return x; });
   const [busy, setBusy] = useState(false);
@@ -231,6 +250,7 @@ function Wizard({ user, config, app, step, setStep }) {
       {step === 'docs' && <DocsStep uid={user.uid} f={f} setF={setF} save={save} onNext={() => next('agreement')} busy={busy} />}
 
       {step === 'agreement' && <AgreementStep user={user} config={config} f={f} setF={setF} app={app} save={save} />}
+      {onDelete && <button className="btn ghost danger-text block" data-ui-lang="en" onClick={onDelete}><Icon name="trash" size={16} /> Delete my form permanently</button>}
     </div>
   );
 }

@@ -187,7 +187,8 @@ export function TrackOrder({ id, fresh, nav }) {
           {live && <span className="pulse-dot" />}
           <div><b>{t(o.status === 'awaiting_payment' ? 'भुगतान / पुष्टि बाकी — ऑर्डर अभी भेजा नहीं गया' : STATUS[o.status]?.label || o.status)}</b>{eta && live && <small>{eta}</small>}</div>
         </div>
-        {o.status === 'picked' && <div className="road"><span className="scooter"><Icon name="bike" size={30} /></span></div>}
+        {!dead && o.status !== 'awaiting_payment' && <div className="th-progress"><i style={{ width: `${Math.max(6, (idx / (STEPS.length - 1)) * 100)}%` }} /></div>}
+        {o.status === 'picked' && <div className="road"><span className="road-marks" /><span className="scooter"><Icon name="bike" size={30} /></span></div>}
         {(o.status === 'accepted' || o.status === 'preparing') && <div className="cooking"><span /><span /><span /><Icon name="fire" size={34} /></div>}
       </div>
 

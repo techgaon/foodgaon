@@ -10,7 +10,6 @@ const HG = { lat: 26.6178, lng: 81.3657 };
 const BASE = { fssai: '', gstin: '', radiusKm: 5, minOrder: 50, riderRate: 20, selfDelivery: true, open: false, demo: false, verified: false, menuEstimated: true, riders: [] };
 
 export const RESTS = [
-  { id: 'raju-lassi', name: 'Raju Lassi', ownerPhone: '9198427160', ownerName: 'Raju', tagline: 'Thick lassi, shakes & fresh sweets', cuisines: ['lassi', 'sweets'], cover: photo('lassi'), rating: 4.5, prepMins: 10, address: 'Haidergarh, Barabanki', lat: HG.lat + 0.0006, lng: HG.lng - 0.0008, sort: 1 },
   { id: 'swagat-restaurant', name: 'Swagat Restaurant', ownerPhone: '', ownerName: '', tagline: 'Thali, paneer, dal & tandoori roti', cuisines: ['northindian', 'thali'], cover: photo('thali'), rating: 4.4, prepMins: 25, address: 'Haidergarh, Barabanki', lat: HG.lat + 0.0015, lng: HG.lng + 0.0012, sort: 2 },
   { id: 'food-ville-cafe', name: 'Food Ville Cafe', ownerPhone: '', ownerName: '', tagline: 'Pizza, burger, momos, shakes & chowmein', cuisines: ['fastfood', 'chinese'], cover: photo('veg_pizza'), rating: 4.4, prepMins: 20, address: 'Haidergarh, Barabanki', lat: HG.lat - 0.0012, lng: HG.lng + 0.0009, sort: 3 },
   { id: 'laxmi-sweets', name: 'Laxmi Sweets', ownerPhone: '', ownerName: '', tagline: 'Mithai, samosa, chaat & hot jalebi', cuisines: ['sweets', 'chaat'], cover: photo('jalebi'), rating: 4.5, prepMins: 10, address: 'Haidergarh, Barabanki', lat: HG.lat + 0.0009, lng: HG.lng + 0.0018, sort: 4 },
@@ -24,17 +23,6 @@ const I = (restaurantId, key, name, cat, price, kcal, qty, desc, extra = {}) => 
 });
 
 export const ITEMS = [
-  // Raju Lassi
-  I('raju-lassi', 'lassi', 'Sweet Lassi', 'lassi', 40, 260, '1 glass', 'गाढ़ी मीठी लस्सी, ऊपर मलाई।', { best: true }),
-  I('raju-lassi', 'mango_lassi', 'Mango Lassi', 'lassi', 60, 320, '1 glass', 'पके आम वाली ठंडी लस्सी।'),
-  I('raju-lassi', 'kesar_lassi', 'Kesar Badam Lassi', 'lassi', 70, 350, '1 glass', 'केसर, बादाम और मलाई वाली लस्सी।', { img: 'lassi' }),
-  I('raju-lassi', 'banana_shake', 'Banana Shake', 'lassi', 60, 290, '1 glass', 'ताज़ा केला और ठंडा दूध।'),
-  I('raju-lassi', 'cold_coffee', 'Cold Coffee', 'lassi', 70, 280, '1 glass', 'ठंडी कॉफ़ी, आइसक्रीम के साथ।'),
-  I('raju-lassi', 'falooda', 'Royal Falooda', 'lassi', 90, 450, '1 glass', 'रोज़ सिरप, सेवइयाँ और कुल्फ़ी।', { best: true }),
-  I('raju-lassi', 'rabri', 'Rabri', 'sweets', 60, 300, '100 g', 'धीमी आँच पर पकी गाढ़ी रबड़ी।'),
-  I('raju-lassi', 'kulfi', 'Malai Kulfi', 'sweets', 30, 180, '1 piece', 'पिस्ता-मलाई कुल्फ़ी।'),
-  I('raju-lassi', 'chaas', 'Masala Chaas', 'lassi', 25, 80, '1 glass', 'भुना जीरा और पुदीना वाली छाछ।'),
-  I('raju-lassi', 'chai', 'Kulhad Chai', 'lassi', 15, 90, '1 kulhad', 'अदरक-इलायची वाली कुल्हड़ चाय।'),
   // Swagat Restaurant
   I('swagat-restaurant', 'thali', 'Special Veg Thali', 'thali', 150, 850, '1 thali', 'पनीर, दाल, सब्ज़ी, चावल, 3 रोटी, सलाद, मिठाई।', { best: true }),
   I('swagat-restaurant', 'pbm', 'Paneer Butter Masala', 'northindian', 180, 480, '1 plate', 'मक्खनी टमाटर ग्रेवी में पनीर।', { best: true }),
